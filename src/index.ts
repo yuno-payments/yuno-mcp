@@ -125,7 +125,7 @@ server.tool("payments.create",
     const paymentResponse = await yunoClient.payments.create({
       description: payment.description ?? "Test payment",
       merchant_order_id: payment.merchant_order_id ?? randomUUID(),
-      country: payment.country ?? "CO",
+      country: payment.country,
       amount: {
         currency: payment.currency,
         value: payment.amount,
@@ -152,7 +152,7 @@ server.tool("payments.create",
   const paymentResponse = await yunoClient.payments.create({
     description: payment.description ?? "Test payment",
     merchant_order_id: payment.merchant_order_id ?? randomUUID(),
-    country: payment.country ?? "CO",
+    country: payment.country,
     amount: {
       currency: payment.currency,
       value: payment.amount,
