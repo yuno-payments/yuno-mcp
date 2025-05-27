@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "bin": {
-    "yuno-mcp": "./build/index.js"
+    "yuno-mcp": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc && chmod 755 build/index.js"
+    "build": "tsc && chmod 755 dist/index.js"
   },
   "files": [
-    "build"
+    "dist",
+    "README.md",
+    "package.json"
   ],
   "dependencies": {
     "@latiscript/yuno-node": "^1.0.1",
