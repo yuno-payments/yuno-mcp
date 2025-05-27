@@ -1,0 +1,16 @@
+kind: template
+load: typescript_test.yaml
+
+data:
+  push_image : true
+  test:
+    vars: 
+      PORT : 3000
+  services:
+    redis:
+      active: false
+    psql:
+      active: false
+      password: secret
+      user: yuno-mcp
+      database: yuno-mcp-db
