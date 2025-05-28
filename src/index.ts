@@ -9,7 +9,7 @@ let yunoClient: ReturnType<typeof YunoClient.initialize>;
 
 const server = new McpServer({
   name: "yuno-mcp",
-  version: "1.0.0",
+  version: "1.2.0",
 });
 
 server.tool(
@@ -408,5 +408,14 @@ server.tool("documentation.read", { documentation_type: z.enum(["createCustomer"
   }
 });
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+export async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('\n🚨  Error initializing Yuno MCP server:\n');
+    console.error(`   ${error.message}\n`);
+  });
+}

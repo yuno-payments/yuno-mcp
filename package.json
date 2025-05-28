@@ -1,12 +1,11 @@
 {
   "name": "@yuno-payments/yuno-mcp",
-  "version": "1.0.0",
-  "type": "module",
+  "version": "1.2.0",
   "bin": {
     "yuno-mcp": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc && chmod 755 dist/index.js"
+    "build": "tsc && echo '#!/usr/bin/env node' | cat - dist/index.js > temp && mv temp dist/index.js && chmod +x dist/index.js"
   },
   "files": [
     "dist",
