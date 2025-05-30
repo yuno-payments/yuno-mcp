@@ -4,6 +4,8 @@
 
 This package provides an MCP server that exposes the Yuno payment platform API as Model Context Protocol tools, enabling programmatic access for AI agents, automation, and advanced workflows.
 
+https://github.com/user-attachments/assets/8f41f3d7-5c52-4d8c-a5fd-681d6ab54b75
+
 ## Features
 
 - Exposes Yuno API endpoints as MCP tools
