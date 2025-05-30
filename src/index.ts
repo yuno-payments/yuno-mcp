@@ -9,7 +9,7 @@ let yunoClient: ReturnType<typeof YunoClient.initialize>;
 
 const server = new McpServer({
   name: "yuno-mcp",
-  version: "1.2.0",
+  version: "1.2.1",
 });
 
 server.tool(

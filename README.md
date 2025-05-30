@@ -43,7 +43,7 @@ npm run build
   "mcpServers": {
     "yuno-mcp": {
       "type": "command",
-      "command": "node @yuno-payments/yuno-mcp",
+      "command": "npx @yuno-payments/yuno-mcp@latest",
       "env": {
         "YUNO_ACCOUNT_CODE": "your_account_code",
         "YUNO_PUBLIC_API_KEY": "your_public_api_key",
@@ -65,9 +65,9 @@ npm run build
 {
   "mcpServers": {
     "yuno-mcp": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "@yuno-payments/yuno-mcp"
+        "@yuno-payments/yuno-mcp@latest"
       ],
       "env": {
         "YUNO_ACCOUNT_CODE": "your_account_code",
