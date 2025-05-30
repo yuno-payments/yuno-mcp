@@ -91,7 +91,7 @@ server.tool(
 server.tool("payments.create",
   {
     payment: z.object({
-      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]),
+      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT"),
       amount: z.number(),
       checkout_session_id: z.string().optional(),
       description: z.string().optional(),
