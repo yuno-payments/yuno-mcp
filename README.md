@@ -13,6 +13,24 @@ https://github.com/user-attachments/assets/8f41f3d7-5c52-4d8c-a5fd-681d6ab54b75
 - TypeScript support
 - Easy integration with [Cursor](https://www.cursor.so/) and other MCP-compatible agents
 
+## Available Tools
+
+The Yuno MCP server exposes the following tools for AI agents and automation:
+
+| Tool Name | Description |
+|-----------|-------------|
+| `customer.create` | Create a new customer |
+| `checkoutSession.create` | Create a checkout session |
+| `payments.create` | Create a payment with various workflows |
+| `payments.read` | Retrieve payment information |
+| `documentation.read` | Access Yuno API documentation and guides |
+
+### Payment Workflows
+
+The `payments.create` tool supports three workflow types:
+- **`DIRECT`** - Direct payment processing
+- **`REDIRECT`** - Redirect-based payment flow
+- **`SDK_CHECKOUT`** - Requires `checkout_session_id` and `ott` (for web, android, and ios payments)
 ---
 
 ## Using with Cursor or Claude Desktop
