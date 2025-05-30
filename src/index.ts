@@ -12,28 +12,20 @@ const server = new McpServer({
   version: "1.2.1",
 });
 
-server.tool(
-  "yuno.initialize",
-  async () => {
-    try {
-      yunoClient = YunoClient.initialize({
-        accountCode: (env.YUNO_ACCOUNT_CODE as string),
-        publicApiKey: (env.YUNO_PUBLIC_API_KEY as string),
-        privateSecretKey: (env.YUNO_PRIVATE_SECRET_KEY as string),
-      countryCode: env.YUNO_COUNTRY_CODE,
-      currency: env.YUNO_CURRENCY,
-    });
-    return {
-      content: [{ type: "text", text: "Yuno client initialized successfully" }],
-    };
-    } catch (error) {
-      if (error instanceof Error) {
-        return { content: [{ type: "text", text: error.message }] };
-      }
-      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+async function initializeYunoClient() {
+  try {
+  yunoClient = await YunoClient.initialize({
+    accountCode: (env.YUNO_ACCOUNT_CODE as string),
+    publicApiKey: (env.YUNO_PUBLIC_API_KEY as string),
+    privateSecretKey: (env.YUNO_PRIVATE_SECRET_KEY as string),
+  });
+  } catch (error) {
+    if (error instanceof Error) {
+      return { content: [{ type: "text", text: error.message }] };
     }
+    return { content: [{ type: "text", text: "An unknown error occurred" }] };
   }
-);
+}
 
 server.tool(
   "customer.create",
@@ -46,7 +38,7 @@ server.tool(
   async ({ first_name, last_name, email, country }) => {
     try {
       if (!yunoClient) {
-        return { content: [{ type: "text", text: "Yuno client not initialized" }] };
+        await initializeYunoClient();
       }
 
       const customer = await yunoClient.customers.create({
@@ -71,7 +63,7 @@ server.tool(
   async ({ customer_id, country, amount, description, merchant_order_id, currency }) => {
     try {
       if (!yunoClient) {
-        return { content: [{ type: "text", text: "Yuno client not initialized" }] };
+        await initializeYunoClient();
       }
 
       const checkoutSession = await yunoClient.checkoutSessions.create({
@@ -99,7 +91,7 @@ server.tool(
 server.tool("payments.create",
   {
     payment: z.object({
-      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]),
+      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT"),
       amount: z.number(),
       checkout_session_id: z.string().optional(),
       description: z.string().optional(),
@@ -118,7 +110,7 @@ server.tool("payments.create",
   }, async ({ payment, idempotency_key }) => {
   try {
     if (!yunoClient) {
-      return { content: [{ type: "text", text: "Yuno client not initialized" }] };
+      await initializeYunoClient();
     }
 
     if (payment.workflow === "SDK_CHECKOUT") {
@@ -186,7 +178,7 @@ server.tool("payments.create",
 server.tool("payments.read", { payment_id: z.string() }, async ({ payment_id }) => {
   try {
     if (!yunoClient) {
-      return { content: [{ type: "text", text: "Yuno client not initialized" }] };
+      await initializeYunoClient();
     }
 
     const payment = await yunoClient.payments.retrieve(payment_id);
@@ -235,10 +227,10 @@ const DOCUMENTATION = {
       HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment.md",
       CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations.md",
     },
+    WEB_V_1_1: "https://docs.y.uno/docs/yuno-web-sdk-v11",
     ANDROID: {
       INTEGRATIONS: "https://docs.y.uno/docs/android-sdk-integrations.md",
       REQUIREMENTS: "https://docs.y.uno/docs/requirements-android.md",
-      RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-android-sdk.md",
       FULL: "https://docs.y.uno/docs/full-checkout-android.md",
       LITE_PAYMENT: "https://docs.y.uno/docs/lite-checkout-android.md",
       LITE_ENROLLMENT: "https://docs.y.uno/docs/enrollment-android.md",
@@ -247,6 +239,7 @@ const DOCUMENTATION = {
       HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment-android.md",
       CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations-android.md",
     },
+    ANDROID_RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-android-sdk.md",
     IOS: {
       INTEGRATIONS: "https://docs.y.uno/docs/ios-sdk-integrations.md",
       REQUIREMENTS: "https://docs.y.uno/docs/requirements-ios.md",
@@ -257,7 +250,7 @@ const DOCUMENTATION = {
       HEADLESS_PAYMENT: "https://docs.y.uno/docs/headless-sdk-payment-ios.md",
       HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment-ios.md",
       CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations-ios.md",
-    }
+    },
   },
   UNOFFICIAL: {
     YUNO_NODE: {
@@ -271,7 +264,7 @@ const DOCUMENTATION = {
   }
 };
 
-server.tool("documentation.read", { documentation_type: z.enum(["createCustomer", "retrieveCustomer", "createCheckoutSession", "retrieveCheckoutSession", "createPayment", "retrievePayment", "guides", "web", "android", "ios", "unofficial.node", "unofficial.react"]) }, async ({ documentation_type }) => {
+server.tool("documentation.read", { documentation_type: z.enum(["createCustomer", "retrieveCustomer", "createCheckoutSession", "retrieveCheckoutSession", "createPayment", "retrievePayment", "guides", "web", "web_v_1_1", "android", "android_release_notes", "ios", "ios_release_notes", "unofficial.node", "unofficial.react"]) }, async ({ documentation_type }) => {
   try {
     if (documentation_type === "createCustomer") {
       const createCustomerDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.CREATE);
@@ -348,6 +341,15 @@ server.tool("documentation.read", { documentation_type: z.enum(["createCustomer"
       };
     }
 
+    if (documentation_type === "web_v_1_1") {
+      const webV11Docs = await fetch(DOCUMENTATION.GUIDES.WEB_V_1_1);
+      const webV11DocsText = await webV11Docs.text();
+
+      return {
+        content: [{ type: "text", text: webV11DocsText }],
+      };
+    }
+
     if (documentation_type === "android") {
       const androidPromises = Object.values(DOCUMENTATION.GUIDES.ANDROID).map((doc) => fetch(doc));
 
@@ -356,6 +358,15 @@ server.tool("documentation.read", { documentation_type: z.enum(["createCustomer"
 
       return {
         content: [{ type: "text", text: androidDocsText.join("\n\n") }],
+      };
+    }
+
+    if (documentation_type === "android_release_notes") {
+      const androidReleaseNotesDocs = await fetch(DOCUMENTATION.GUIDES.ANDROID_RELEASE_NOTES);
+      const androidReleaseNotesDocsText = await androidReleaseNotesDocs.text();
+
+      return {
+        content: [{ type: "text", text: androidReleaseNotesDocsText }],
       };
     }
 
