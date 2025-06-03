@@ -37,22 +37,11 @@ The `payments.create` tool supports three workflow types:
 
 You can use this MCP server with [Cursor](https://www.cursor.so/) or [Claude Desktop](https://www.anthropic.com/claude) to enable AI-driven payment flows, customer creation, and more.
 
-### 1. Build the Project
-
-Clone this project and build it locally:
-
-```bash
-git clone https://github.com/yuno-payments/yuno-mcp.git
-cd yuno-mcp
-npm install
-npm run build
-```
-
-### 2. Set Up Your Yuno API Credentials
+### 1. Set Up Your Yuno API Credentials
 
 - Set your Yuno API credentials using environment variables (see config examples below).
 
-### 3. Add the MCP Server to Cursor
+### 2. Add the MCP Server to Cursor
 
 1. Open Cursor Settings (`Cmd+Shift+P` → "Cursor Settings").
 2. Go to the "MCP" section and click "Add new global MCP server".
@@ -76,7 +65,7 @@ npm run build
 }
 ```
 
-### 4. Add the MCP Server to Claude Desktop
+### 3. Add the MCP Server to Claude Desktop
 
 1. Open Claude Desktop settings → "Developer" tab → Edit Config.
 2. Add the following config:
@@ -101,7 +90,7 @@ npm run build
 }
 ```
 
-### 5. Test the Integration
+### 4. Test the Integration
 
 - In Cursor or Claude, select a Markdown file or chat and ask the agent to create a payment, customer, or checkout session using the `yuno-mcp` tool.
 - Make sure your environment variables are set correctly.
