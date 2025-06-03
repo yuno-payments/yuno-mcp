@@ -1,6 +1,6 @@
 {
   "name": "@yuno-payments/yuno-mcp",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "bin": {
     "yuno-mcp": "./dist/index.js"
   },
