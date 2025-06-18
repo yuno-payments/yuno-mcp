@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { YunoClient } from "@latiscript/yuno-node";
+import { CheckoutSessionInput, CustomerInput, PaymentInput, YunoClient } from "@latiscript/yuno-node";
 import { env } from "process";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
@@ -9,7 +9,7 @@ let yunoClient: ReturnType<typeof YunoClient.initialize>;
 
 const server = new McpServer({
   name: "yuno-mcp",
-  version: "1.2.1",
+  version: "1.2.3",
 });
 
 async function initializeYunoClient() {
@@ -30,24 +30,16 @@ async function initializeYunoClient() {
 server.tool(
   "customer.create",
   {
-    first_name: z.string(),
-    last_name: z.string(),
-    email: z.string(),
-    country: z.string().optional(),
+    customer: z.custom<CustomerInput>(),
   },
-  async ({ first_name, last_name, email, country }) => {
+  async ({ customer }) => {
     try {
       if (!yunoClient) {
         await initializeYunoClient();
       }
 
-      const customer = await yunoClient.customers.create({
-        first_name,
-        last_name,
-        email,
-        country,
-    });
-    return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
+      const customerResponse = await yunoClient.customers.create(customer);
+    return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customerResponse, null, 4)}` }] };
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text", text: error.message }] };
@@ -59,25 +51,16 @@ server.tool(
 
 server.tool(
   "checkoutSession.create",
-  { customer_id: z.string(), amount: z.number(), description: z.string().optional(), merchant_order_id: z.string().optional(), currency: z.string().optional(), country: z.string().optional() },
-  async ({ customer_id, country, amount, description, merchant_order_id, currency }) => {
+  { checkoutSession: z.custom<CheckoutSessionInput>() },
+  async ({ checkoutSession }) => {
     try {
       if (!yunoClient) {
         await initializeYunoClient();
       }
 
-      const checkoutSession = await yunoClient.checkoutSessions.create({
-        amount: {
-          currency,
-        value: amount,
-      },
-      customer_id,
-      merchant_order_id: merchant_order_id ?? randomUUID(),
-      payment_description: description ?? "Test payment",
-      country,
-    });
+      const checkoutSessionResponse = await yunoClient.checkoutSessions.create(checkoutSession);
     return {
-      content: [{ type: "text", text: `checkout session response: ${JSON.stringify(checkoutSession, null, 4)}` }],
+      content: [{ type: "text", text: `checkout session response: ${JSON.stringify(checkoutSessionResponse, null, 4)}` }],
     };
     } catch (error) {
       if (error instanceof Error) {
@@ -90,22 +73,7 @@ server.tool(
 
 server.tool("payments.create",
   {
-    payment: z.object({
-      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT"),
-      amount: z.number(),
-      checkout_session_id: z.string().optional(),
-      description: z.string().optional(),
-      payment_method_type: z.string().optional(),
-      ott: z.string().optional(),
-      merchant_order_id: z.string().optional(),
-      country: z.string().optional(),
-      currency: z.string().optional(),
-    }).refine((data) => {
-      if (data.workflow === "SDK_CHECKOUT" && (!data.checkout_session_id || !data.ott)) {
-        return false;
-      }
-      return true;
-    }, "If workflow is SDK_CHECKOUT, checkout_session_id and ott are required"),
+    payment: z.custom<PaymentInput>(),
     idempotency_key: z.string().optional(),
   }, async ({ payment, idempotency_key }) => {
   try {
@@ -114,21 +82,26 @@ server.tool("payments.create",
     }
 
     if (payment.workflow === "SDK_CHECKOUT") {
+      if (!payment.checkout.session || !payment.payment_method.token) {
+        return {
+          content: [{ type: "text", text: "If workflow is SDK_CHECKOUT, checkout_session_id and ott are required" }],
+        };
+      }
+    }
+
+    if (payment.workflow === "SDK_CHECKOUT") {
     const paymentResponse = await yunoClient.payments.create({
       description: payment.description ?? "Test payment",
       merchant_order_id: payment.merchant_order_id ?? randomUUID(),
       country: payment.country,
-      amount: {
-        currency: payment.currency,
-        value: payment.amount,
-      },
+      amount: payment.amount,
       workflow: payment.workflow,
       checkout: {
-        session: payment.checkout_session_id!,
+        session: payment.checkout.session,
       },
       payment_method: {
-        token: payment.ott,
-        type: payment.payment_method_type,
+        token: payment.payment_method.token,
+        type: payment.payment_method.type,
       },
     }, idempotency_key);
     return {
@@ -145,13 +118,10 @@ server.tool("payments.create",
     description: payment.description ?? "Test payment",
     merchant_order_id: payment.merchant_order_id ?? randomUUID(),
     country: payment.country,
-    amount: {
-      currency: payment.currency,
-      value: payment.amount,
-    },
+    amount: payment.amount,
     payment_method: {
-      type: payment.payment_method_type!,
-      token: payment.ott,
+      type: payment.payment_method.type,
+      token: payment.payment_method.token,
     },
     workflow: payment.workflow,
   }, idempotency_key);
