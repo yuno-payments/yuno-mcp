@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { YunoClient } from "@latiscript/yuno-node";
+import { YunoClient } from "./client";
 import { env } from "process";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
@@ -30,24 +30,54 @@ async function initializeYunoClient() {
 server.tool(
   "customer.create",
   {
+    merchant_customer_id: z.string(),
     first_name: z.string(),
     last_name: z.string(),
+    gender: z.enum(["M", "F", "NB"]).optional(),
+    date_of_birth: z.string().optional(),
     email: z.string(),
-    country: z.string().optional(),
+    nationality: z.string().optional(),
+    country: z.string(),
+    document: z.object({
+      document_type: z.string(),
+      document_number: z.string()
+    }).optional(),
+    phone: z.object({
+      number: z.string(),
+      country_code: z.string()
+    }).optional(),
+    billing_address: z.object({
+      address_line_1: z.string(),
+      address_line_2: z.string().optional(),
+      country: z.string(),
+      state: z.string(),
+      city: z.string(),
+      zip_code: z.string(),
+      neighborhood: z.string().optional()
+    }).optional(),
+    shipping_address: z.object({
+      address_line_1: z.string(),
+      address_line_2: z.string().optional(),
+      country: z.string(),
+      state: z.string(),
+      city: z.string(),
+      zip_code: z.string(),
+      neighborhood: z.string().optional()
+    }).optional(),
+    metadata: z.array(z.object({
+      key: z.string(),
+      value: z.string()
+    })).optional(),
+    merchant_customer_created_at: z.string().optional()
   },
-  async ({ first_name, last_name, email, country }) => {
+  async (customerData) => {
     try {
       if (!yunoClient) {
         await initializeYunoClient();
       }
 
-      const customer = await yunoClient.customers.create({
-        first_name,
-        last_name,
-        email,
-        country,
-    });
-    return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
+      const customer = await yunoClient.customers.create(customerData);
+      return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text", text: error.message }] };
@@ -59,26 +89,51 @@ server.tool(
 
 server.tool(
   "checkoutSession.create",
-  { customer_id: z.string(), amount: z.number(), description: z.string().optional(), merchant_order_id: z.string().optional(), currency: z.string().optional(), country: z.string().optional() },
-  async ({ customer_id, country, amount, description, merchant_order_id, currency }) => {
+  {
+    customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer"),
+    merchant_order_id: z.string().min(3).max(255).describe("The unique identifier of the customer's order"),
+    payment_description: z.string().min(1).max(255).describe("The description of the payment"),
+    callback_url: z.string().min(3).max(526).optional().describe("The URL where we will redirect your customer after making the purchase"),
+    country: z.enum(["AR", "BO", "BR", "CL", "CO", "CR", "EC", "SV", "GT", "HN", "MX", "NI", "PA", "PY", "PE", "US", "UY"]).describe("The customer's country (ISO 3166-1)"),
+    amount: z.object({
+      currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]).describe("The currency used to make the payment (ISO 4217)"),
+      value: z.number().multipleOf(0.0001).describe("The payment amount")
+    }).describe("Specifies the payment amount object"),
+    metadata: z.array(
+      z.object({
+        key: z.string(),
+        value: z.string()
+      })
+    ).max(120).optional().describe("Specifies a list of metadata objects. Max 120 items"),
+    installments: z.object({
+      plan_id: z.string().optional().describe("Plan Id of the installment plan created in Yuno"),
+      plan: z.array(
+        z.object({
+          installment: z.number().int().describe("The number of monthly installments"),
+          rate: z.number().describe("The rate applied to the final amount (percentage)")
+        })
+      ).optional().describe("Installments to show the customer")
+    }).optional().describe("The installment plan configuration")
+  },
+  async ({ customer_id, country, amount, payment_description, merchant_order_id, callback_url, metadata, installments }) => {
     try {
       if (!yunoClient) {
         await initializeYunoClient();
       }
 
       const checkoutSession = await yunoClient.checkoutSessions.create({
-        amount: {
-          currency,
-        value: amount,
-      },
-      customer_id,
-      merchant_order_id: merchant_order_id ?? randomUUID(),
-      payment_description: description ?? "Test payment",
-      country,
-    });
-    return {
-      content: [{ type: "text", text: `checkout session response: ${JSON.stringify(checkoutSession, null, 4)}` }],
-    };
+        amount,
+        customer_id,
+        merchant_order_id,
+        payment_description,
+        country,
+        callback_url,
+        metadata,
+        installments
+      });
+      return {
+        content: [{ type: "text", text: `checkout session response: ${JSON.stringify(checkoutSession, null, 4)}` }],
+      };
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text", text: error.message }] };
@@ -91,46 +146,67 @@ server.tool(
 server.tool("payments.create",
   {
     payment: z.object({
-      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT"),
-      amount: z.number(),
-      checkout_session_id: z.string().optional(),
-      description: z.string().optional(),
-      payment_method_type: z.string().optional(),
-      ott: z.string().optional(),
-      merchant_order_id: z.string().optional(),
-      country: z.string().optional(),
-      currency: z.string().optional(),
+      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT").describe("Payment workflow type"),
+      amount: z.object({
+        currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]).describe("The currency used to make the payment (ISO 4217)"),
+        value: z.number().multipleOf(0.0001).describe("The payment amount")
+      }).describe("Payment amount details"),
+      description: z.string().min(1).max(255).describe("Payment description"),
+      merchant_order_id: z.string().min(3).max(255).describe("Unique identifier for the order"),
+      country: z.enum(["AR", "BO", "BR", "CL", "CO", "CR", "EC", "SV", "GT", "HN", "MX", "NI", "PA", "PY", "PE", "US", "UY"]).describe("The customer's country (ISO 3166-1)"),
+      customer_id: z.string().min(36).max(64).optional().describe("Customer unique identifier"),
+      checkout_session_id: z.string().optional().describe("Checkout session ID for SDK_CHECKOUT workflow"),
+      ott: z.string().optional().describe("One-time token for payment method"),
+      payment_method_type: z.string().optional().describe("Type of payment method"),
+      payment_method: z.object({
+        type: z.string().describe("Payment method type"),
+        token: z.string().optional().describe("Payment method token"),
+        card: z.object({
+          number: z.string().describe("Card number"),
+          exp_month: z.string().describe("Expiration month (MM)"),
+          exp_year: z.string().describe("Expiration year (YYYY)"),
+          cvc: z.string().describe("Card security code"),
+          name: z.string().describe("Cardholder name")
+        }).optional().describe("Card details"),
+        billing_address: z.object({
+          address_line_1: z.string(),
+          address_line_2: z.string().optional(),
+          country: z.string(),
+          state: z.string(),
+          city: z.string(),
+          zip_code: z.string(),
+          neighborhood: z.string().optional()
+        }).optional().describe("Billing address"),
+        installments: z.object({
+          number: z.number().int().min(1).describe("Number of installments"),
+          rate: z.number().describe("Interest rate")
+        }).optional().describe("Installment details")
+      }).optional().describe("Payment method details"),
+      metadata: z.array(z.object({
+        key: z.string(),
+        value: z.string()
+      })).max(120).optional().describe("Additional metadata, max 120 items"),
+      callback_url: z.string().min(3).max(526).optional().describe("URL for payment status notifications"),
+      success_url: z.string().min(3).max(526).optional().describe("URL for successful payments"),
+      failure_url: z.string().min(3).max(526).optional().describe("URL for failed payments"),
+      three_ds: z.object({
+        email: z.string().email().describe("Customer email for 3DS"),
+        ip: z.string().describe("Customer IP address")
+      }).optional().describe("3D Secure configuration")
     }).refine((data) => {
       if (data.workflow === "SDK_CHECKOUT" && (!data.checkout_session_id || !data.ott)) {
         return false;
       }
       return true;
     }, "If workflow is SDK_CHECKOUT, checkout_session_id and ott are required"),
-    idempotency_key: z.string().optional(),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payments")
   }, async ({ payment, idempotency_key }) => {
   try {
     if (!yunoClient) {
       await initializeYunoClient();
     }
 
-    if (payment.workflow === "SDK_CHECKOUT") {
-    const paymentResponse = await yunoClient.payments.create({
-      description: payment.description ?? "Test payment",
-      merchant_order_id: payment.merchant_order_id ?? randomUUID(),
-      country: payment.country,
-      amount: {
-        currency: payment.currency,
-        value: payment.amount,
-      },
-      workflow: payment.workflow,
-      checkout: {
-        session: payment.checkout_session_id!,
-      },
-      payment_method: {
-        token: payment.ott,
-        type: payment.payment_method_type,
-      },
-    }, idempotency_key);
+    const paymentResponse = await yunoClient.payments.create(payment, idempotency_key);
     return {
       content: [
         {
@@ -139,30 +215,6 @@ server.tool("payments.create",
         },
       ],
     };
-  }
-
-  const paymentResponse = await yunoClient.payments.create({
-    description: payment.description ?? "Test payment",
-    merchant_order_id: payment.merchant_order_id ?? randomUUID(),
-    country: payment.country,
-    amount: {
-      currency: payment.currency,
-      value: payment.amount,
-    },
-    payment_method: {
-      type: payment.payment_method_type!,
-      token: payment.ott,
-    },
-    workflow: payment.workflow,
-  }, idempotency_key);
-  return {
-    content: [
-      {
-        type: "text",
-        text: `payment response: ${JSON.stringify(paymentResponse, null, 4)}`,
-      },
-    ],
-  };
   } catch (error) {
     if (error instanceof Error) {
       return {
