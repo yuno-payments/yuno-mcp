@@ -4,8 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { YunoClient } from "./client";
 import { env } from "process";
 import { z } from "zod";
-import { randomUUID } from "node:crypto";
-let yunoClient: ReturnType<typeof YunoClient.initialize>;
+let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
 
 const server = new McpServer({
   name: "yuno-mcp",
@@ -18,6 +17,7 @@ async function initializeYunoClient() {
     accountCode: (env.YUNO_ACCOUNT_CODE as string),
     publicApiKey: (env.YUNO_PUBLIC_API_KEY as string),
     privateSecretKey: (env.YUNO_PRIVATE_SECRET_KEY as string),
+    baseUrl: (env.YUNO_BASE_URL as string),
   });
   } catch (error) {
     if (error instanceof Error) {
@@ -122,6 +122,7 @@ server.tool(
       }
 
       const checkoutSession = await yunoClient.checkoutSessions.create({
+        account_id: env.YUNO_ACCOUNT_CODE as string,
         amount,
         customer_id,
         merchant_order_id,
@@ -181,7 +182,7 @@ server.tool("payments.create",
           number: z.number().int().min(1).describe("Number of installments"),
           rate: z.number().describe("Interest rate")
         }).optional().describe("Installment details")
-      }).optional().describe("Payment method details"),
+      }).describe("Payment method details"),
       metadata: z.array(z.object({
         key: z.string(),
         value: z.string()

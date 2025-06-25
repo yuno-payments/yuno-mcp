@@ -10,7 +10,7 @@ export class YunoClient {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
-    this.baseUrl = config.baseUrl || 'https://api.y.uno';
+    this.baseUrl = config.baseUrl || 'https://api.y.uno/v1';
   }
 
   static async initialize(config: YunoClientConfig): Promise<YunoClient> {
@@ -18,37 +18,42 @@ export class YunoClient {
     return client;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-Account-Code': this.accountCode,
-      'X-Public-Api-Key': this.publicApiKey,
-      'X-Private-Secret-Key': this.privateSecretKey,
-    };
+  private async request<T>(endpoint: string, options: RequestInit = {}) {
+    try {
+      const url = `${this.baseUrl}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...headers,
-        ...options.headers,
-      },
-    });
+      const headers = {
+        'Content-Type': 'application/json',
+        // 'account-Code': this.accountCode,
+        'public-api-key': this.publicApiKey,
+        'private-secret-key': this.privateSecretKey,
+      };
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'An error occurred while making the request');
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
+      });
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('An error occurred while making the request');
     }
-
-    return response.json();
+    
   }
 
   customers = {
     create: async (customer: YunoCustomer) => {
-      return this.request<YunoCustomer>('/customers', {
-        method: 'POST',
-        body: JSON.stringify(customer),
-      });
+        return this.request<YunoCustomer>('/customers', {
+          method: 'POST',
+          body: JSON.stringify(customer),
+        });
+      
     },
 
     retrieve: async (customerId: string) => {
