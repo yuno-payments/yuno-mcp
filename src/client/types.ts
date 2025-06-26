@@ -92,4 +92,18 @@ export interface YunoPayment {
   workflow: 'SDK_CHECKOUT' | 'DIRECT' | 'REDIRECT';
   checkout?: YunoCheckout;
   installments?: YunoInstallments;
+}
+
+export interface YunoCheckoutPaymentMethod {
+  type: string;
+  name: string;
+  category?: string;
+  provider?: string;
+  status?: string;
+  vaulted_token?: string;
+  [key: string]: any;
+}
+
+export interface YunoCheckoutPaymentMethodsResponse {
+  payment_methods: YunoCheckoutPaymentMethod[];
 } 

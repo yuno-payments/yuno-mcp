@@ -88,6 +88,107 @@ server.tool(
 );
 
 server.tool(
+  "customer.retrieve",
+  {
+    customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
+  },
+  async ({ customerId }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const customer = await yunoClient.customers.retrieve(customerId);
+      return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "customer.retrieveByExternalId",
+  {
+    merchant_customer_id: z.string().describe("The external merchant_customer_id to retrieve the customer")
+  },
+  async ({ merchant_customer_id }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const customer = await yunoClient.customers.retrieveByExternalId(merchant_customer_id);
+      return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "customer.update",
+  {
+    customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to update (MIN 36, MAX 64 characters)"),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    gender: z.enum(["M", "F", "NB"]).optional(),
+    date_of_birth: z.string().optional(),
+    email: z.string().optional(),
+    nationality: z.string().optional(),
+    country: z.string().optional(),
+    document: z.object({
+      document_type: z.string(),
+      document_number: z.string()
+    }).optional(),
+    phone: z.object({
+      number: z.string(),
+      country_code: z.string()
+    }).optional(),
+    billing_address: z.object({
+      address_line_1: z.string(),
+      address_line_2: z.string().optional(),
+      country: z.string(),
+      state: z.string(),
+      city: z.string(),
+      zip_code: z.string(),
+      neighborhood: z.string().optional()
+    }).optional(),
+    shipping_address: z.object({
+      address_line_1: z.string(),
+      address_line_2: z.string().optional(),
+      country: z.string(),
+      state: z.string(),
+      city: z.string(),
+      zip_code: z.string(),
+      neighborhood: z.string().optional()
+    }).optional(),
+    metadata: z.array(z.object({
+      key: z.string(),
+      value: z.string()
+    })).optional(),
+    merchant_customer_created_at: z.string().optional()
+  },
+  async ({ customerId, ...updateFields }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const customer = await yunoClient.customers.update(customerId, updateFields);
+      return { content: [{ type: "text", text: `customer response: ${JSON.stringify(customer, null, 4)}` }] };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
   "checkoutSession.create",
   {
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer"),
@@ -134,6 +235,34 @@ server.tool(
       });
       return {
         content: [{ type: "text", text: `checkout session response: ${JSON.stringify(checkoutSession, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "checkoutSession.retrievePaymentMethods",
+  {
+    sessionId: z.string().describe("The unique identifier of the checkout session"),
+  },
+  async ({ sessionId }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const paymentMethodsResponse = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `payment methods response: ${JSON.stringify(paymentMethodsResponse, null, 4)}`,
+          },
+        ],
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -254,11 +383,13 @@ const DOCUMENTATION = {
   API_REFERENCE: {
     CUSTOMER: {
       CREATE: 'https://docs.y.uno/reference/create-customer.md',
-      READ: 'https://docs.y.uno/reference/retrieve-customer.md'
+      RETRIEVE: 'https://docs.y.uno/reference/retrieve-customer.md',
+      RETRIEVE_BY_EXTERNAL_ID: 'https://docs.y.uno/reference/retrieve-customer-by-external-id.md',
+      UPDATE: 'https://docs.y.uno/reference/update-customer.md'
     },
     CHECKOUT_SESSION: {
       CREATE: 'https://docs.y.uno/reference/create-checkout-session.md',
-      READ: 'https://docs.y.uno/reference/retrieve-payment-methods-for-checkout.md',
+      RETRIEVE_PAYMENT_METHODS: 'https://docs.y.uno/reference/retrieve-payment-methods-for-checkout.md',
     },
     PAYMENT: {
       CREATE: 'https://docs.y.uno/reference/create-payment.md',
@@ -317,7 +448,25 @@ const DOCUMENTATION = {
   }
 };
 
-server.tool("documentation.read", { documentation_type: z.enum(["createCustomer", "retrieveCustomer", "createCheckoutSession", "retrieveCheckoutSession", "createPayment", "retrievePayment", "guides", "web", "web_v_1_1", "android", "android_release_notes", "ios", "ios_release_notes", "unofficial.node", "unofficial.react"]) }, async ({ documentation_type }) => {
+server.tool("documentation.read", { documentation_type: z.enum([
+    "createCustomer",
+    "retrieveCustomer",
+    "retrieveCustomerByExternalId",
+    "updateCustomer",
+    "createCheckoutSession",
+    "retrievePaymentMethodsForCheckoutSession",
+    "createPayment",
+    "retrievePayment",
+    "guides",
+    "web",
+    "web_v_1_1",
+    "android",
+    "android_release_notes",
+    "ios",
+    "ios_release_notes",
+    "unofficial.node",
+    "unofficial.react"
+  ]) }, async ({ documentation_type }) => {
   try {
     if (documentation_type === "createCustomer") {
       const createCustomerDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.CREATE);
@@ -329,11 +478,29 @@ server.tool("documentation.read", { documentation_type: z.enum(["createCustomer"
     }
 
     if (documentation_type === "retrieveCustomer") {
-      const retrieveCustomerDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.READ);
+      const retrieveCustomerDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.RETRIEVE);
       const retrieveCustomerDocsText = await retrieveCustomerDocs.text();
 
       return {
         content: [{ type: "text", text: retrieveCustomerDocsText }],
+      };
+    }
+
+    if (documentation_type === "retrieveCustomerByExternalId") {
+      const retrieveCustomerByExternalIdDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.RETRIEVE_BY_EXTERNAL_ID);
+      const retrieveCustomerByExternalIdDocsText = await retrieveCustomerByExternalIdDocs.text();
+
+      return {
+        content: [{ type: "text", text: retrieveCustomerByExternalIdDocsText }],
+      };
+    }
+
+    if (documentation_type === "updateCustomer") {
+      const updateCustomerDocs = await fetch(DOCUMENTATION.API_REFERENCE.CUSTOMER.UPDATE);
+      const updateCustomerDocsText = await updateCustomerDocs.text();
+
+      return {
+        content: [{ type: "text", text: updateCustomerDocsText }],
       };
     }
 
@@ -346,12 +513,12 @@ server.tool("documentation.read", { documentation_type: z.enum(["createCustomer"
       };
     }
     
-    if (documentation_type === "retrieveCheckoutSession") {
-      const retrieveCheckoutSessionDocs = await fetch(DOCUMENTATION.API_REFERENCE.CHECKOUT_SESSION.READ);
-      const retrieveCheckoutSessionDocsText = await retrieveCheckoutSessionDocs.text();
+    if (documentation_type === "retrievePaymentMethodsForCheckoutSession") {
+      const retrievePaymentMethodsForCheckoutSessionDocs = await fetch(DOCUMENTATION.API_REFERENCE.CHECKOUT_SESSION.RETRIEVE_PAYMENT_METHODS);
+      const retrievePaymentMethodsForCheckoutSessionDocsText = await retrievePaymentMethodsForCheckoutSessionDocs.text();
 
       return {
-        content: [{ type: "text", text: retrieveCheckoutSessionDocsText }],
+        content: [{ type: "text", text: retrievePaymentMethodsForCheckoutSessionDocsText }],
       };
     }
 
