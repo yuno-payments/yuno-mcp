@@ -4,17 +4,19 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { YunoClient } from "./client";
 import { env } from "process";
 import { z } from "zod";
+import { randomUUID } from 'crypto';
 let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
 
 const server = new McpServer({
   name: "yuno-mcp",
   version: "1.2.3",
 });
+const accountCode = process.env.YUNO_ACCOUNT_CODE as string;
 
 async function initializeYunoClient() {
   try {
   yunoClient = await YunoClient.initialize({
-    accountCode: (env.YUNO_ACCOUNT_CODE as string),
+    accountCode: accountCode,
     publicApiKey: (env.YUNO_PUBLIC_API_KEY as string),
     privateSecretKey: (env.YUNO_PRIVATE_SECRET_KEY as string),
     baseUrl: (env.YUNO_BASE_URL as string),
@@ -273,62 +275,63 @@ server.tool(
   }
 );
 
+
+const createPaymentSchema = z.object({
+  account_id: z.string().optional().describe("Account ID for the payment"),
+  description: z.string().describe("Payment description"),
+  additional_data: z.any().optional(),
+  country: z.string().describe("Customer's country (ISO 3166-1)"),
+  merchant_order_id: z.string().describe("Unique identifier for the order"),
+  merchant_reference: z.string().optional(),
+  amount: z.object({
+    currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]).describe("The currency used to make the payment (ISO 4217)"),
+    value: z.number().describe("Payment amount")
+  }).describe("Payment amount details"),
+  customer_payer: z.object({
+    id: z.string().describe("Customer unique identifier"),
+    first_name: z.string().describe("First name of the customer"),
+    last_name: z.string().describe("Last name of the customer"),
+    email: z.string().describe("Email of the customer")
+  }).describe("Customer payer info"),
+  workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).describe("Payment workflow type"),
+  payment_method: z.object({
+    token: z.string().optional(),
+    vaulted_token: z.string().optional(),
+    type: z.string().describe("Payment method type"),
+    detail: z.object({
+      card: z.object({
+        capture: z.boolean().optional(),
+        installments: z.number().optional(),
+        first_installment_deferral: z.number().optional(),
+        soft_descriptor: z.string().optional(),
+        card_data: z.object({
+          number: z.string(),
+          expiration_month: z.number().optional(),
+          expiration_year: z.number().optional(),
+          security_code: z.string().optional(),
+          holder_name: z.string(),
+          type: z.string().optional(),
+        }),
+        verify: z.boolean().optional(),
+        stored_credentials: z.object({
+          reason: z.string().optional(),
+          usage: z.string().optional(),
+          subscription_agreement_id: z.string().optional(),
+          network_transaction_id: z.string().optional(),
+        }).optional(),
+      }).optional(),
+    }).optional(),
+    vault_on_success: z.boolean().optional(),
+  }).describe("Payment method details"),
+  callback_url: z.string().optional(),
+  fraud_screening: z.any().optional(),
+  split_marketplace: z.any().optional(),
+  metadata: z.any().optional()
+});
+
 server.tool("payments.create",
   {
-    payment: z.object({
-      workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).default("DIRECT").describe("Payment workflow type"),
-      amount: z.object({
-        currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]).describe("The currency used to make the payment (ISO 4217)"),
-        value: z.number().multipleOf(0.0001).describe("The payment amount")
-      }).describe("Payment amount details"),
-      description: z.string().min(1).max(255).describe("Payment description"),
-      merchant_order_id: z.string().min(3).max(255).describe("Unique identifier for the order"),
-      country: z.enum(["AR", "BO", "BR", "CL", "CO", "CR", "EC", "SV", "GT", "HN", "MX", "NI", "PA", "PY", "PE", "US", "UY"]).describe("The customer's country (ISO 3166-1)"),
-      customer_id: z.string().min(36).max(64).optional().describe("Customer unique identifier"),
-      checkout_session_id: z.string().optional().describe("Checkout session ID for SDK_CHECKOUT workflow"),
-      ott: z.string().optional().describe("One-time token for payment method"),
-      payment_method_type: z.string().optional().describe("Type of payment method"),
-      payment_method: z.object({
-        type: z.string().describe("Payment method type"),
-        token: z.string().optional().describe("Payment method token"),
-        card: z.object({
-          number: z.string().describe("Card number"),
-          exp_month: z.string().describe("Expiration month (MM)"),
-          exp_year: z.string().describe("Expiration year (YYYY)"),
-          cvc: z.string().describe("Card security code"),
-          name: z.string().describe("Cardholder name")
-        }).optional().describe("Card details"),
-        billing_address: z.object({
-          address_line_1: z.string(),
-          address_line_2: z.string().optional(),
-          country: z.string(),
-          state: z.string(),
-          city: z.string(),
-          zip_code: z.string(),
-          neighborhood: z.string().optional()
-        }).optional().describe("Billing address"),
-        installments: z.object({
-          number: z.number().int().min(1).describe("Number of installments"),
-          rate: z.number().describe("Interest rate")
-        }).optional().describe("Installment details")
-      }).describe("Payment method details"),
-      metadata: z.array(z.object({
-        key: z.string(),
-        value: z.string()
-      })).max(120).optional().describe("Additional metadata, max 120 items"),
-      callback_url: z.string().min(3).max(526).optional().describe("URL for payment status notifications"),
-      success_url: z.string().min(3).max(526).optional().describe("URL for successful payments"),
-      failure_url: z.string().min(3).max(526).optional().describe("URL for failed payments"),
-      three_ds: z.object({
-        email: z.string().email().describe("Customer email for 3DS"),
-        ip: z.string().describe("Customer IP address")
-      }).optional().describe("3D Secure configuration")
-    }).refine((data) => {
-      if (data.workflow === "SDK_CHECKOUT" && (!data.checkout_session_id || !data.ott)) {
-        return false;
-      }
-      return true;
-    }, "If workflow is SDK_CHECKOUT, checkout_session_id and ott are required"),
+    payment: createPaymentSchema,
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payments")
   }, async ({ payment, idempotency_key }) => {
   try {
@@ -336,7 +339,9 @@ server.tool("payments.create",
       await initializeYunoClient();
     }
 
-    const paymentResponse = await yunoClient.payments.create(payment, idempotency_key);
+    const paymentWithAccount = { ...payment, account_id: payment.account_id || accountCode };
+    const idempotencyKey = idempotency_key || randomUUID();
+    const paymentResponse = await yunoClient.payments.create(paymentWithAccount, idempotencyKey);
     return {
       content: [
         {
@@ -357,7 +362,7 @@ server.tool("payments.create",
   }
 });
 
-server.tool("payments.read", { payment_id: z.string() }, async ({ payment_id }) => {
+server.tool("payments.retrieve", { payment_id: z.string() }, async ({ payment_id }) => {
   try {
     if (!yunoClient) {
       await initializeYunoClient();
@@ -379,6 +384,225 @@ server.tool("payments.read", { payment_id: z.string() }, async ({ payment_id }) 
   }
 });
 
+server.tool(
+  "payments.retrieveByMerchantOrderId",
+  {
+    merchant_order_id: z.string().describe("The unique identifier of the order for the payment (merchant_order_id)"),
+  },
+  async ({ merchant_order_id }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const payments = await yunoClient.payments.retrieveByMerchantOrderId(merchant_order_id);
+      return {
+        content: [{ type: "text", text: `payments response: ${JSON.stringify(payments, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+const operationPaymentResponseAdditionalDataSchema = z.object({
+  receipt: z.boolean().optional(),
+  receipt_language: z.enum(["ES", "EN", "PT"]).optional(),
+}).optional()
+
+const refundPaymentSchema = z.object({
+  description: z.string().min(3).max(255).optional(),
+  reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).optional(),
+  merchant_reference: z.string().min(3).max(255),
+  amount: z.object({
+    currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]).optional(),
+    value: z.string().optional(),
+  }).optional(),
+  simplified_mode: z.boolean().optional(),
+  response_additional_data: operationPaymentResponseAdditionalDataSchema,
+  customer_payer: z.object({
+    id: z.string().describe("Customer unique identifier").optional(),
+    first_name: z.string().describe("First name of the customer").optional(),
+    last_name: z.string().describe("Last name of the customer").optional(),
+    email: z.string().describe("Email of the customer").optional()
+  }).describe("Customer payer info"),
+})
+
+server.tool(
+  "payments.refund",
+  {
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: refundPaymentSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds")
+  },
+  async ({ paymentId, transactionId, body, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const idempotencyKey = idempotency_key || randomUUID();
+      const refundResponse = await yunoClient.payments.refund(paymentId, transactionId, body, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `refund response: ${JSON.stringify(refundResponse, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "payments.cancelOrRefund",
+  {
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    body: refundPaymentSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancel/refund")
+  },
+  async ({ paymentId, body, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const idempotencyKey = idempotency_key || randomUUID();
+      const response = await yunoClient.payments.cancelOrRefund(paymentId, body, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `cancelOrRefund response: ${JSON.stringify(response, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "payments.cancelOrRefundWithTransaction",
+  {
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: refundPaymentSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancel/refund")
+  },
+  async ({ paymentId, transactionId, body, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const idempotencyKey = idempotency_key || randomUUID();
+      const response = await yunoClient.payments.cancelOrRefundWithTransaction(paymentId, transactionId, body, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `cancelOrRefundWithTransaction response: ${JSON.stringify(response, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "payments.cancel",
+  {
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: z.object({
+      description: z.string().min(3).max(255).optional(),
+      reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER", ""]).optional(),
+      merchant_reference: z.string().min(3).max(255),
+      response_additional_data: operationPaymentResponseAdditionalDataSchema,
+    }),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancels")
+  },
+  async ({ paymentId, transactionId, body, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const idempotencyKey = idempotency_key || randomUUID();
+      const cancelResponse = await yunoClient.payments.cancel(paymentId, transactionId, body, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `cancel response: ${JSON.stringify(cancelResponse, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "payments.authorize",
+  {
+    payment: createPaymentSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payments")
+  },
+  async ({ payment, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const paymentWithAccount = { ...payment, account_id: payment.account_id || accountCode };
+      const idempotencyKey = idempotency_key || randomUUID();
+      const response = await yunoClient.payments.authorize(paymentWithAccount, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `authorize response: ${JSON.stringify(response, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
+server.tool(
+  "payments.captureAuthorization",
+  {
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: z.object({
+      merchant_reference: z.string().min(3).max(255),
+      amount: z.object({
+        currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]),
+        value: z.string(),
+      }).optional(),
+      reason: z.string().min(3).max(255),
+      simplified_mode: z.boolean().optional(),
+    }),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate captures")
+  },
+  async ({ paymentId, transactionId, body, idempotency_key }) => {
+    try {
+      if (!yunoClient) {
+        await initializeYunoClient();
+      }
+      const idempotencyKey = idempotency_key || randomUUID();
+      const response = await yunoClient.payments.captureAuthorization(paymentId, transactionId, body, idempotencyKey);
+      return {
+        content: [{ type: "text", text: `captureAuthorization response: ${JSON.stringify(response, null, 4)}` }],
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { content: [{ type: "text", text: error.message }] };
+      }
+      return { content: [{ type: "text", text: "An unknown error occurred" }] };
+    }
+  }
+);
+
 const DOCUMENTATION = {
   API_REFERENCE: {
     CUSTOMER: {
@@ -393,7 +617,14 @@ const DOCUMENTATION = {
     },
     PAYMENT: {
       CREATE: 'https://docs.y.uno/reference/create-payment.md',
-      READ: 'https://docs.y.uno/reference/retrieve-payment-by-id.md',
+      RETRIEVE: 'https://docs.y.uno/reference/retrieve-payment-by-id.md',
+      RETRIEVE_BY_MERCHANT_ORDER_ID: 'https://docs.y.uno/reference/retrieve-payment-by-merchant-order-id.md',
+      REFUND: 'https://docs.y.uno/reference/refund-payment.md',
+      CANCEL: 'https://docs.y.uno/reference/cancel-payment.md',
+      CANCEL_OR_REFUND: 'https://docs.y.uno/reference/cancel-or-refund-a-payment.md',
+      CANCEL_OR_REFUND_WITH_TRANSACTION: 'https://docs.y.uno/reference/cancel-or-refund-payment-with-transaction',
+      AUTHORIZE: 'https://docs.y.uno/reference/authorize-payment.md',
+      CAPTURE_AUTHORIZATION: 'https://docs.y.uno/reference/capture-authorization',
     },
   },
   GUIDES: {
@@ -457,6 +688,13 @@ server.tool("documentation.read", { documentation_type: z.enum([
     "retrievePaymentMethodsForCheckoutSession",
     "createPayment",
     "retrievePayment",
+    "retrievePaymentByMerchantOrderId",
+    "refundPayment",
+    "cancelOrRefundPayment",
+    "cancelOrRefundWithTransactionPayment",
+    "cancelPayment",
+    "authorizePayment",
+    "captureAuthorizationPayment",
     "guides",
     "web",
     "web_v_1_1",
@@ -532,11 +770,74 @@ server.tool("documentation.read", { documentation_type: z.enum([
     }
 
     if (documentation_type === "retrievePayment") {
-      const retrievePaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.READ);
+      const retrievePaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.RETRIEVE);
       const retrievePaymentDocsText = await retrievePaymentDocs.text();
 
       return {
         content: [{ type: "text", text: retrievePaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "retrievePaymentByMerchantOrderId") {
+      const retrievePaymentByMerchantOrderIdDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.RETRIEVE_BY_MERCHANT_ORDER_ID);
+      const retrievePaymentByMerchantOrderIdDocsText = await retrievePaymentByMerchantOrderIdDocs.text();
+
+      return {
+        content: [{ type: "text", text: retrievePaymentByMerchantOrderIdDocsText }],
+      };
+    }
+
+    if (documentation_type === "refundPayment") {
+      const refundPaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.REFUND);
+      const refundPaymentDocsText = await refundPaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: refundPaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "cancelOrRefundPayment") {
+      const cancelOrRefundPaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.CANCEL_OR_REFUND);
+      const cancelOrRefundPaymentDocsText = await cancelOrRefundPaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: cancelOrRefundPaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "cancelOrRefundWithTransactionPayment") {
+      const cancelOrRefundWithTransactionPaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.CANCEL_OR_REFUND_WITH_TRANSACTION);
+      const cancelOrRefundWithTransactionPaymentDocsText = await cancelOrRefundWithTransactionPaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: cancelOrRefundWithTransactionPaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "cancelPayment") {
+      const cancelPaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.CANCEL);
+      const cancelPaymentDocsText = await cancelPaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: cancelPaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "authorizePayment") {
+      const authorizePaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.AUTHORIZE);
+      const authorizePaymentDocsText = await authorizePaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: authorizePaymentDocsText }],
+      };
+    }
+
+    if (documentation_type === "captureAuthorizationPayment") {
+      const captureAuthorizationPaymentDocs = await fetch(DOCUMENTATION.API_REFERENCE.PAYMENT.CAPTURE_AUTHORIZATION);
+      const captureAuthorizationPaymentDocsText = await captureAuthorizationPaymentDocs.text();
+
+      return {
+        content: [{ type: "text", text: captureAuthorizationPaymentDocsText }],
       };
     }
 
