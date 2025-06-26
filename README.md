@@ -20,7 +20,11 @@ The Yuno MCP server exposes the following tools for AI agents and automation:
 | Tool Name | Description |
 |-----------|-------------|
 | `customer.create` | Create a new customer |
+| `customer.retrieve` | Retrieve a customer by ID |
+| `customer.retrieveByExternalId` | Retrieve a customer by external id (merchant_customer_id) |
+| `customer.update` | Update an existing customer by ID |
 | `checkoutSession.create` | Create a checkout session |
+| `checkoutSession.retrievePaymentMethods` | Retrieve payment methods for checkout |
 | `payments.create` | Create a payment with various workflows |
 | `payments.read` | Retrieve payment information |
 | `documentation.read` | Access Yuno API documentation and guides |

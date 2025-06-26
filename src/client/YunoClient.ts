@@ -53,7 +53,6 @@ export class YunoClient {
           method: 'POST',
           body: JSON.stringify(customer),
         });
-      
     },
 
     retrieve: async (customerId: string) => {
@@ -61,18 +60,31 @@ export class YunoClient {
         method: 'GET',
       });
     },
+
+    retrieveByExternalId: async (merchant_customer_id: string) => {
+      return this.request<YunoCustomer>(`/customers?merchant_customer_id=${encodeURIComponent(merchant_customer_id)}`, {
+        method: 'GET',
+      });
+    },
+
+    update: async (customerId: string, updateFields: Partial<YunoCustomer>) => {
+      return this.request<YunoCustomer>(`/customers/${customerId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateFields),
+      });
+    },
   };
 
   checkoutSessions = {
     create: async (checkoutSession: YunoCheckoutSession) => {
-      return this.request<YunoCheckoutSession>('/checkout-sessions', {
+      return this.request<YunoCheckoutSession>('/checkout/sessions', {
         method: 'POST',
         body: JSON.stringify(checkoutSession),
       });
     },
 
-    retrieve: async (sessionId: string) => {
-      return this.request<YunoCheckoutSession>(`/checkout-sessions/${sessionId}`, {
+    retrievePaymentMethods: async (sessionId: string) => {
+      return this.request<import('./types').YunoCheckoutPaymentMethodsResponse>(`/checkout/sessions/${sessionId}/payment-methods`, {
         method: 'GET',
       });
     },
