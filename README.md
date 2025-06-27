@@ -26,7 +26,14 @@ The Yuno MCP server exposes the following tools for AI agents and automation:
 | `checkoutSession.create` | Create a checkout session |
 | `checkoutSession.retrievePaymentMethods` | Retrieve payment methods for checkout |
 | `payments.create` | Create a payment with various workflows |
-| `payments.read` | Retrieve payment information |
+| `payments.retrieve` | Retrieve payment information |
+| `payments.retrieveByMerchantOrderId` | Retrieve payment(s) by merchant_order_id |
+| `payments.refund` | Refund a payment (full or partial) by payment and transaction id |
+| `payments.cancelOrRefund` | Cancel or refund a payment by payment id (auto-detects action) |
+| `payments.cancelOrRefundWithTransaction` | Cancel or refund a payment by payment and transaction id (auto-detects action) |
+| `payments.cancel` | Cancel a pending payment by payment and transaction id |
+| `payments.authorize` | Authorize a payment (capture: false) |
+| `payments.captureAuthorization` | Capture a previously authorized payment |
 | `documentation.read` | Access Yuno API documentation and guides |
 
 ### Payment Workflows

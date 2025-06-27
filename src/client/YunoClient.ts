@@ -91,12 +91,9 @@ export class YunoClient {
   };
 
   payments = {
-    create: async (payment: YunoPayment, idempotencyKey?: string) => {
+    create: async (payment: YunoPayment, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
-      if (idempotencyKey) {
-        headers['Idempotency-Key'] = idempotencyKey;
-      }
-
+      headers['x-idempotency-key'] = idempotencyKey;
       return this.request<YunoPayment>('/payments', {
         method: 'POST',
         headers,
@@ -107,6 +104,75 @@ export class YunoClient {
     retrieve: async (paymentId: string) => {
       return this.request<YunoPayment>(`/payments/${paymentId}`, {
         method: 'GET',
+      });
+    },
+
+    retrieveByMerchantOrderId: async (merchant_order_id: string) => {
+      return this.request<YunoPayment[]>(`/payments?merchant_order_id=${encodeURIComponent(merchant_order_id)}`, {
+        method: 'GET',
+      });
+    },
+
+    refund: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/refund`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+    },
+
+    cancelOrRefund: async (paymentId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<any>(`/payments/${paymentId}/cancel-or-refund`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+    },
+
+    cancelOrRefundWithTransaction: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel-or-refund`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+    },
+
+    cancel: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+    },
+
+    authorize: async (payment: YunoPayment, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      if (payment && payment.payment_method && payment.payment_method.detail && payment.payment_method.detail.card) {
+        payment.payment_method.detail.card.capture = false;
+      }
+      return this.request<YunoPayment>('/payments', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payment),
+      });
+    },
+
+    captureAuthorization: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/capture`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
       });
     },
   };
