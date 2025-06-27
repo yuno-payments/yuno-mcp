@@ -1,7 +1,8 @@
-import { YunoClientConfig, YunoCustomer, YunoCheckoutSession, YunoPayment } from './types';
+import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoCustomer, YunoPayment } from '../shared/types';
+import { YunoClientConfig } from './types';
 
 export class YunoClient {
-  private accountCode: string;
+  public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
   private baseUrl: string;
@@ -24,7 +25,6 @@ export class YunoClient {
 
       const headers = {
         'Content-Type': 'application/json',
-        // 'account-Code': this.accountCode,
         'public-api-key': this.publicApiKey,
         'private-secret-key': this.privateSecretKey,
       };
@@ -84,7 +84,7 @@ export class YunoClient {
     },
 
     retrievePaymentMethods: async (sessionId: string) => {
-      return this.request<import('./types').YunoCheckoutPaymentMethodsResponse>(`/checkout/sessions/${sessionId}/payment-methods`, {
+      return this.request<YunoCheckoutPaymentMethodsResponse>(`/checkout/sessions/${sessionId}/payment-methods`, {
         method: 'GET',
       });
     },
