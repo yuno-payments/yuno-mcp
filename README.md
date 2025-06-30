@@ -23,6 +23,10 @@ The Yuno MCP server exposes the following tools for AI agents and automation:
 | `customer.retrieve` | Retrieve a customer by ID |
 | `customer.retrieveByExternalId` | Retrieve a customer by external id (merchant_customer_id) |
 | `customer.update` | Update an existing customer by ID |
+| `paymentMethod.enroll` | Enroll or create payment method for a customer. |
+| `paymentMethod.retrieve` | Retrieve payment method. |
+| `paymentMethod.retrieveEnrolled` | Retrieve all enrolled payment methods for a customer. |
+| `paymentMethod.unenroll` | Unenroll payment method. |
 | `checkoutSession.create` | Create a checkout session |
 | `checkoutSession.retrievePaymentMethods` | Retrieve payment methods for checkout |
 | `payments.create` | Create a payment with various workflows |
@@ -34,6 +38,25 @@ The Yuno MCP server exposes the following tools for AI agents and automation:
 | `payments.cancel` | Cancel a pending payment by payment and transaction id |
 | `payments.authorize` | Authorize a payment (capture: false) |
 | `payments.captureAuthorization` | Capture a previously authorized payment |
+| `paymentLinks.create` | Create a new payment link |
+| `paymentLinks.retrieve` | Retrieve a payment link by ID |
+| `paymentLinks.cancel` | Cancel a payment link by ID |
+| `subscriptions.create` | Create a new subscription |
+| `subscriptions.retrieve` | Retrieve a subscription by ID |
+| `subscriptions.pause` | Pause a subscription by ID |
+| `subscriptions.resume` | Resume a subscription by ID |
+| `subscriptions.update` | Update a subscription by ID |
+| `subscriptions.cancel` | Cancel a subscription by ID |
+| `recipients.create` | Create a new recipient |
+| `recipients.retrieve` | Retrieve a recipient by ID |
+| `recipients.update` | Update a recipient by ID |
+| `recipients.delete` | Delete a recipient by ID |
+| `recipients.createOnboarding` | Create onboarding for a recipient |
+| `installmentPlans.create` | Create a new installment plan |
+| `installmentPlans.retrieve` | Retrieve an installment plan by ID |
+| `installmentPlans.retrieveAll` | Retrieve all installment plans for an account |
+| `installmentPlans.update` | Update an installment plan by ID |
+| `installmentPlans.delete` | Delete an installment plan by ID |
 | `documentation.read` | Access Yuno API documentation and guides |
 
 ### Payment Workflows

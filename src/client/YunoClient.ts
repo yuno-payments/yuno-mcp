@@ -1,4 +1,11 @@
-import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoCustomer, YunoPayment } from '../shared/types';
+import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession } from '../checkouts/types';
+import { YunoCustomer } from '../customers/types';
+import { YunoInstallmentPlan } from '../installmentPlans/types';
+import { YunoPaymentLink } from '../paymentLinks/types';
+import { YunoPaymentMethod } from '../paymentMethods/types';
+import { YunoPayment } from '../payments/types';
+import { YunoRecipient } from '../recipients/types';
+import { YunoSubscription } from '../subscriptions/types';
 import { YunoClientConfig } from './types';
 
 export class YunoClient {
@@ -71,6 +78,33 @@ export class YunoClient {
       return this.request<YunoCustomer>(`/customers/${customerId}`, {
         method: 'PATCH',
         body: JSON.stringify(updateFields),
+      });
+    },
+  };
+
+  paymentMethods = {
+    enroll: async (customerId: string, body: any, idempotencyKey: string) => {
+      const headers: Record<string, string> = {};
+      headers['x-idempotency-key'] = idempotencyKey;
+      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+    },
+    retrieve: async (customerId: string,paymentMethodId: string) => {
+      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods/${paymentMethodId}`, {
+        method: 'GET',
+      });
+    },
+    retrieveEnrolled: async (customerId: string) => {
+      return this.request<YunoPaymentMethod[]>(`/customers/${customerId}/payment-methods`, {
+        method: 'GET',
+      });
+    },
+    unenroll: async (customerId: string, paymentMethodId: string) => {
+      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods/${paymentMethodId}/unenroll`, {
+        method: 'POST',
       });
     },
   };
@@ -173,6 +207,133 @@ export class YunoClient {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
+      });
+    },
+  };
+
+  paymentLinks = {
+    create: async (paymentLink: YunoPaymentLink) => {
+      const paymentLinkWithAccount = { ...paymentLink, account_id: paymentLink.account_id || this.accountCode };
+      return this.request<YunoPaymentLink>('/payment-links', {
+        method: 'POST',
+        body: JSON.stringify(paymentLinkWithAccount),
+      });
+    },
+
+    retrieve: async (paymentLinkId: string) => {
+      return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}`, {
+        method: 'GET',
+      });
+    },
+
+    cancel: async (paymentLinkId: string, body: any) => {
+      return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+    },
+  };
+
+  subscriptions = {
+    create: async (subscription: YunoSubscription) => {
+      const subscriptionWithAccount = { ...subscription, account_id: subscription.account_id || this.accountCode };
+      return this.request<YunoSubscription>('/subscriptions', {
+        method: 'POST',
+        body: JSON.stringify(subscriptionWithAccount),
+      });
+    },
+
+    retrieve: async (subscriptionId: string) => {
+      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}`, {
+        method: 'GET',
+      });
+    },
+
+    pause: async (subscriptionId: string) => {
+      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/pause`, {
+        method: 'POST',
+      });
+    },
+
+    resume: async (subscriptionId: string) => {
+      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/resume`, {
+        method: 'POST',
+      });
+    },
+
+    update: async (subscriptionId: string, updateFields: YunoSubscription) => {
+      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateFields),
+      });
+    },
+
+    cancel: async (subscriptionId: string) => {
+      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/cancel`, {
+        method: 'POST',
+      });
+    },
+  };
+
+  recipients = {
+    create: async (recipient: YunoRecipient) => {
+      const recipientWithAccount = { ...recipient, account_id: recipient.account_id || this.accountCode };
+      return this.request<YunoRecipient>('/recipients', {
+        method: 'POST',
+        body: JSON.stringify(recipientWithAccount),
+      });
+    },
+
+    retrieve: async (recipientId: string) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+        method: 'GET',
+      });
+    },
+
+    update: async (ID: string, updateFields: YunoRecipient) => {
+      return this.request<YunoRecipient>(`/recipients/${ID}?account_id=${this.accountCode}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateFields),
+      });
+    },
+
+    delete: async (recipientId: string) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+        method: 'DELETE',
+      });
+    },
+  };
+
+  installmentPlans = {
+    create: async (plan: YunoInstallmentPlan) => {
+      return this.request<YunoInstallmentPlan>('/installments-plans', {
+        method: 'POST',
+        body: JSON.stringify(plan),
+      });
+    },
+
+    retrieve: async (planId: string) => {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+        method: 'GET',
+      });
+    },
+
+    retrieveAll: async (accountId: string) => {
+      return this.request<YunoInstallmentPlan[]>(`/installments-plans?account_id=${encodeURIComponent(accountId)}`, {
+        method: 'GET',
+      });
+    },
+
+    update: async (planId: string, updateFields: YunoInstallmentPlan) => {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateFields),
+      });
+    },
+
+    delete: async (planId: string) => {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+        method: 'DELETE',
       });
     },
   };
