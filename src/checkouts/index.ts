@@ -8,7 +8,8 @@ export const checkoutSessionCreateTool: Tool = {
   description: "Create a new checkout session in Yuno.",
   schema: checkoutSessionCreateSchema,
   handler: async (yunoClient: YunoClient, data: YunoCheckoutSession, _extra?: any) => {
-    const checkoutSession = await yunoClient.checkoutSessions.create(data);
+    const checkoutSessionWithAccount = { ...data, account_id: data.account_id || yunoClient.accountCode };
+    const checkoutSession = await yunoClient.checkoutSessions.create(checkoutSessionWithAccount);
     return { 
       content: [
         { 

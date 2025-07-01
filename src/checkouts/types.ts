@@ -13,6 +13,7 @@ export interface YunoInstallments {
 }
 
 export interface YunoCheckoutSession {
+  account_id?: string;
   amount: YunoAmount;
   customer_id?: string;
   merchant_order_id: string;
@@ -38,6 +39,7 @@ export interface YunoCheckoutPaymentMethodsResponse {
 }
 
 export const checkoutSessionCreateSchema = z.object({
+  account_id: z.string().min(36).max(64).describe("The unique identifier of the Yuno account").optional(),
   customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer"),
   merchant_order_id: z.string().min(3).max(255).describe("The unique identifier of the customer's order"),
   payment_description: z.string().min(1).max(255).describe("The description of the payment"),
