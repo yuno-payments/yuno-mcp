@@ -8,18 +8,23 @@ export type Tool = {
   handler: (yunoClient: YunoClient, data: any, _extra?: any) => Promise<any>,
 }; 
 
+export interface YunoDocument {
+  document_type: string;
+  document_number: string;
+}
+
 export interface YunoPhone {
   number: string;
   country_code: string;
 }
 
 export interface YunoAddress {
-  address_line_1: string;
+  address_line_1?: string;
   address_line_2?: string;
-  country: string;
-  state: string;
-  city: string;
-  zip_code: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  zip_code?: string;
   neighborhood?: string;
 }
 
