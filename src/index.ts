@@ -9,7 +9,7 @@ let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
 
 const server = new McpServer({
   name: "yuno-mcp",
-  version: "1.2.3",
+  version: "1.3.0",
 });
 
 async function initializeYunoClient() {
