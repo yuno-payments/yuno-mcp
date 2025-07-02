@@ -9,7 +9,7 @@ let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
 
 const server = new McpServer({
   name: "yuno-mcp",
-  version: "1.3.0",
+  version: "1.3.1",
 });
 
 async function initializeYunoClient() {
@@ -18,7 +18,6 @@ async function initializeYunoClient() {
     accountCode: process.env.YUNO_ACCOUNT_CODE as string,
     publicApiKey: (env.YUNO_PUBLIC_API_KEY as string),
     privateSecretKey: (env.YUNO_PRIVATE_SECRET_KEY as string),
-    baseUrl: (env.YUNO_BASE_URL as string),
   });
   } catch (error) {
     if (error instanceof Error) {
