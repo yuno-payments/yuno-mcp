@@ -5,7 +5,8 @@
     "yuno-mcp": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc && echo '#!/usr/bin/env node' | cat - dist/index.js > temp && mv temp dist/index.js && chmod +x dist/index.js"
+    "build": "tsc && echo '#!/usr/bin/env node' | cat - dist/index.js > temp && mv temp dist/index.js && chmod +x dist/index.js",
+    "test": "jest"
   },
   "files": [
     "dist",
@@ -17,7 +18,10 @@
     "zod": "3.24.4"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "22.15.3",
+    "jest": "^30.0.3",
+    "ts-jest": "^29.4.0",
     "typescript": "5.8.3"
   }
 }
