@@ -7,8 +7,11 @@ export const installmentPlanCreateTool: Tool = {
   method: "installmentPlans.create",
   description: "Create an installment plan in Yuno.",
   schema: installmentPlanCreateSchema,
-  handler: async (yunoClient: YunoClient, data: any, _extra?: any) => {
-    const planWithAccount = { ...data, account_id: data.account_id || yunoClient.accountCode };
+  handler: async (yunoClient: YunoClient, data: any) => {
+    const planWithAccount = {
+      ...data,
+      account_id: data.account_id || yunoClient.accountCode,
+    };
     const plan = await yunoClient.installmentPlans.create(planWithAccount);
     return {
       content: [
@@ -19,7 +22,7 @@ export const installmentPlanCreateTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const installmentPlanRetrieveTool: Tool = {
   method: "installmentPlans.retrieve",
@@ -27,7 +30,7 @@ export const installmentPlanRetrieveTool: Tool = {
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
   }),
-  handler: async (yunoClient: YunoClient, { planId }, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { planId }) => {
     const plan = await yunoClient.installmentPlans.retrieve(planId);
     return {
       content: [
@@ -38,7 +41,7 @@ export const installmentPlanRetrieveTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const installmentPlanRetrieveAllTool: Tool = {
   method: "installmentPlans.retrieveAll",
@@ -46,7 +49,7 @@ export const installmentPlanRetrieveAllTool: Tool = {
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
-  handler: async (yunoClient: YunoClient, { accountId }, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { accountId }) => {
     const plans = await yunoClient.installmentPlans.retrieveAll(accountId);
     return {
       content: [
@@ -57,13 +60,13 @@ export const installmentPlanRetrieveAllTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const installmentPlanUpdateTool: Tool = {
   method: "installmentPlans.update",
   description: "Update an installment plan in Yuno by its ID.",
   schema: installmentPlanUpdateSchema,
-  handler: async (yunoClient: YunoClient, { planId, ...updateFields }: any, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { planId, ...updateFields }: any) => {
     const plan = await yunoClient.installmentPlans.update(planId, updateFields);
     return {
       content: [
@@ -74,7 +77,7 @@ export const installmentPlanUpdateTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const installmentPlanDeleteTool: Tool = {
   method: "installmentPlans.delete",
@@ -82,7 +85,7 @@ export const installmentPlanDeleteTool: Tool = {
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),
   }),
-  handler: async (yunoClient: YunoClient, { planId }, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { planId }) => {
     const response = await yunoClient.installmentPlans.delete(planId);
     return {
       content: [
@@ -93,7 +96,7 @@ export const installmentPlanDeleteTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const installmentPlanTools: Tool[] = [
   installmentPlanCreateTool,
@@ -101,4 +104,4 @@ export const installmentPlanTools: Tool[] = [
   installmentPlanRetrieveAllTool,
   installmentPlanUpdateTool,
   installmentPlanDeleteTool,
-]; 
+];

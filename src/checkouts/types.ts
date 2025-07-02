@@ -47,13 +47,19 @@ export const checkoutSessionCreateSchema = z.object({
   country: z.string().min(2).max(2).describe("The customer's country (ISO 3166-1)"),
   amount: amountSchema.describe("Specifies the payment amount object"),
   metadata: metadataSchema,
-  installments: z.object({
-    plan_id: z.string().optional().describe("Plan Id of the installment plan created in Yuno"),
-    plan: z.array(
-      z.object({
-        installment: z.number().int().describe("The number of monthly installments"),
-        rate: z.number().describe("The rate applied to the final amount (percentage)")
-      })
-    ).optional().describe("Installments to show the customer")
-  }).optional().describe("The installment plan configuration")
+  installments: z
+    .object({
+      plan_id: z.string().optional().describe("Plan Id of the installment plan created in Yuno"),
+      plan: z
+        .array(
+          z.object({
+            installment: z.number().int().describe("The number of monthly installments"),
+            rate: z.number().describe("The rate applied to the final amount (percentage)"),
+          }),
+        )
+        .optional()
+        .describe("Installments to show the customer"),
+    })
+    .optional()
+    .describe("The installment plan configuration"),
 });

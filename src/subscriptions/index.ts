@@ -7,8 +7,11 @@ export const subscriptionCreateTool: Tool = {
   method: "subscriptions.create",
   description: "Create a subscription in Yuno.",
   schema: subscriptionCreateSchema,
-  handler: async (yunoClient: YunoClient, data: any, _extra?: any) => {
-    const subscriptionWithAccount = { ...data, account_id: data.account_id || yunoClient.accountCode };
+  handler: async (yunoClient: YunoClient, data: any) => {
+    const subscriptionWithAccount = {
+      ...data,
+      account_id: data.account_id || yunoClient.accountCode,
+    };
     const subscription = await yunoClient.subscriptions.create(subscriptionWithAccount);
     return {
       content: [
@@ -19,7 +22,7 @@ export const subscriptionCreateTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const subscriptionRetrieveTool: Tool = {
   method: "subscriptions.retrieve",
@@ -29,16 +32,16 @@ export const subscriptionRetrieveTool: Tool = {
   }),
   handler: async (yunoClient, { subscriptionId }) => {
     const subscription = await yunoClient.subscriptions.retrieve(subscriptionId);
-    return { 
+    return {
       content: [
-        { 
-          type: "text", 
-          text: `subscription response: ${JSON.stringify(subscription, null, 4)}` 
+        {
+          type: "text",
+          text: `subscription response: ${JSON.stringify(subscription, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const subscriptionPauseTool: Tool = {
   method: "subscriptions.pause",
@@ -50,14 +53,14 @@ export const subscriptionPauseTool: Tool = {
     const response = await yunoClient.subscriptions.pause(subscriptionId);
     return {
       content: [
-        { 
-          type: "text", 
+        {
+          type: "text",
           text: `pause subscription response: ${JSON.stringify(response, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const subscriptionResumeTool: Tool = {
   method: "subscriptions.resume",
@@ -69,14 +72,14 @@ export const subscriptionResumeTool: Tool = {
     const response = await yunoClient.subscriptions.resume(subscriptionId);
     return {
       content: [
-        { 
-          type: "text", 
+        {
+          type: "text",
           text: `resume subscription response: ${JSON.stringify(response, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const subscriptionUpdateTool: Tool = {
   method: "subscriptions.update",
@@ -86,14 +89,14 @@ export const subscriptionUpdateTool: Tool = {
     const subscription = await yunoClient.subscriptions.update(subscriptionId, updateFields);
     return {
       content: [
-        { 
-          type: "text", 
-          text: `subscription response: ${JSON.stringify(subscription, null, 4)}` 
+        {
+          type: "text",
+          text: `subscription response: ${JSON.stringify(subscription, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const subscriptionCancelTool: Tool = {
   method: "subscriptions.cancel",
@@ -103,16 +106,16 @@ export const subscriptionCancelTool: Tool = {
   }),
   handler: async (yunoClient: YunoClient, { subscriptionId }) => {
     const response = await yunoClient.subscriptions.cancel(subscriptionId);
-    return { 
+    return {
       content: [
-        { 
-          type: "text", 
+        {
+          type: "text",
           text: `cancel subscription response: ${JSON.stringify(response, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const subscriptionTools: Tool[] = [
   subscriptionCreateTool,
@@ -121,4 +124,4 @@ export const subscriptionTools: Tool[] = [
   subscriptionResumeTool,
   subscriptionUpdateTool,
   subscriptionCancelTool,
-]; 
+];

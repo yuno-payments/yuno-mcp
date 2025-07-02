@@ -7,19 +7,22 @@ export const checkoutSessionCreateTool: Tool = {
   method: "checkoutSession.create",
   description: "Create a new checkout session in Yuno.",
   schema: checkoutSessionCreateSchema,
-  handler: async (yunoClient: YunoClient, data: YunoCheckoutSession, _extra?: any) => {
-    const checkoutSessionWithAccount = { ...data, account_id: data.account_id || yunoClient.accountCode };
+  handler: async (yunoClient: YunoClient, data: YunoCheckoutSession) => {
+    const checkoutSessionWithAccount = {
+      ...data,
+      account_id: data.account_id || yunoClient.accountCode,
+    };
     const checkoutSession = await yunoClient.checkoutSessions.create(checkoutSessionWithAccount);
-    return { 
+    return {
       content: [
-        { 
+        {
           type: "text" as const,
           text: `checkout session response: ${JSON.stringify(checkoutSession, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
 export const checkoutSessionRetrievePaymentMethodsTool: Tool = {
   method: "checkoutSession.retrievePaymentMethods",
@@ -27,20 +30,17 @@ export const checkoutSessionRetrievePaymentMethodsTool: Tool = {
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
-  handler: async (yunoClient: YunoClient, { sessionId }: any, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { sessionId }: any) => {
     const paymentMethodsResponse = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
     return {
       content: [
-        { 
+        {
           type: "text" as const,
           text: `payment methods response: ${JSON.stringify(paymentMethodsResponse, null, 4)}`,
         },
       ],
     };
   },
-}; 
+};
 
-export const checkoutTools: Tool[] = [
-  checkoutSessionCreateTool,
-  checkoutSessionRetrievePaymentMethodsTool,
-]; 
+export const checkoutTools: Tool[] = [checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool];
