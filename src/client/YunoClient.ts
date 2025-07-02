@@ -6,7 +6,24 @@ import { YunoPaymentMethod } from '../paymentMethods/types';
 import { YunoPayment } from '../payments/types';
 import { YunoRecipient } from '../recipients/types';
 import { YunoSubscription } from '../subscriptions/types';
-import { YunoClientConfig } from './types';
+import { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from './types';
+
+const apiKeyPrefixToEnvironmentSuffix = {
+  dev: "-dev",
+  staging: "-staging",
+  sandbox: "-sandbox",
+  prod: "",
+} as ApiKeyPrefixToEnvironmentSuffix;
+
+function generateBaseUrlApi(publicApiKey: string) {
+  const [apiKeyPrefix] = publicApiKey.split("_");
+  const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[
+    apiKeyPrefix as ApiKeyPrefix
+  ] as EnvironmentSuffix;
+  const baseURL = `https://api${environmentSuffix}.y.uno/v1`;
+
+  return baseURL;
+}
 
 export class YunoClient {
   public accountCode: string;
@@ -18,7 +35,7 @@ export class YunoClient {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
-    this.baseUrl = config.baseUrl || 'https://api.y.uno/v1';
+    this.baseUrl = generateBaseUrlApi(this.publicApiKey);
   }
 
   static async initialize(config: YunoClientConfig): Promise<YunoClient> {
