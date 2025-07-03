@@ -20,7 +20,7 @@ export interface YunoSubscription {
   };
   billing_cycles?: {
     total: number;
-  }; 
+  };
   payment_method?: {
     type?: string;
     vaulted_token?: string;
@@ -38,11 +38,11 @@ export interface YunoSubscription {
   trial_period?: {
     billing_cycles?: string;
     amount?: YunoAmount;
-  }
+  };
   availability?: {
     start_at?: string;
     finish_at?: string;
-  },
+  };
   metadata?: YunoMetadata[];
 }
 
@@ -54,20 +54,29 @@ export const subscriptionCreateSchema = z.object({
   country: z.string().min(2).max(2).describe("Country (ISO 3166-1)"),
   amount: amountSchema,
   additional_data: z.any().optional().describe("Additional data for the subscription"),
-  frequency: z.object({
-    type: z.enum(["DAY", "WEEK", "MONTH"]),
-    value: z.number(),
-  }).optional().describe("Frequency of the subscription"),
-  billing_cycles: z.object({
-    total: z.number(),
-  }).optional().describe("Total billing cycles"),
+  frequency: z
+    .object({
+      type: z.enum(["DAY", "WEEK", "MONTH"]),
+      value: z.number(),
+    })
+    .optional()
+    .describe("Frequency of the subscription"),
+  billing_cycles: z
+    .object({
+      total: z.number(),
+    })
+    .optional()
+    .describe("Total billing cycles"),
   customer_payer: z.object({
     id: z.string().describe("The unique identifier of the customer"),
   }),
-  payment_method: z.object({
-    type: z.string(),
-    vaulted_token: z.string().optional(),
-  }).optional().describe("Payment method for the subscription"),
+  payment_method: z
+    .object({
+      type: z.string(),
+      vaulted_token: z.string().optional(),
+    })
+    .optional()
+    .describe("Payment method for the subscription"),
   trial_period: z.any().optional().describe("Trial period for the subscription"),
   availability: z.any().optional().describe("Availability for the subscription"),
   metadata: metadataSchema,
@@ -82,35 +91,51 @@ export const subscriptionUpdateSchema = z.object({
   description: z.string().optional(),
   merchant_reference: z.string().optional(),
   country: z.string().optional(),
-  amount: z.object({
-    currency: z.string(),
-    value: z.number(),
-  }).optional(),
-  frequency: z.object({
-    type: z.enum(["DAY", "WEEK", "MONTH"]),
-    value: z.number(),
-  }).optional(),
-  billing_cycles: z.object({
-    total: z.number(),
-  }).optional(),
-  customer_payer: z.object({
-    id: z.string(),
-  }).optional(),
-  payment_method: z.object({
-    type: z.string(),
-    vaulted_token: z.string(),
-    card: z.object({
-      verify: z.boolean().optional(),
-      card_data: cardDataSchema.optional(),
-    }).optional(),
-  }).optional(),
-  availability: z.object({
-    start_at: z.string().optional(),
-    finish_at: z.string().optional(),
-  }).optional(),
-  retries: z.object({
-    retry_on_decline: z.boolean().optional(),
-    amount: z.number().optional(),
-  }).optional(),
+  amount: z
+    .object({
+      currency: z.string(),
+      value: z.number(),
+    })
+    .optional(),
+  frequency: z
+    .object({
+      type: z.enum(["DAY", "WEEK", "MONTH"]),
+      value: z.number(),
+    })
+    .optional(),
+  billing_cycles: z
+    .object({
+      total: z.number(),
+    })
+    .optional(),
+  customer_payer: z
+    .object({
+      id: z.string(),
+    })
+    .optional(),
+  payment_method: z
+    .object({
+      type: z.string(),
+      vaulted_token: z.string(),
+      card: z
+        .object({
+          verify: z.boolean().optional(),
+          card_data: cardDataSchema.optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+  availability: z
+    .object({
+      start_at: z.string().optional(),
+      finish_at: z.string().optional(),
+    })
+    .optional(),
+  retries: z
+    .object({
+      retry_on_decline: z.boolean().optional(),
+      amount: z.number().optional(),
+    })
+    .optional(),
   metadata: metadataSchema,
 });

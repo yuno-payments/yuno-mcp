@@ -7,8 +7,11 @@ export const recipientCreateTool: Tool = {
   method: "recipients.create",
   description: "Create a recipient in Yuno.",
   schema: recipientCreateSchema,
-  handler: async (yunoClient: YunoClient, data: any, _extra?: any) => {
-    const recipientWithAccount = { ...data, account_id: data.account_id || yunoClient.accountCode };
+  handler: async (yunoClient: YunoClient, data: any) => {
+    const recipientWithAccount = {
+      ...data,
+      account_id: data.account_id || yunoClient.accountCode,
+    };
     const recipient = await yunoClient.recipients.create(recipientWithAccount);
     return {
       content: [
@@ -19,7 +22,7 @@ export const recipientCreateTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const recipientRetrieveTool: Tool = {
   method: "recipients.retrieve",
@@ -27,7 +30,7 @@ export const recipientRetrieveTool: Tool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
-  handler: async (yunoClient: YunoClient, { recipientId }, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { recipientId }) => {
     const recipient = await yunoClient.recipients.retrieve(recipientId);
     return {
       content: [
@@ -38,13 +41,13 @@ export const recipientRetrieveTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const recipientUpdateTool: Tool = {
   method: "recipients.update",
   description: "Update a recipient in Yuno by its ID.",
   schema: recipientUpdateSchema,
-  handler: async (yunoClient: YunoClient, { recipientId, ...updateFields }: any , _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { recipientId, ...updateFields }: any) => {
     const recipient = await yunoClient.recipients.update(recipientId, updateFields);
     return {
       content: [
@@ -55,7 +58,7 @@ export const recipientUpdateTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const recipientDeleteTool: Tool = {
   method: "recipients.delete",
@@ -63,7 +66,7 @@ export const recipientDeleteTool: Tool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),
   }),
-  handler: async (yunoClient: YunoClient, { recipientId }, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { recipientId }) => {
     const response = await yunoClient.recipients.delete(recipientId);
     return {
       content: [
@@ -74,11 +77,6 @@ export const recipientDeleteTool: Tool = {
       ],
     };
   },
-}; 
+};
 
-export const recipientTools: Tool[] = [
-  recipientCreateTool,
-  recipientRetrieveTool,
-  recipientUpdateTool,
-  recipientDeleteTool,
-]; 
+export const recipientTools: Tool[] = [recipientCreateTool, recipientRetrieveTool, recipientUpdateTool, recipientDeleteTool];

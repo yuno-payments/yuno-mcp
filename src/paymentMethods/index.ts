@@ -10,10 +10,13 @@ export const paymentMethodEnrollTool: Tool = {
   schema: z.object({
     body: paymentMethodEnrollSchema,
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods")
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
   }),
-  handler: async (yunoClient: YunoClient, { customerId, body, idempotency_key }: any, _extra?: any) => {
-    const enrollmentWithAccount = { ...body, account_id: body.account_id || yunoClient.accountCode };
+  handler: async (yunoClient: YunoClient, { customerId, body, idempotency_key }: any) => {
+    const enrollmentWithAccount = {
+      ...body,
+      account_id: body.account_id || yunoClient.accountCode,
+    };
     const idempotencyKey = idempotency_key || randomUUID();
     const response = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, idempotencyKey);
     return {
@@ -25,7 +28,7 @@ export const paymentMethodEnrollTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const paymentMethodRetrieveTool: Tool = {
   method: "paymentMethod.retrieve",
@@ -34,7 +37,7 @@ export const paymentMethodRetrieveTool: Tool = {
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any) => {
     const response = await yunoClient.paymentMethods.retrieve(customer_id, payment_method_id);
     return {
       content: [
@@ -45,7 +48,7 @@ export const paymentMethodRetrieveTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const paymentMethodRetrieveEnrolledTool: Tool = {
   method: "paymentMethod.retrieveEnrolled",
@@ -53,7 +56,7 @@ export const paymentMethodRetrieveEnrolledTool: Tool = {
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id }: any, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id }: any) => {
     const response = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
     return {
       content: [
@@ -64,7 +67,7 @@ export const paymentMethodRetrieveEnrolledTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const paymentMethodUnenrollTool: Tool = {
   method: "paymentMethod.unenroll",
@@ -73,7 +76,7 @@ export const paymentMethodUnenrollTool: Tool = {
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any, _extra?: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any) => {
     const response = await yunoClient.paymentMethods.unenroll(customer_id, payment_method_id);
     return {
       content: [
@@ -84,11 +87,11 @@ export const paymentMethodUnenrollTool: Tool = {
       ],
     };
   },
-}; 
+};
 
 export const paymentMethodTools: Tool[] = [
   paymentMethodEnrollTool,
   paymentMethodRetrieveTool,
   paymentMethodRetrieveEnrolledTool,
-  paymentMethodUnenrollTool
-]; 
+  paymentMethodUnenrollTool,
+];

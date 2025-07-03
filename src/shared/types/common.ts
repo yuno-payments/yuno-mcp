@@ -2,11 +2,11 @@ import { z } from "zod";
 import { YunoClient } from "../../client";
 
 export type Tool = {
-  method: string,
-  description: string,
-  schema: z.ZodObject<any>,
-  handler: (yunoClient: YunoClient, data: any, _extra?: any) => Promise<any>,
-}; 
+  method: string;
+  description: string;
+  schema: z.ZodObject<any>;
+  handler: (yunoClient: YunoClient, data: any, _extra?: any) => Promise<any>;
+};
 
 export interface YunoDocument {
   document_type: string;

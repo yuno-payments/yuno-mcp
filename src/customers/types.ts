@@ -6,7 +6,7 @@ export interface YunoCustomer {
   merchant_customer_id: string;
   first_name?: string;
   last_name?: string;
-  gender?: 'M' | 'F' | 'NB';
+  gender?: "M" | "F" | "NB";
   date_of_birth?: string;
   email?: string;
   document?: YunoDocument;
@@ -32,7 +32,7 @@ export const customerCreateSchema = z.object({
   billing_address: addressSchema,
   shipping_address: addressSchema,
   metadata: metadataSchema,
-})
+});
 
 export const customerUpdateSchema = z.object({
   customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to update (MIN 36, MAX 64 characters)"),
@@ -49,4 +49,4 @@ export const customerUpdateSchema = z.object({
   shipping_address: addressSchema,
   metadata: metadataSchema,
   merchant_customer_created_at: z.string().optional(),
-})
+});

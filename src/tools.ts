@@ -16,5 +16,5 @@ export const tools: Tool[] = [
   ...paymentLinkTools,
   ...subscriptionTools,
   ...recipientTools,
-  ...installmentPlanTools
+  ...installmentPlanTools,
 ];

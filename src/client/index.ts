@@ -1,2 +1,2 @@
-import { YunoClient } from './YunoClient';
+import { YunoClient } from "./YunoClient";
 export { YunoClient };
