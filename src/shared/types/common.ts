@@ -38,7 +38,6 @@ export interface YunoAmount {
   value: number;
 }
 
-// Interfaces para tarjetas
 export interface YunoCard {
   number: string;
   expiration_month: number;

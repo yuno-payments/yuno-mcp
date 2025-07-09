@@ -1,6 +1,6 @@
 import z from "zod";
-import { YunoAmount, YunoMetadata, YunoCard, YunoCardData, YunoBrowserInfo } from "../shared/types/common";
-import { amountSchema, metadataSchema, cardDataSchema, browserInfoSchema } from "../shared/types";
+import { YunoAmount, YunoMetadata, YunoCard, YunoCardData, YunoBrowserInfo, YunoDocument, YunoPhone, YunoAddress } from "../shared/types/common";
+import { amountSchema, metadataSchema, cardDataSchema, browserInfoSchema, documentSchema, phoneSchema, addressSchema } from "../shared/types";
 
 export interface YunoInstallmentsPlan {
   installment: number;
@@ -40,13 +40,23 @@ export interface YunoCheckoutPaymentMethodsResponse {
 
 export interface YunoOttCustomer {
   browser_info: YunoBrowserInfo;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  gender?: string;
+  date_of_birth?: string;
+  document?: YunoDocument;
+  phone?: YunoPhone;
+  billing_address?: YunoAddress;
+  shipping_address?: YunoAddress;
 }
 
 export interface YunoOttPaymentMethod {
   type: string;
   vault_on_success: boolean;
-  card: YunoCard;
+  card?: YunoCard;
   customer: YunoOttCustomer;
+  vaulted_token?: string | null;
 }
 
 export interface YunoThreeDSecure {
@@ -81,7 +91,7 @@ export interface YunoOttResponse {
   vaulted_token?: string | null;
   vault_on_success: boolean;
   type: string;
-  card_data: YunoCardData;
+  card_data?: YunoCardData;
   customer: YunoOttResponseCustomer;
   installment?: any | null;
   country: string;
@@ -114,20 +124,31 @@ export const checkoutSessionCreateSchema = z.object({
     .describe("The installment plan configuration"),
 });
 
-// Schema para crear OTT - usando schemas compartidos
 export const ottCreateSchema = z.object({
   sessionId: z.string().describe("The unique identifier of the checkout session"),
   payment_method: z.object({
-    type: z.string().describe("Payment method type (e.g., 'CARD')"),
+    type: z.string().describe("Payment method type (e.g., 'CARD', 'NEQUI', etc.)"),
     vault_on_success: z.boolean().describe("Whether to vault the payment method on success"),
-    card: cardDataSchema.extend({
-      expiration_year: z.number().int().min(20).max(99).describe("Card expiration year (YY format)"),
-      security_code: z.string().describe("Card security code (CVV)"),
-      holder_name: z.string().describe("Cardholder name"),
-    }),
+    card: cardDataSchema
+      .extend({
+        expiration_year: z.number().int().min(20).max(99).describe("Card expiration year (YY format)"),
+        security_code: z.string().describe("Card security code (CVV)"),
+        holder_name: z.string().describe("Cardholder name"),
+      })
+      .optional(),
     customer: z.object({
       browser_info: browserInfoSchema,
+      first_name: z.string().optional(),
+      last_name: z.string().optional(),
+      email: z.string().email().optional(),
+      gender: z.string().optional(),
+      date_of_birth: z.string().optional(),
+      document: documentSchema.optional(),
+      phone: phoneSchema.optional(),
+      billing_address: addressSchema.optional(),
+      shipping_address: addressSchema.optional(),
     }),
+    vaulted_token: z.string().optional().nullable(),
   }),
   three_d_secure: z.object({
     three_d_secure_setup_id: z.string().optional().nullable().describe("3DS setup ID"),
