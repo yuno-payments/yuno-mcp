@@ -19,49 +19,48 @@ The Yuno MCP server exposes the following tools for AI agents and automation:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `customer.create` | Create a new customer |
-| `customer.retrieve` | Retrieve a customer by ID |
-| `customer.retrieveByExternalId` | Retrieve a customer by external id (merchant_customer_id) |
-| `customer.update` | Update an existing customer by ID |
-| `paymentMethod.enroll` | Enroll or create payment method for a customer. |
-| `paymentMethod.retrieve` | Retrieve payment method. |
-| `paymentMethod.retrieveEnrolled` | Retrieve all enrolled payment methods for a customer. |
-| `paymentMethod.unenroll` | Unenroll payment method. |
-| `checkoutSession.create` | Create a checkout session |
-| `checkoutSession.retrievePaymentMethods` | Retrieve payment methods for checkout |
-| `payments.create` | Create a payment with various workflows |
-| `payments.retrieve` | Retrieve payment information |
-| `payments.retrieveByMerchantOrderId` | Retrieve payment(s) by merchant_order_id |
-| `payments.refund` | Refund a payment (full or partial) by payment and transaction id |
-| `payments.cancelOrRefund` | Cancel or refund a payment by payment id (auto-detects action) |
-| `payments.cancelOrRefundWithTransaction` | Cancel or refund a payment by payment and transaction id (auto-detects action) |
-| `payments.cancel` | Cancel a pending payment by payment and transaction id |
-| `payments.authorize` | Authorize a payment (capture: false) |
-| `payments.captureAuthorization` | Capture a previously authorized payment |
-| `paymentLinks.create` | Create a new payment link |
-| `paymentLinks.retrieve` | Retrieve a payment link by ID |
-| `paymentLinks.cancel` | Cancel a payment link by ID |
-| `subscriptions.create` | Create a new subscription |
-| `subscriptions.retrieve` | Retrieve a subscription by ID |
-| `subscriptions.pause` | Pause a subscription by ID |
-| `subscriptions.resume` | Resume a subscription by ID |
-| `subscriptions.update` | Update a subscription by ID |
-| `subscriptions.cancel` | Cancel a subscription by ID |
-| `recipients.create` | Create a new recipient |
-| `recipients.retrieve` | Retrieve a recipient by ID |
-| `recipients.update` | Update a recipient by ID |
-| `recipients.delete` | Delete a recipient by ID |
-| `recipients.createOnboarding` | Create onboarding for a recipient |
-| `installmentPlans.create` | Create a new installment plan |
-| `installmentPlans.retrieve` | Retrieve an installment plan by ID |
-| `installmentPlans.retrieveAll` | Retrieve all installment plans for an account |
-| `installmentPlans.update` | Update an installment plan by ID |
-| `installmentPlans.delete` | Delete an installment plan by ID |
-| `documentation.read` | Access Yuno API documentation and guides |
+| `customerCreate` | Create a new customer |
+| `customerRetrieve` | Retrieve a customer by ID |
+| `customerRetrieveByExternalId` | Retrieve a customer by external id (merchant_customer_id) |
+| `customerUpdate` | Update an existing customer by ID |
+| `paymentMethodEnroll` | Enroll or create payment method for a customer. |
+| `paymentMethodRetrieve` | Retrieve payment method. |
+| `paymentMethodRetrieveEnrolled` | Retrieve all enrolled payment methods for a customer. |
+| `paymentMethodUnenroll` | Unenroll payment method. |
+| `checkoutSessionCreate` | Create a checkout session |
+| `checkoutSessionRetrievePaymentMethods` | Retrieve payment methods for checkout |
+| `paymentCreate` | Create a payment with various workflows |
+| `paymentRetrieve` | Retrieve payment information |
+| `paymentRetrieveByMerchantOrderId` | Retrieve payment(s) by merchant_order_id |
+| `paymentRefund` | Refund a payment (full or partial) by payment and transaction id |
+| `paymentCancelOrRefund` | Cancel or refund a payment by payment id (auto-detects action) |
+| `paymentCancelOrRefundWithTransaction` | Cancel or refund a payment by payment and transaction id (auto-detects action) |
+| `paymentCancel` | Cancel a pending payment by payment and transaction id |
+| `paymentAuthorize` | Authorize a payment (capture: false) |
+| `paymentCaptureAuthorization` | Capture a previously authorized payment |
+| `paymentLinkCreate` | Create a new payment link |
+| `paymentLinkRetrieve` | Retrieve a payment link by ID |
+| `paymentLinkCancel` | Cancel a payment link by ID |
+| `subscriptionCreate` | Create a new subscription |
+| `subscriptionRetrieve` | Retrieve a subscription by ID |
+| `subscriptionPause` | Pause a subscription by ID |
+| `subscriptionResume` | Resume a subscription by ID |
+| `subscriptionUpdate` | Update a subscription by ID |
+| `subscriptionCancel` | Cancel a subscription by ID |
+| `recipientCreate` | Create a new recipient |
+| `recipientRetrieve` | Retrieve a recipient by ID |
+| `recipientUpdate` | Update a recipient by ID |
+| `recipientDelete` | Delete a recipient by ID |
+| `installmentPlanCreate` | Create a new installment plan |
+| `installmentPlanRetrieve` | Retrieve an installment plan by ID |
+| `installmentPlanRetrieveAll` | Retrieve all installment plans for an account |
+| `installmentPlanUpdate` | Update an installment plan by ID |
+| `installmentPlanDelete` | Delete an installment plan by ID |
+| `documentationRead` | Access Yuno API documentation and guides |
 
 ### Payment Workflows
 
-The `payments.create` tool supports three workflow types:
+The `paymentsCreate` tool supports three workflow types:
 - **`DIRECT`** - Direct payment processing
 - **`REDIRECT`** - Redirect-based payment flow
 - **`SDK_CHECKOUT`** - Requires `checkout_session_id` and `ott` (for web, android, and ios payments)

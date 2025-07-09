@@ -4,7 +4,7 @@ import { Tool } from "../shared/types/common";
 import { subscriptionCreateSchema, subscriptionUpdateSchema } from "./types";
 
 export const subscriptionCreateTool: Tool = {
-  method: "subscriptions.create",
+  method: "subscriptionCreate",
   description: "Create a subscription in Yuno.",
   schema: subscriptionCreateSchema,
   handler: async (yunoClient: YunoClient, data: any) => {
@@ -25,7 +25,7 @@ export const subscriptionCreateTool: Tool = {
 };
 
 export const subscriptionRetrieveTool: Tool = {
-  method: "subscriptions.retrieve",
+  method: "subscriptionRetrieve",
   description: "Retrieve a subscription in Yuno by its ID.",
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to retrieve"),
@@ -44,7 +44,7 @@ export const subscriptionRetrieveTool: Tool = {
 };
 
 export const subscriptionPauseTool: Tool = {
-  method: "subscriptions.pause",
+  method: "subscriptionPause",
   description: "Pause a subscription in Yuno by its ID.",
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to pause"),
@@ -63,7 +63,7 @@ export const subscriptionPauseTool: Tool = {
 };
 
 export const subscriptionResumeTool: Tool = {
-  method: "subscriptions.resume",
+  method: "subscriptionResume",
   description: "Resume a subscription in Yuno by its ID.",
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to resume"),
@@ -82,7 +82,7 @@ export const subscriptionResumeTool: Tool = {
 };
 
 export const subscriptionUpdateTool: Tool = {
-  method: "subscriptions.update",
+  method: "subscriptionUpdate",
   description: "Update a subscription in Yuno by its ID.",
   schema: subscriptionUpdateSchema,
   handler: async (yunoClient, { subscriptionId, ...updateFields }) => {
@@ -99,7 +99,7 @@ export const subscriptionUpdateTool: Tool = {
 };
 
 export const subscriptionCancelTool: Tool = {
-  method: "subscriptions.cancel",
+  method: "subscriptionCancel",
   description: "Cancel a subscription in Yuno by its ID.",
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to cancel"),

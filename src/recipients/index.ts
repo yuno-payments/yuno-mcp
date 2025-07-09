@@ -4,7 +4,7 @@ import { Tool } from "../shared/types/common";
 import { recipientCreateSchema, recipientUpdateSchema } from "./types";
 
 export const recipientCreateTool: Tool = {
-  method: "recipients.create",
+  method: "recipientCreate",
   description: "Create a recipient in Yuno.",
   schema: recipientCreateSchema,
   handler: async (yunoClient: YunoClient, data: any) => {
@@ -25,7 +25,7 @@ export const recipientCreateTool: Tool = {
 };
 
 export const recipientRetrieveTool: Tool = {
-  method: "recipients.retrieve",
+  method: "recipientRetrieve",
   description: "Retrieve a recipient in Yuno by its ID.",
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
@@ -44,7 +44,7 @@ export const recipientRetrieveTool: Tool = {
 };
 
 export const recipientUpdateTool: Tool = {
-  method: "recipients.update",
+  method: "recipientUpdate",
   description: "Update a recipient in Yuno by its ID.",
   schema: recipientUpdateSchema,
   handler: async (yunoClient: YunoClient, { recipientId, ...updateFields }: any) => {
@@ -61,7 +61,7 @@ export const recipientUpdateTool: Tool = {
 };
 
 export const recipientDeleteTool: Tool = {
-  method: "recipients.delete",
+  method: "recipientDelete",
   description: "Delete a recipient in Yuno by its ID.",
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),

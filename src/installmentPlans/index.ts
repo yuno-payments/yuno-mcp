@@ -4,7 +4,7 @@ import { Tool } from "../shared/types/common";
 import { installmentPlanCreateSchema, installmentPlanUpdateSchema } from "./types";
 
 export const installmentPlanCreateTool: Tool = {
-  method: "installmentPlans.create",
+  method: "installmentPlanCreate",
   description: "Create an installment plan in Yuno.",
   schema: installmentPlanCreateSchema,
   handler: async (yunoClient: YunoClient, data: any) => {
@@ -25,7 +25,7 @@ export const installmentPlanCreateTool: Tool = {
 };
 
 export const installmentPlanRetrieveTool: Tool = {
-  method: "installmentPlans.retrieve",
+  method: "installmentPlanRetrieve",
   description: "Retrieve an installment plan in Yuno by its ID.",
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
@@ -44,7 +44,7 @@ export const installmentPlanRetrieveTool: Tool = {
 };
 
 export const installmentPlanRetrieveAllTool: Tool = {
-  method: "installmentPlans.retrieveAll",
+  method: "installmentPlanRetrieveAll",
   description: "Retrieve all installment plans in Yuno for an account.",
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
@@ -63,7 +63,7 @@ export const installmentPlanRetrieveAllTool: Tool = {
 };
 
 export const installmentPlanUpdateTool: Tool = {
-  method: "installmentPlans.update",
+  method: "installmentPlanUpdate",
   description: "Update an installment plan in Yuno by its ID.",
   schema: installmentPlanUpdateSchema,
   handler: async (yunoClient: YunoClient, { planId, ...updateFields }: any) => {
@@ -80,7 +80,7 @@ export const installmentPlanUpdateTool: Tool = {
 };
 
 export const installmentPlanDeleteTool: Tool = {
-  method: "installmentPlans.delete",
+  method: "installmentPlanDelete",
   description: "Delete an installment plan in Yuno by its ID.",
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),

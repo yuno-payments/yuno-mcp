@@ -3,7 +3,7 @@ import { Tool } from "../shared/types/common";
 import { paymentLinkCancelSchema, paymentLinkCreateSchema } from "./types";
 
 export const paymentLinkCreateTool: Tool = {
-  method: "paymentLinks.create",
+  method: "paymentLinkCreate",
   description: "Create a payment link in Yuno.",
   schema: paymentLinkCreateSchema,
   handler: async (yunoClient, data) => {
@@ -24,7 +24,7 @@ export const paymentLinkCreateTool: Tool = {
 };
 
 export const paymentLinkRetrieveTool: Tool = {
-  method: "paymentLinks.retrieve",
+  method: "paymentLinkRetrieve",
   description: "Retrieve a payment link in Yuno by its ID.",
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
@@ -43,7 +43,7 @@ export const paymentLinkRetrieveTool: Tool = {
 };
 
 export const paymentLinkCancelTool: Tool = {
-  method: "paymentLinks.cancel",
+  method: "paymentLinkCancel",
   description: "Cancel a payment link in Yuno by its ID.",
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to cancel"),

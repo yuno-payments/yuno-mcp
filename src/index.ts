@@ -155,7 +155,7 @@ const DOCUMENTATION = {
 };
 
 server.tool(
-  "documentation.read",
+  "documentationRead",
   {
     documentation_type: z.enum([
       "createCustomer",
