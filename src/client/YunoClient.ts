@@ -1,4 +1,4 @@
-import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession } from "../checkouts/types";
+import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../checkouts/types";
 import { YunoCustomer } from "../customers/types";
 import { YunoInstallmentPlan } from "../installmentPlans/types";
 import { YunoPaymentLink } from "../paymentLinks/types";
@@ -134,6 +134,13 @@ export class YunoClient {
     retrievePaymentMethods: async (sessionId: string) => {
       return this.request<YunoCheckoutPaymentMethodsResponse>(`/checkout/sessions/${sessionId}/payment-methods`, {
         method: "GET",
+      });
+    },
+
+    createOtt: async (sessionId: string, ottRequest: YunoOttRequest) => {
+      return this.request<YunoOttResponse>(`/checkout/sessions/${sessionId}/token`, {
+        method: "POST",
+        body: JSON.stringify(ottRequest),
       });
     },
   };
