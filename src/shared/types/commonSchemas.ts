@@ -34,7 +34,22 @@ export const cardDataSchema = z.object({
   expiration_year: z.number().min(1).max(9999),
   security_code: z.string().min(3).max(4).optional(),
   holder_name: z.string().min(3).max(26).optional(),
-  type: z.string().optional(),
+  type: z.string().optional().nullable(),
+  brand: z.string().optional(),
+});
+
+export const browserInfoSchema = z.object({
+  browser_time_difference: z.string().describe("Browser time difference"),
+  color_depth: z.string().describe("Screen color depth"),
+  java_enabled: z.boolean().describe("Whether Java is enabled"),
+  screen_width: z.string().describe("Screen width"),
+  screen_height: z.string().describe("Screen height"),
+  user_agent: z.string().describe("Browser user agent"),
+  language: z.string().describe("Browser language"),
+  javascript_enabled: z.boolean().describe("Whether JavaScript is enabled"),
+  accept_browser: z.string().describe("Browser accept header"),
+  accept_content: z.string().describe("Content accept header"),
+  accept_header: z.string().describe("Accept header"),
 });
 
 export const amountSchema = z.object({

@@ -37,3 +37,40 @@ export interface YunoAmount {
   currency: string;
   value: number;
 }
+
+export interface YunoCard {
+  number: string;
+  expiration_month: number;
+  expiration_year: number;
+  security_code?: string;
+  holder_name?: string;
+  type?: string | null;
+  brand?: string;
+}
+
+export interface YunoCardData {
+  holder_name: string;
+  iin: string;
+  lfd: string;
+  number_length: number;
+  security_code_length: number;
+  brand: string;
+  type: string;
+  category: string;
+  issuer_name: string;
+  issuer_code?: string | null;
+}
+
+export interface YunoBrowserInfo {
+  browser_time_difference: string;
+  color_depth: string;
+  java_enabled: boolean;
+  screen_width: string;
+  screen_height: string;
+  user_agent: string;
+  language: string;
+  javascript_enabled: boolean;
+  accept_browser: string;
+  accept_content: string;
+  accept_header: string;
+}
