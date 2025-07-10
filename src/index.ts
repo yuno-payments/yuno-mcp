@@ -62,6 +62,7 @@ const DOCUMENTATION = {
     CHECKOUT_SESSION: {
       CREATE: "https://docs.y.uno/reference/create-checkout-session.md",
       RETRIEVE_PAYMENT_METHODS: "https://docs.y.uno/reference/retrieve-payment-methods-for-checkout.md",
+      CREATE_OTT: "https://docs.y.uno/docs/yuno-testing-gateway.md",
     },
     PAYMENT: {
       CREATE: "https://docs.y.uno/reference/create-payment.md",
@@ -168,6 +169,7 @@ server.tool(
       "unenrollPaymentMethod",
       "createCheckoutSession",
       "retrievePaymentMethodsForCheckoutSession",
+      "createOttForCheckoutSession",
       "createPayment",
       "retrievePayment",
       "retrievePaymentByMerchantOrderId",
@@ -288,6 +290,19 @@ server.tool(
             {
               type: "text",
               text: retrievePaymentMethodsForCheckoutSessionDocsText,
+            },
+          ],
+        };
+      }
+
+      if (documentation_type === "createOttForCheckoutSession") {
+        const createOttForCheckoutSessionDocs = await fetch(DOCUMENTATION.API_REFERENCE.CHECKOUT_SESSION.CREATE_OTT);
+        const createOttForCheckoutSessionDocsText = await createOttForCheckoutSessionDocs.text();
+        return {
+          content: [
+            {
+              type: "text",
+              text: createOttForCheckoutSessionDocsText,
             },
           ],
         };
