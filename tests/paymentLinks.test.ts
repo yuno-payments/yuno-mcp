@@ -1,3 +1,4 @@
+import { expect, it, describe, rstest } from '@rstest/core';
 import { paymentLinkCreateTool, paymentLinkRetrieveTool, paymentLinkCancelTool } from "../src/paymentLinks";
 import { paymentLinkCreateSchema, paymentLinkCancelSchema } from "../src/paymentLinks/types";
 import z from "zod";
@@ -7,7 +8,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
       },
     };
     const input = {
@@ -57,7 +58,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
       },
     };
     const input = {
@@ -87,7 +88,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
       },
     };
     const input = {
@@ -115,7 +116,7 @@ describe("paymentLinkRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        retrieve: jest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
       },
     };
     const input = { paymentLinkId: "plink_123" };
@@ -139,7 +140,7 @@ describe("paymentLinkCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        cancel: jest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
       },
     };
     const input = { paymentLinkId: "plink_123", body: { reason: "REQUESTED_BY_CUSTOMER" } };
