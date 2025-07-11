@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 import { paymentCancelSchema, paymentCaptureAuthorizationSchema, paymentCreateSchema, paymentRefundSchema } from "./types";
 
 export const paymentCreateTool: Tool = {
-  method: "payments.create",
+  method: "paymentCreate",
   description: "Create a new payment in Yuno.",
   schema: paymentCreateSchema,
   handler: async (yunoClient: YunoClient, { payment, idempotency_key }: any) => {
@@ -27,7 +27,7 @@ export const paymentCreateTool: Tool = {
 };
 
 export const paymentRetrieveTool: Tool = {
-  method: "payments.retrieve",
+  method: "paymentRetrieve",
   description: "Retrieve a payment by ID in Yuno.",
   schema: z.object({
     payment_id: z.string().describe("The unique identifier of the payment"),
@@ -46,7 +46,7 @@ export const paymentRetrieveTool: Tool = {
 };
 
 export const paymentRetrieveByMerchantOrderIdTool: Tool = {
-  method: "payments.retrieveByMerchantOrderId",
+  method: "paymentRetrieveByMerchantOrderId",
   description: "Retrieve payments by merchant order ID in Yuno.",
   schema: z.object({
     merchant_order_id: z.string().describe("The unique identifier of the order for the payment (merchant_order_id)"),
@@ -65,7 +65,7 @@ export const paymentRetrieveByMerchantOrderIdTool: Tool = {
 };
 
 export const paymentRefundTool: Tool = {
-  method: "payments.refund",
+  method: "paymentRefund",
   description: "Refund a payment in Yuno.",
   schema: z.object({
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
@@ -88,7 +88,7 @@ export const paymentRefundTool: Tool = {
 };
 
 export const paymentCancelOrRefundTool: Tool = {
-  method: "payments.cancelOrRefund",
+  method: "paymentCancelOrRefund",
   description: "Cancel or refund a payment in Yuno.",
   schema: z.object({
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
@@ -110,7 +110,7 @@ export const paymentCancelOrRefundTool: Tool = {
 };
 
 export const paymentCancelOrRefundWithTransactionTool: Tool = {
-  method: "payments.cancelOrRefundWithTransaction",
+  method: "paymentCancelOrRefundWithTransaction",
   description: "Cancel or refund a payment with transaction in Yuno.",
   schema: z.object({
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
@@ -133,7 +133,7 @@ export const paymentCancelOrRefundWithTransactionTool: Tool = {
 };
 
 export const paymentCancelTool: Tool = {
-  method: "payments.cancel",
+  method: "paymentCancel",
   description: "Cancel a payment in Yuno.",
   schema: paymentCancelSchema,
   handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {
@@ -151,7 +151,7 @@ export const paymentCancelTool: Tool = {
 };
 
 export const paymentAuthorizeTool: Tool = {
-  method: "payments.authorize",
+  method: "paymentAuthorize",
   description: "Authorize a payment in Yuno.",
   schema: paymentCreateSchema,
   handler: async (yunoClient: YunoClient, { payment, idempotency_key }: any) => {
@@ -173,7 +173,7 @@ export const paymentAuthorizeTool: Tool = {
 };
 
 export const paymentCaptureAuthorizationTool: Tool = {
-  method: "payments.captureAuthorization",
+  method: "paymentCaptureAuthorization",
   description: "Capture an authorized payment in Yuno.",
   schema: paymentCaptureAuthorizationSchema,
   handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {

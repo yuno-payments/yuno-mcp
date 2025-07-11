@@ -4,7 +4,7 @@ import { Tool } from "../shared/types";
 import { checkoutSessionCreateSchema, YunoCheckoutSession, ottCreateSchema, YunoOttRequest } from "./types";
 
 export const checkoutSessionCreateTool: Tool = {
-  method: "checkoutSession.create",
+  method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
   schema: checkoutSessionCreateSchema,
   handler: async (yunoClient: YunoClient, data: YunoCheckoutSession) => {
@@ -25,7 +25,7 @@ export const checkoutSessionCreateTool: Tool = {
 };
 
 export const checkoutSessionRetrievePaymentMethodsTool: Tool = {
-  method: "checkoutSession.retrievePaymentMethods",
+  method: "checkoutSessionRetrievePaymentMethods",
   description: "Retrieve payment methods for a checkout session in Yuno.",
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),

@@ -6,8 +6,10 @@
   },
   "scripts": {
     "build": "tsc && echo '#!/usr/bin/env node' | cat - dist/index.js > temp && mv temp dist/index.js && chmod +x dist/index.js",
+    "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
-    "lint": "eslint . --ext .ts,.tsx"
+    "start": "node dist/index.js",
+    "mcp:sse": "mcp-proxy --port 4000 --shell \"npm run start\""
   },
   "files": [
     "dist",
@@ -15,10 +17,13 @@
     "package.json"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.11.0",
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "express": "^5.1.0",
+    "mcp-proxy": "^5.3.0",
     "zod": "3.24.4"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "22.15.3",
     "@typescript-eslint/eslint-plugin": "^8.35.1",

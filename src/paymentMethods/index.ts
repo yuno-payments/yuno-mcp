@@ -5,7 +5,7 @@ import { YunoClient } from "../client";
 import { randomUUID } from "crypto";
 
 export const paymentMethodEnrollTool: Tool = {
-  method: "paymentMethod.enroll",
+  method: "paymentMethodEnroll",
   description: `Enroll or create payment method.`,
   schema: z.object({
     body: paymentMethodEnrollSchema,
@@ -31,7 +31,7 @@ export const paymentMethodEnrollTool: Tool = {
 };
 
 export const paymentMethodRetrieveTool: Tool = {
-  method: "paymentMethod.retrieve",
+  method: "paymentMethodRetrieve",
   description: `Retrieve a enrolled payment method by customer and payment method id.`,
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
@@ -51,7 +51,7 @@ export const paymentMethodRetrieveTool: Tool = {
 };
 
 export const paymentMethodRetrieveEnrolledTool: Tool = {
-  method: "paymentMethod.retrieveEnrolled",
+  method: "paymentMethodRetrieveEnrolled",
   description: `Retrieve all enrolled payment methods for a customer.`,
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
@@ -70,7 +70,7 @@ export const paymentMethodRetrieveEnrolledTool: Tool = {
 };
 
 export const paymentMethodUnenrollTool: Tool = {
-  method: "paymentMethod.unenroll",
+  method: "paymentMethodUnenroll",
   description: `Unenroll a saved payment method for the user.`,
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
