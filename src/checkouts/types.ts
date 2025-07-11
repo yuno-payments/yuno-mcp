@@ -157,3 +157,5 @@ export const ottCreateSchema = z.object({
   third_party_data: z.any().optional().nullable().describe("Third party data"),
   device_fingerprints: z.any().optional().nullable().describe("Device fingerprints"),
 });
+
+export type YunoOttCreateSchema = z.infer<typeof ottCreateSchema>;

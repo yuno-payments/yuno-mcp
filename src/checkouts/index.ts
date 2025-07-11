@@ -1,7 +1,7 @@
 import z from "zod";
 import { YunoClient } from "../client";
 import { Tool } from "../shared/types";
-import { checkoutSessionCreateSchema, YunoCheckoutSession, ottCreateSchema, YunoOttRequest } from "./types";
+import { checkoutSessionCreateSchema, YunoCheckoutSession, ottCreateSchema, YunoOttRequest, YunoOttCreateSchema } from "./types";
 
 export const checkoutSessionCreateTool: Tool = {
   method: "checkoutSessionCreate",
@@ -30,7 +30,7 @@ export const checkoutSessionRetrievePaymentMethodsTool: Tool = {
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
-  handler: async (yunoClient: YunoClient, { sessionId }: any) => {
+  handler: async (yunoClient: YunoClient, { sessionId }: { sessionId: string }) => {
     const paymentMethodsResponse = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
     return {
       content: [
@@ -47,7 +47,7 @@ export const checkoutSessionCreateOttTool: Tool = {
   method: "checkoutSession.createOtt",
   description: "Generate a One Time Token (OTT) for a checkout session in Yuno.",
   schema: ottCreateSchema,
-  handler: async (yunoClient: YunoClient, data: any) => {
+  handler: async (yunoClient: YunoClient, data: YunoOttCreateSchema) => {
     const { sessionId, ...ottRequest } = data;
     const ottResponse = await yunoClient.checkoutSessions.createOtt(sessionId, ottRequest as YunoOttRequest);
     return {

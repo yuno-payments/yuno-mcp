@@ -7,6 +7,7 @@ import { subscriptionTools } from "./subscriptions";
 import { recipientTools } from "./recipients";
 import { installmentPlanTools } from "./installmentPlans";
 import { Tool } from "./shared/types/common";
+import { documentationTools } from "./documentations";
 
 export const tools: Tool[] = [
   ...customerTools,
@@ -17,4 +18,5 @@ export const tools: Tool[] = [
   ...subscriptionTools,
   ...recipientTools,
   ...installmentPlanTools,
+  ...documentationTools,
 ];
