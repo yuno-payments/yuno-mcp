@@ -1,6 +1,6 @@
 import z from "zod";
 import { Tool } from "../shared/types";
-import { paymentMethodEnrollSchema } from "./types";
+import { PaymentMethodEnrollSchema, paymentMethodEnrollSchema } from "./types";
 import { YunoClient } from "../client";
 import { randomUUID } from "crypto";
 
@@ -12,7 +12,7 @@ export const paymentMethodEnrollTool: Tool = {
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
   }),
-  handler: async (yunoClient: YunoClient, { customerId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { customerId, body, idempotency_key }: { customerId: string, body: PaymentMethodEnrollSchema, idempotency_key: string }) => {
     const enrollmentWithAccount = {
       ...body,
       account_id: body.account_id || yunoClient.accountCode,
@@ -37,7 +37,7 @@ export const paymentMethodRetrieveTool: Tool = {
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: { customer_id: string, payment_method_id: string }) => {
     const response = await yunoClient.paymentMethods.retrieve(customer_id, payment_method_id);
     return {
       content: [
@@ -56,7 +56,7 @@ export const paymentMethodRetrieveEnrolledTool: Tool = {
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id }: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id }: { customer_id: string }) => {
     const response = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
     return {
       content: [
@@ -76,7 +76,7 @@ export const paymentMethodUnenrollTool: Tool = {
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
-  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: any) => {
+  handler: async (yunoClient: YunoClient, { customer_id, payment_method_id }: { customer_id: string, payment_method_id: string }) => {
     const response = await yunoClient.paymentMethods.unenroll(customer_id, payment_method_id);
     return {
       content: [

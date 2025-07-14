@@ -1,3 +1,4 @@
+import { expect, it, describe, rstest } from '@rstest/core';
 import {
   installmentPlanCreateTool,
   installmentPlanUpdateTool,
@@ -12,7 +13,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: jest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
+        create: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
       },
     };
     const input = {
@@ -25,7 +26,7 @@ describe("installmentPlanCreateTool", () => {
     expect(mockYunoClient.installmentPlans.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
-        account_id: "acc_123",
+        account_id: ["acc_123"],
       }),
     );
     expect(result.content[0].text).toContain("plan_123");
@@ -62,7 +63,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: jest.fn().mockResolvedValue({ id: "plan_456", name: "Full Plan", brand: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "plan_456", name: "Full Plan", brand: [] }),
       },
     };
     const input = {
@@ -88,7 +89,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: jest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Plan" }),
+        create: rstest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Plan" }),
       },
     };
     const input = {
@@ -101,7 +102,7 @@ describe("installmentPlanCreateTool", () => {
     expect(mockYunoClient.installmentPlans.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
-        account_id: "acc_123",
+        account_id: ["acc_123"],
       }),
     );
     expect(result.content[0].text).toContain("plan_789");
@@ -113,7 +114,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: jest.fn().mockResolvedValue({ id: "plan_123", name: "Updated Plan" }),
+        update: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Updated Plan" }),
       },
     };
     const input = {
@@ -141,7 +142,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: jest.fn().mockResolvedValue({ id: "plan_456", name: "Full Update", brand: [] }),
+        update: rstest.fn().mockResolvedValue({ id: "plan_456", name: "Full Update", brand: [] }),
       },
     };
     const input = {
@@ -165,7 +166,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: jest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Update" }),
+        update: rstest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Update" }),
       },
     };
     const input = { planId: "plan_789" };
@@ -182,7 +183,7 @@ describe("installmentPlanRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        retrieve: jest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
       },
     };
     const input = { planId: "plan_123" };
@@ -206,7 +207,7 @@ describe("installmentPlanDeleteTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        delete: jest.fn().mockResolvedValue({ id: "plan_123", deleted: true }),
+        delete: rstest.fn().mockResolvedValue({ id: "plan_123", deleted: true }),
       },
     };
     const input = { planId: "plan_123" };

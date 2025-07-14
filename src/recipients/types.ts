@@ -68,6 +68,8 @@ export const recipientCreateSchema = z.object({
   ),
 });
 
+export type RecipientCreateSchema = z.infer<typeof recipientCreateSchema>;
+
 export const recipientUpdateSchema = z.object({
   recipientId: z.string().describe("The unique identifier of the recipient to update"),
   merchant_recipientId: z.string().describe("The unique identifier of the recipient to update"),
@@ -112,3 +114,6 @@ export const recipientUpdateSchema = z.object({
       .describe("Providers for the recipient"),
   ),
 });
+
+export type RecipientUpdateSchema = z.infer<typeof recipientUpdateSchema>;
+export type RecipientUpdateBody = Omit<RecipientUpdateSchema, "recipientId">

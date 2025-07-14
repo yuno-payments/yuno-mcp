@@ -1,12 +1,13 @@
 import z from "zod";
 import { Tool } from "../shared/types/common";
-import { paymentLinkCancelSchema, paymentLinkCreateSchema } from "./types";
+import { PaymentLinkCancelSchema, paymentLinkCancelSchema, PaymentLinkCreateSchema, paymentLinkCreateSchema } from "./types";
+import { YunoClient } from "../client";
 
 export const paymentLinkCreateTool: Tool = {
   method: "paymentLinkCreate",
   description: "Create a payment link in Yuno.",
   schema: paymentLinkCreateSchema,
-  handler: async (yunoClient, data) => {
+  handler: async (yunoClient: YunoClient, data: PaymentLinkCreateSchema) => {
     const paymentLinkWithAccount = {
       ...data,
       account_id: data.account_id || yunoClient.accountCode,
@@ -29,7 +30,7 @@ export const paymentLinkRetrieveTool: Tool = {
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
   }),
-  handler: async (yunoClient, { paymentLinkId }) => {
+  handler: async (yunoClient: YunoClient, { paymentLinkId }: { paymentLinkId: string }) => {
     const paymentLink = await yunoClient.paymentLinks.retrieve(paymentLinkId);
     return {
       content: [
@@ -49,7 +50,7 @@ export const paymentLinkCancelTool: Tool = {
     paymentLinkId: z.string().describe("The unique identifier of the payment link to cancel"),
     body: paymentLinkCancelSchema,
   }),
-  handler: async (yunoClient, { paymentLinkId, body }) => {
+  handler: async (yunoClient: YunoClient, { paymentLinkId, body }: { paymentLinkId: string; body: PaymentLinkCancelSchema }) => {
     const cancelResponse = await yunoClient.paymentLinks.cancel(paymentLinkId, body);
     return {
       content: [

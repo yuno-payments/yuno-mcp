@@ -1,3 +1,4 @@
+import { expect, it, describe, rstest } from '@rstest/core';
 import { customerCreateTool, customerRetrieveTool, customerRetrieveByExternalIdTool, customerUpdateTool } from "../src/customers";
 import { customerCreateSchema, customerUpdateSchema } from "../src/customers/types";
 import z from "zod";
@@ -14,7 +15,7 @@ describe("customerCreateTool", () => {
   it("should create a customer, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        create: jest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
+        create: rstest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
       },
     };
     const input = { merchant_customer_id: "abc", email: "test@example.com" };
@@ -45,7 +46,7 @@ describe("customerCreateTool", () => {
   it("should handle creation with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       customers: {
-        create: jest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
       },
     };
     const input = {
@@ -84,7 +85,7 @@ describe("customerCreateTool", () => {
   it("should handle creation with only required fields", async () => {
     const mockYunoClient = {
       customers: {
-        create: jest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
+        create: rstest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
       },
     };
     const input = { merchant_customer_id: "minimal", email: "minimal@example.com" };
@@ -99,7 +100,7 @@ describe("customerRetrieveTool", () => {
   it("should retrieve a customer, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        retrieve: jest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
       },
     };
     const input = { customerId: "cus_123" };
@@ -121,7 +122,7 @@ describe("customerRetrieveByExternalIdTool", () => {
   it("should retrieve a customer by external id, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        retrieveByExternalId: jest.fn().mockResolvedValue({ id: "cus_456", email: "external@example.com" }),
+        retrieveByExternalId: rstest.fn().mockResolvedValue({ id: "cus_456", email: "external@example.com" }),
       },
     };
     const input = { merchant_customer_id: "external_123" };
@@ -143,7 +144,7 @@ describe("customerUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       customers: {
-        update: jest.fn().mockResolvedValue({ id: "cus_123", email: "updated@example.com" }),
+        update: rstest.fn().mockResolvedValue({ id: "cus_123", email: "updated@example.com" }),
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456", email: "updated@example.com" };
@@ -168,7 +169,7 @@ describe("customerUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       customers: {
-        update: jest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
+        update: rstest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
       },
     };
     const input = {
@@ -208,7 +209,7 @@ describe("customerUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       customers: {
-        update: jest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
+        update: rstest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456" };

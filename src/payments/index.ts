@@ -2,17 +2,17 @@ import { Tool } from "../shared/types/common";
 import { YunoClient } from "../client";
 import z from "zod";
 import { randomUUID } from "crypto";
-import { paymentCancelSchema, paymentCaptureAuthorizationSchema, paymentCreateSchema, paymentRefundSchema } from "./types";
+import { PaymentCancelSchema, paymentCancelSchema, PaymentCaptureAuthorizationSchema, paymentCaptureAuthorizationSchema, PaymentCreateBody, PaymentCreateSchema, paymentCreateSchema, PaymentRefundSchema, paymentRefundSchema } from "./types";
 
 export const paymentCreateTool: Tool = {
   method: "paymentCreate",
   description: "Create a new payment in Yuno.",
   schema: paymentCreateSchema,
-  handler: async (yunoClient: YunoClient, { payment, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { payment, idempotency_key }: PaymentCreateSchema) => {
     const paymentWithAccount = {
       ...payment,
       account_id: payment.account_id || yunoClient.accountCode,
-    };
+    } satisfies PaymentCreateBody;
     const idempotencyKey = idempotency_key || randomUUID();
     const paymentResponse = await yunoClient.payments.create(paymentWithAccount, idempotencyKey);
     return {
@@ -32,7 +32,7 @@ export const paymentRetrieveTool: Tool = {
   schema: z.object({
     payment_id: z.string().describe("The unique identifier of the payment"),
   }),
-  handler: async (yunoClient: YunoClient, { payment_id }: any) => {
+  handler: async (yunoClient: YunoClient, { payment_id }: { payment_id: string }) => {
     const payment = await yunoClient.payments.retrieve(payment_id);
     return {
       content: [
@@ -51,7 +51,7 @@ export const paymentRetrieveByMerchantOrderIdTool: Tool = {
   schema: z.object({
     merchant_order_id: z.string().describe("The unique identifier of the order for the payment (merchant_order_id)"),
   }),
-  handler: async (yunoClient: any, { merchant_order_id }: any) => {
+  handler: async (yunoClient: YunoClient, { merchant_order_id }: { merchant_order_id: string }) => {
     const payments = await yunoClient.payments.retrieveByMerchantOrderId(merchant_order_id);
     return {
       content: [
@@ -73,7 +73,7 @@ export const paymentRefundTool: Tool = {
     body: paymentRefundSchema,
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
-  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: { paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotency_key: string }) => {
     const idempotencyKey = idempotency_key || randomUUID();
     const refundResponse = await yunoClient.payments.refund(paymentId, transactionId, body, idempotencyKey);
     return {
@@ -95,7 +95,7 @@ export const paymentCancelOrRefundTool: Tool = {
     body: paymentRefundSchema,
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
-  handler: async (yunoClient: YunoClient, { paymentId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { paymentId, body, idempotency_key }: { paymentId: string, body: PaymentRefundSchema, idempotency_key: string }) => {
     const idempotencyKey = idempotency_key || randomUUID();
     const response = await yunoClient.payments.cancelOrRefund(paymentId, body, idempotencyKey);
     return {
@@ -118,7 +118,7 @@ export const paymentCancelOrRefundWithTransactionTool: Tool = {
     body: paymentRefundSchema,
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
-  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: { paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotency_key: string }) => {
     const idempotencyKey = idempotency_key || randomUUID();
     const response = await yunoClient.payments.cancelOrRefundWithTransaction(paymentId, transactionId, body, idempotencyKey);
     return {
@@ -136,7 +136,7 @@ export const paymentCancelTool: Tool = {
   method: "paymentCancel",
   description: "Cancel a payment in Yuno.",
   schema: paymentCancelSchema,
-  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: { paymentId: string, transactionId: string, body: PaymentCancelSchema, idempotency_key: string }) => {
     const idempotencyKey = idempotency_key || randomUUID();
     const cancelResponse = await yunoClient.payments.cancel(paymentId, transactionId, body, idempotencyKey);
     return {
@@ -154,7 +154,7 @@ export const paymentAuthorizeTool: Tool = {
   method: "paymentAuthorize",
   description: "Authorize a payment in Yuno.",
   schema: paymentCreateSchema,
-  handler: async (yunoClient: YunoClient, { payment, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { payment, idempotency_key }: { payment: PaymentCreateSchema["payment"], idempotency_key: string }) => {
     const paymentWithAccount = {
       ...payment,
       account_id: payment.account_id || yunoClient.accountCode,
@@ -176,7 +176,7 @@ export const paymentCaptureAuthorizationTool: Tool = {
   method: "paymentCaptureAuthorization",
   description: "Capture an authorized payment in Yuno.",
   schema: paymentCaptureAuthorizationSchema,
-  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: any) => {
+  handler: async (yunoClient: YunoClient, { paymentId, transactionId, body, idempotency_key }: { paymentId: string, transactionId: string, body: PaymentCaptureAuthorizationSchema, idempotency_key: string }) => {
     const idempotencyKey = idempotency_key || randomUUID();
     const response = await yunoClient.payments.captureAuthorization(paymentId, transactionId, body, idempotencyKey);
     return {
