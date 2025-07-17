@@ -64,6 +64,8 @@ export const paymentLinkCreateSchema = z.object({
   vault_on_success: z.boolean().optional(),
 });
 
+export type PaymentLinkCreateSchema = z.infer<typeof paymentLinkCreateSchema>;
+
 export const paymentLinkCancelSchema = z
   .object({
     description: z.string().optional().describe("Reason for the cancellation"),
@@ -74,3 +76,5 @@ export const paymentLinkCancelSchema = z
     merchant_reference: z.string().optional().describe("Merchant reference for the cancellation"),
   })
   .describe("Body for payment link cancellation");
+
+export type PaymentLinkCancelSchema = z.infer<typeof paymentLinkCancelSchema>;

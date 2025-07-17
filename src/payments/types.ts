@@ -186,6 +186,9 @@ export const paymentCreateSchema = z.object({
   idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payments"),
 });
 
+export type PaymentCreateSchema = z.infer<typeof paymentCreateSchema>;
+export type PaymentCreateBody = Omit<PaymentCreateSchema, "idempotency_key">["payment"];
+
 export const operationPaymentResponseAdditionalDataSchema = z
   .object({
     receipt: z.boolean().optional(),
@@ -217,6 +220,8 @@ export const paymentRefundSchema = z.object({
     .describe("Customer payer info"),
 });
 
+export type PaymentRefundSchema = z.infer<typeof paymentRefundSchema>;
+
 export const paymentCancelSchema = z.object({
   paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
   transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
@@ -228,6 +233,8 @@ export const paymentCancelSchema = z.object({
   }),
   idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancels"),
 });
+
+export type PaymentCancelSchema = z.infer<typeof paymentCancelSchema>;
 
 export const paymentCaptureAuthorizationSchema = z.object({
   paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
@@ -245,3 +252,5 @@ export const paymentCaptureAuthorizationSchema = z.object({
   }),
   idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate captures"),
 });
+
+export type PaymentCaptureAuthorizationSchema = z.infer<typeof paymentCaptureAuthorizationSchema>;

@@ -1,5 +1,7 @@
 import { checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool, checkoutSessionCreateOttTool } from "../src/checkouts";
 import { checkoutSessionCreateSchema, ottCreateSchema } from "../src/checkouts/types";
+import { expect, it, describe, rstest } from '@rstest/core';
+
 import z from "zod";
 
 describe("checkoutSessionCreateTool", () => {
@@ -7,7 +9,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
       },
     };
     const input = {
@@ -57,7 +59,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
       },
     };
     const input = {
@@ -84,7 +86,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
       },
     };
     const input = {
@@ -112,7 +114,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        retrievePaymentMethods: jest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
       },
     };
     const input = { sessionId: "sess_123" };
@@ -134,7 +136,7 @@ describe("checkoutSessionCreateOttTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        createOtt: jest.fn().mockResolvedValue({
+        createOtt: rstest.fn().mockResolvedValue({
           token: "f3beb554-21c7-46a7-9e22-769c6c012df1",
           vaulted_token: null,
           vault_on_success: false,
