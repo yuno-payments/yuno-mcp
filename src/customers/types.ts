@@ -50,3 +50,5 @@ export const customerUpdateSchema = z.object({
   metadata: metadataSchema,
   merchant_customer_created_at: z.string().optional(),
 });
+
+export type CustomerUpdateSchema = z.infer<typeof customerUpdateSchema>;

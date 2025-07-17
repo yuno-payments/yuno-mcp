@@ -60,6 +60,8 @@ export const installmentPlanCreateSchema = z.object({
     .describe("Availability period for the plan"),
 });
 
+export type InstallmentPlanCreateSchema = z.infer<typeof installmentPlanCreateSchema>;
+
 export const installmentPlanUpdateSchema = z.object({
   planId: z.string().describe("The unique identifier of the installment plan to update"),
   name: z.string().optional(),
@@ -90,3 +92,6 @@ export const installmentPlanUpdateSchema = z.object({
     })
     .optional(),
 });
+
+export type InstallmentPlanUpdateSchema = z.infer<typeof installmentPlanUpdateSchema>;
+export type InstallmentPlanUpdateBody = Omit<InstallmentPlanUpdateSchema, "planId">;

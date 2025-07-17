@@ -1,13 +1,13 @@
 import z from "zod";
 import { YunoClient } from "../client";
 import { Tool } from "../shared/types/common";
-import { recipientCreateSchema, recipientUpdateSchema } from "./types";
+import { RecipientCreateSchema, recipientCreateSchema, RecipientUpdateSchema, recipientUpdateSchema } from "./types";
 
 export const recipientCreateTool: Tool = {
   method: "recipientCreate",
   description: "Create a recipient in Yuno.",
   schema: recipientCreateSchema,
-  handler: async (yunoClient: YunoClient, data: any) => {
+  handler: async (yunoClient: YunoClient, data: RecipientCreateSchema) => {
     const recipientWithAccount = {
       ...data,
       account_id: data.account_id || yunoClient.accountCode,
@@ -30,7 +30,7 @@ export const recipientRetrieveTool: Tool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
-  handler: async (yunoClient: YunoClient, { recipientId }) => {
+  handler: async (yunoClient: YunoClient, { recipientId }: { recipientId: string }) => {
     const recipient = await yunoClient.recipients.retrieve(recipientId);
     return {
       content: [
@@ -47,7 +47,7 @@ export const recipientUpdateTool: Tool = {
   method: "recipientUpdate",
   description: "Update a recipient in Yuno by its ID.",
   schema: recipientUpdateSchema,
-  handler: async (yunoClient: YunoClient, { recipientId, ...updateFields }: any) => {
+  handler: async (yunoClient: YunoClient, { recipientId, ...updateFields }: RecipientUpdateSchema) => {
     const recipient = await yunoClient.recipients.update(recipientId, updateFields);
     return {
       content: [
@@ -66,7 +66,7 @@ export const recipientDeleteTool: Tool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),
   }),
-  handler: async (yunoClient: YunoClient, { recipientId }) => {
+  handler: async (yunoClient: YunoClient, { recipientId }: { recipientId: string }) => {
     const response = await yunoClient.recipients.delete(recipientId);
     return {
       content: [
