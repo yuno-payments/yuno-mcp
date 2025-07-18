@@ -85,6 +85,8 @@ export const subscriptionCreateSchema = z.object({
   billing_date: z.any().optional().describe("Billing date for the subscription"),
 });
 
+export type SubscriptionCreateSchema = z.infer<typeof subscriptionCreateSchema>;
+
 export const subscriptionUpdateSchema = z.object({
   subscriptionId: z.string().describe("The unique identifier of the subscription to update"),
   name: z.string().optional(),
@@ -139,3 +141,6 @@ export const subscriptionUpdateSchema = z.object({
     .optional(),
   metadata: metadataSchema,
 });
+
+export type SubscriptionUpdateSchema = z.infer<typeof subscriptionUpdateSchema>;
+export type SubscriptionUpdateBody = Omit<SubscriptionUpdateSchema, "subscriptionId">

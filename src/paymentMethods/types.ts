@@ -39,3 +39,5 @@ export const paymentMethodEnrollSchema = z.object({
     .optional()
     .describe("Indicates whether to verify the payment with a verify transaction or not. null if not specified."),
 });
+
+export type PaymentMethodEnrollSchema = z.infer<typeof paymentMethodEnrollSchema>;

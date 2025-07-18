@@ -1,3 +1,4 @@
+import { expect, it, describe, rstest } from '@rstest/core';
 import {
   paymentCreateTool,
   paymentRetrieveTool,
@@ -17,7 +18,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: jest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
+        create: rstest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
       },
     };
     const input = {
@@ -80,7 +81,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: jest.fn().mockResolvedValue({ id: "pay_456", description: "Full payment", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "pay_456", description: "Full payment", metadata: [] }),
       },
     };
     const input = {
@@ -110,7 +111,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: jest.fn().mockResolvedValue({ id: "pay_789", description: "Minimal payment" }),
+        create: rstest.fn().mockResolvedValue({ id: "pay_789", description: "Minimal payment" }),
       },
     };
     const input = {
@@ -142,7 +143,7 @@ describe("paymentRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        retrieve: jest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
       },
     };
     const input = { payment_id: "pay_123" };
@@ -166,7 +167,7 @@ describe("paymentRetrieveByMerchantOrderIdTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        retrieveByMerchantOrderId: jest.fn().mockResolvedValue([{ id: "pay_123", description: "Test payment" }]),
+        retrieveByMerchantOrderId: rstest.fn().mockResolvedValue([{ id: "pay_123", description: "Test payment" }]),
       },
     };
     const input = { merchant_order_id: "order_123" };
@@ -195,7 +196,7 @@ describe("paymentRefundTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        refund: jest.fn().mockResolvedValue({ id: "pay_123", refunded: true }),
+        refund: rstest.fn().mockResolvedValue({ id: "pay_123", refunded: true }),
       },
     };
     const input = {
@@ -228,7 +229,7 @@ describe("paymentCancelOrRefundTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancelOrRefund: jest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancelOrRefund: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
       },
     };
     const input = {
@@ -261,7 +262,7 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancelOrRefundWithTransaction: jest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancelOrRefundWithTransaction: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
       },
     };
     const input = {
@@ -293,7 +294,7 @@ describe("paymentCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancel: jest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
       },
     };
     const input = {
@@ -321,7 +322,7 @@ describe("paymentAuthorizeTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        authorize: jest.fn().mockResolvedValue({ id: "pay_123", authorized: true }),
+        authorize: rstest.fn().mockResolvedValue({ id: "pay_123", authorized: true }),
       },
     };
     const input = {
@@ -371,7 +372,7 @@ describe("paymentCaptureAuthorizationTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        captureAuthorization: jest.fn().mockResolvedValue({ id: "pay_123", captured: true }),
+        captureAuthorization: rstest.fn().mockResolvedValue({ id: "pay_123", captured: true }),
       },
     };
     const input = {
