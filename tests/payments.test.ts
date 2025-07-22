@@ -1,4 +1,4 @@
-import { expect, it, describe, rstest } from '@rstest/core';
+import { expect, it, describe, rstest } from "@rstest/core";
 import {
   paymentCreateTool,
   paymentRetrieveTool,
@@ -9,9 +9,10 @@ import {
   paymentCancelTool,
   paymentAuthorizeTool,
   paymentCaptureAuthorizationTool,
-} from "../src/payments";
-import { paymentCreateSchema, paymentRefundSchema, paymentCancelSchema, paymentCaptureAuthorizationSchema } from "../src/payments/types";
+} from "../src/tools/payments";
+import { paymentCreateSchema, paymentRefundSchema, paymentCancelSchema, paymentCaptureAuthorizationSchema } from "../src/schemas";
 import z from "zod";
+import { PaymentCancelSchema, PaymentCaptureAuthorizationSchema, PaymentCreateSchema } from "../src/tools/payments/types";
 
 describe("paymentCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -32,8 +33,8 @@ describe("paymentCreateTool", () => {
         payment_method: { type: "CARD" },
       },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies PaymentCreateSchema;
+    const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("Test payment");
@@ -100,8 +101,8 @@ describe("paymentCreateTool", () => {
         metadata: [],
       },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies PaymentCreateSchema;
+    const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_456");
     expect(result.content[0].text).toContain("Full payment");
@@ -123,8 +124,8 @@ describe("paymentCreateTool", () => {
         workflow: "DIRECT",
         payment_method: { type: "CARD" },
       },
-    };
-    const result = await paymentCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies PaymentCreateSchema;
+    const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input.payment,
@@ -147,7 +148,7 @@ describe("paymentRetrieveTool", () => {
       },
     };
     const input = { payment_id: "pay_123" };
-    const result = await paymentRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await paymentRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.retrieve).toHaveBeenCalledWith("pay_123");
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("Test payment");
@@ -171,7 +172,7 @@ describe("paymentRetrieveByMerchantOrderIdTool", () => {
       },
     };
     const input = { merchant_order_id: "order_123" };
-    const result = await paymentRetrieveByMerchantOrderIdTool.handler(mockYunoClient as any, input);
+    const result = await paymentRetrieveByMerchantOrderIdTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.retrieveByMerchantOrderId).toHaveBeenCalledWith("order_123");
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("Test payment");
@@ -205,7 +206,7 @@ describe("paymentRefundTool", () => {
       body: { merchant_reference: "ref_1", customer_payer: {} },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
-    const result = await paymentRefundTool.handler(mockYunoClient as any, input);
+    const result = await paymentRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.refund).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
@@ -237,7 +238,7 @@ describe("paymentCancelOrRefundTool", () => {
       body: { merchant_reference: "ref_1", customer_payer: {} },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
-    const result = await paymentCancelOrRefundTool.handler(mockYunoClient as any, input);
+    const result = await paymentCancelOrRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.cancelOrRefund).toHaveBeenCalledWith(input.paymentId, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
@@ -271,7 +272,7 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
       body: { merchant_reference: "ref_1", customer_payer: {} },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
-    const result = await paymentCancelOrRefundWithTransactionTool.handler(mockYunoClient as any, input);
+    const result = await paymentCancelOrRefundWithTransactionTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.cancelOrRefundWithTransaction).toHaveBeenCalledWith(
       input.paymentId,
       input.transactionId,
@@ -300,10 +301,10 @@ describe("paymentCancelTool", () => {
     const input = {
       paymentId: "pay_123456789012345678901234567890123456",
       transactionId: "txn_123456789012345678901234567890123456",
-      body: { merchant_reference: "ref_1" },
+      body: { merchant_reference: "ref_1", description: "Test payment", reason: "REQUESTED_BY_CUSTOMER" },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentCancelTool.handler(mockYunoClient as any, input);
+    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCancelSchema; idempotency_key: string };
+    const result = await paymentCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.cancel).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
@@ -336,8 +337,8 @@ describe("paymentAuthorizeTool", () => {
         payment_method: { type: "CARD" },
       },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentAuthorizeTool.handler(mockYunoClient as any, input);
+    } as const satisfies PaymentCreateSchema;
+    const result = await paymentAuthorizeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.authorize).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
@@ -380,8 +381,8 @@ describe("paymentCaptureAuthorizationTool", () => {
       transactionId: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", reason: "capture" },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentCaptureAuthorizationTool.handler(mockYunoClient as any, input);
+    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCaptureAuthorizationSchema; idempotency_key: string };
+    const result = await paymentCaptureAuthorizationTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.captureAuthorization).toHaveBeenCalledWith(
       input.paymentId,
       input.transactionId,

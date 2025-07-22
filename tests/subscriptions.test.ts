@@ -1,4 +1,4 @@
-import { expect, it, describe, rstest } from '@rstest/core';
+import { expect, it, describe, rstest } from "@rstest/core";
 import {
   subscriptionCreateTool,
   subscriptionRetrieveTool,
@@ -6,9 +6,10 @@ import {
   subscriptionResumeTool,
   subscriptionUpdateTool,
   subscriptionCancelTool,
-} from "../src/subscriptions";
-import { subscriptionCreateSchema, subscriptionUpdateSchema } from "../src/subscriptions/types";
+} from "../src/tools/subscriptions";
+import { subscriptionCreateSchema, subscriptionUpdateSchema } from "../src/schemas";
 import z from "zod";
+import { SubscriptionCreateSchema, SubscriptionUpdateSchema } from "../src/tools/subscriptions/types";
 
 describe("subscriptionCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -23,8 +24,8 @@ describe("subscriptionCreateTool", () => {
       country: "US",
       amount: { currency: "USD", value: 100 },
       customer_payer: { id: "cus_1" },
-    };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionCreateSchema;
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Test Sub");
@@ -77,8 +78,8 @@ describe("subscriptionCreateTool", () => {
       retries: {},
       initial_payment_validation: true,
       billing_date: {},
-    };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionCreateSchema;
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_456");
     expect(result.content[0].text).toContain("Full Sub");
@@ -97,7 +98,7 @@ describe("subscriptionCreateTool", () => {
       amount: { currency: "USD", value: 50 },
       customer_payer: { id: "cus_3" },
     };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_789");
     expect(result.content[0].text).toContain("Minimal Sub");
@@ -113,7 +114,7 @@ describe("subscriptionRetrieveTool", () => {
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.retrieve).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Test Sub");
@@ -136,7 +137,7 @@ describe("subscriptionPauseTool", () => {
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionPauseTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionPauseTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.pause).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("paused");
   });
@@ -158,7 +159,7 @@ describe("subscriptionResumeTool", () => {
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionResumeTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionResumeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.resume).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("active");
   });
@@ -179,7 +180,7 @@ describe("subscriptionUpdateTool", () => {
       },
     };
     const input = { subscriptionId: "sub_123", name: "Updated Sub" };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_123", { name: "Updated Sub" });
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Updated Sub");
@@ -224,8 +225,8 @@ describe("subscriptionUpdateTool", () => {
       availability: { start_at: "2024-01-01", finish_at: "2024-12-31" },
       retries: { retry_on_decline: true, amount: 10 },
       metadata: [],
-    };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionUpdateSchema;
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     const { subscriptionId, ...updateFields } = input;
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith(subscriptionId, updateFields);
     expect(result.content[0].text).toContain("sub_456");
@@ -239,7 +240,7 @@ describe("subscriptionUpdateTool", () => {
       },
     };
     const input = { subscriptionId: "sub_789" };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_789", {});
     expect(result.content[0].text).toContain("sub_789");
     expect(result.content[0].text).toContain("Minimal Sub");
@@ -255,7 +256,7 @@ describe("subscriptionCancelTool", () => {
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionCancelTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.cancel).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("cancelled");
   });

@@ -1,12 +1,13 @@
-import { expect, it, describe, rstest } from '@rstest/core';
+import { expect, it, describe, rstest } from "@rstest/core";
 import {
   paymentMethodEnrollTool,
   paymentMethodRetrieveTool,
   paymentMethodRetrieveEnrolledTool,
   paymentMethodUnenrollTool,
-} from "../src/paymentMethods";
-import { paymentMethodEnrollSchema } from "../src/paymentMethods/types";
+} from "../src/tools/paymentMethods";
+import { paymentMethodEnrollSchema } from "../src/schemas";
 import z from "zod";
+import { PaymentMethodEnrollSchema } from "../src/tools/paymentMethods/types";
 
 describe("paymentMethodEnrollTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -25,7 +26,7 @@ describe("paymentMethodEnrollTool", () => {
       },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
-    const result = await paymentMethodEnrollTool.handler(mockYunoClient as any, input);
+    const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pm_123");
     expect(result.content[0].text).toContain("CARD");
@@ -101,8 +102,8 @@ describe("paymentMethodEnrollTool", () => {
         verify: { vault_on_success: true, currency: "USD" },
       },
       idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    };
-    const result = await paymentMethodEnrollTool.handler(mockYunoClient as any, input);
+    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotency_key?: string };
+    const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pm_456");
     expect(result.content[0].text).toContain("CARD");
@@ -122,8 +123,9 @@ describe("paymentMethodEnrollTool", () => {
         country: "US",
         type: "CARD",
       },
-    };
-    const result = await paymentMethodEnrollTool.handler(mockYunoClient as any, input);
+      idempotency_key: "what-ever",
+    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotency_key: string };
+    const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(
       input.customerId,
       expect.objectContaining({
@@ -150,7 +152,7 @@ describe("paymentMethodRetrieveTool", () => {
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456", payment_method_id: "pm_123456789012345678901234567890123456" };
-    const result = await paymentMethodRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await paymentMethodRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.retrieve).toHaveBeenCalledWith(input.customer_id, input.payment_method_id);
     expect(result.content[0].text).toContain("pm_123");
     expect(result.content[0].text).toContain("CARD");
@@ -176,7 +178,7 @@ describe("paymentMethodRetrieveEnrolledTool", () => {
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456" };
-    const result = await paymentMethodRetrieveEnrolledTool.handler(mockYunoClient as any, input);
+    const result = await paymentMethodRetrieveEnrolledTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.retrieveEnrolled).toHaveBeenCalledWith(input.customer_id);
     expect(result.content[0].text).toContain("pm_123");
     expect(result.content[0].text).toContain("CARD");
@@ -203,7 +205,7 @@ describe("paymentMethodUnenrollTool", () => {
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456", payment_method_id: "pm_123456789012345678901234567890123456" };
-    const result = await paymentMethodUnenrollTool.handler(mockYunoClient as any, input);
+    const result = await paymentMethodUnenrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.unenroll).toHaveBeenCalledWith(input.customer_id, input.payment_method_id);
     expect(result.content[0].text).toContain("pm_123");
     expect(result.content[0].text).toContain("true");

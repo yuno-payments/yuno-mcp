@@ -6,12 +6,28 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "types": "./dist/client/index.d.ts"
+    },
+    "./schemas": {
+      "import": "./dist/schemas/index.js",
+      "types": "./dist/schemas/index.d.ts"
+    },
+    "./tools": {
+      "import": "./dist/tools/index.js",
+      "types": "./dist/tools/index.d.ts"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts"
     }
   },
   "scripts": {
-    "build": "rm -rf dist && bunchee",
+    "build": "rm -rf dist && tsc --noEmit && bunchee",
     "test": "rstest run",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
   },
   "files": [
     "dist",
@@ -20,7 +36,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.15.1",
-    "zod": "3.24.4"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

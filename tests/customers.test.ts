@@ -1,7 +1,8 @@
-import { expect, it, describe, rstest } from '@rstest/core';
-import { customerCreateTool, customerRetrieveTool, customerRetrieveByExternalIdTool, customerUpdateTool } from "../src/customers";
-import { customerCreateSchema, customerUpdateSchema } from "../src/customers/types";
+import { expect, it, describe, rstest } from "@rstest/core";
 import z from "zod";
+import { customerCreateSchema, customerUpdateSchema } from "../src/schemas";
+import { customerCreateTool, customerRetrieveTool, customerRetrieveByExternalIdTool, customerUpdateTool } from "../src/tools/customers";
+import { CustomerUpdateSchema, YunoCustomer } from "../src/tools/customers/types";
 
 const customerRetrieveSchema = z.object({
   customerId: z.string().min(36).max(64),
@@ -19,7 +20,7 @@ describe("customerCreateTool", () => {
       },
     };
     const input = { merchant_customer_id: "abc", email: "test@example.com" };
-    const result = await customerCreateTool.handler(mockYunoClient as any, input);
+    const result = await customerCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("cus_123");
     expect(result.content[0].text).toContain("test@example.com");
@@ -57,8 +58,6 @@ describe("customerCreateTool", () => {
       gender: "M",
       date_of_birth: "1990-01-01",
       email: "full@example.com",
-      nationality: "US",
-      country: "US",
       document: { document_type: "passport", document_number: "123456" },
       phone: { number: "1234567890", country_code: "1" },
       billing_address: {
@@ -74,8 +73,8 @@ describe("customerCreateTool", () => {
         zip_code: "90001",
       },
       metadata: [],
-    };
-    const result = await customerCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies YunoCustomer;
+    const result = await customerCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("cus_456");
     expect(result.content[0].text).toContain("full@example.com");
@@ -89,7 +88,7 @@ describe("customerCreateTool", () => {
       },
     };
     const input = { merchant_customer_id: "minimal", email: "minimal@example.com" };
-    const result = await customerCreateTool.handler(mockYunoClient as any, input);
+    const result = await customerCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("cus_789");
     expect(result.content[0].text).toContain("minimal@example.com");
@@ -104,7 +103,7 @@ describe("customerRetrieveTool", () => {
       },
     };
     const input = { customerId: "cus_123" };
-    const result = await customerRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await customerRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.retrieve).toHaveBeenCalledWith(input.customerId);
     expect(result.content[0].text).toContain("cus_123");
     expect(result.content[0].text).toContain("test@example.com");
@@ -126,7 +125,7 @@ describe("customerRetrieveByExternalIdTool", () => {
       },
     };
     const input = { merchant_customer_id: "external_123" };
-    const result = await customerRetrieveByExternalIdTool.handler(mockYunoClient as any, input);
+    const result = await customerRetrieveByExternalIdTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.retrieveByExternalId).toHaveBeenCalledWith(input.merchant_customer_id);
     expect(result.content[0].text).toContain("cus_456");
     expect(result.content[0].text).toContain("external@example.com");
@@ -148,7 +147,7 @@ describe("customerUpdateTool", () => {
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456", email: "updated@example.com" };
-    const result = await customerUpdateTool.handler(mockYunoClient as any, input);
+    const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customerId, { email: "updated@example.com" });
     expect(result.content[0].text).toContain("cus_123");
     expect(result.content[0].text).toContain("updated@example.com");
@@ -197,8 +196,8 @@ describe("customerUpdateTool", () => {
       },
       metadata: [],
       merchant_customer_created_at: "2024-01-01",
-    };
-    const result = await customerUpdateTool.handler(mockYunoClient as any, input);
+    } as const satisfies CustomerUpdateSchema;
+    const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     const { customerId, ...updateFields } = input;
     expect(mockYunoClient.customers.update).toHaveBeenCalledWith(customerId, updateFields);
     expect(result.content[0].text).toContain("cus_456");
@@ -213,7 +212,7 @@ describe("customerUpdateTool", () => {
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456" };
-    const result = await customerUpdateTool.handler(mockYunoClient as any, input);
+    const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customerId, {});
     expect(result.content[0].text).toContain("cus_789");
   });

@@ -1,19 +1,27 @@
-import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../checkouts/types";
-import { YunoCustomer } from "../customers/types";
-import { InstallmentPlanUpdateBody, YunoInstallmentPlan } from "../installmentPlans/types";
-import { PaymentLinkCancelSchema, YunoPaymentLink } from "../paymentLinks/types";
-import { PaymentMethodEnrollSchema, YunoPaymentMethod } from "../paymentMethods/types";
-import { PaymentCancelSchema, PaymentCaptureAuthorizationSchema, PaymentCreateBody, PaymentCreateSchema, PaymentRefundSchema, YunoPayment } from "../payments/types";
-import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../recipients/types";
-import { SubscriptionUpdateBody, YunoSubscription } from "../subscriptions/types";
-import { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from "./types";
+import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../tools/checkouts/types";
+import { YunoCustomer } from "../tools/customers/types";
+import { InstallmentPlanUpdateBody, YunoInstallmentPlan } from "../tools/installmentPlans/types";
+import { PaymentLinkCancelSchema, YunoPaymentLink } from "../tools/paymentLinks/types";
+import { PaymentMethodEnrollSchema, YunoPaymentMethod } from "../tools/paymentMethods/types";
+import {
+  PaymentCancelSchema,
+  PaymentCaptureAuthorizationSchema,
+  PaymentCreateBody,
+  PaymentCreateSchema,
+  PaymentRefundSchema,
+  YunoPayment,
+} from "../tools/payments/types";
+import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../tools/recipients/types";
+import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
+import type { PublicApiKey } from "../types/shared";
+import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from "./types";
 
 const apiKeyPrefixToEnvironmentSuffix = {
   dev: "-dev",
   staging: "-staging",
   sandbox: "-sandbox",
   prod: "",
-} as ApiKeyPrefixToEnvironmentSuffix;
+} as const satisfies ApiKeyPrefixToEnvironmentSuffix;
 
 function generateBaseUrlApi(publicApiKey: string) {
   const [apiKeyPrefix] = publicApiKey.split("_");
@@ -27,7 +35,7 @@ export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
-  private baseUrl: string;
+  private baseUrl: ReturnType<typeof generateBaseUrlApi>;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
@@ -36,7 +44,7 @@ export class YunoClient {
     this.baseUrl = generateBaseUrlApi(this.publicApiKey);
   }
 
-  static async initialize(config: YunoClientConfig): Promise<YunoClient> {
+  static initialize(config: YunoClientConfig): YunoClient {
     const client = new YunoClient(config);
     return client;
   }

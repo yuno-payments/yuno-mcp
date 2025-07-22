@@ -1,12 +1,13 @@
-import { expect, it, describe, rstest } from '@rstest/core';
+import { expect, it, describe, rstest } from "@rstest/core";
 import {
   installmentPlanCreateTool,
   installmentPlanUpdateTool,
   installmentPlanRetrieveTool,
   installmentPlanDeleteTool,
-} from "../src/installmentPlans";
-import { installmentPlanCreateSchema, installmentPlanUpdateSchema } from "../src/installmentPlans/types";
+} from "../src/tools/installmentPlans";
+import { installmentPlanCreateSchema, installmentPlanUpdateSchema } from "../src/schemas";
 import z from "zod";
+import { InstallmentPlanCreateSchema, InstallmentPlanUpdateSchema } from "../src/tools/installmentPlans/types";
 
 describe("installmentPlanCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -22,7 +23,7 @@ describe("installmentPlanCreateTool", () => {
       installments_plan: [{ installment: 3, rate: 1.5 }],
       country_code: "US",
     };
-    const result = await installmentPlanCreateTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
@@ -78,8 +79,8 @@ describe("installmentPlanCreateTool", () => {
       first_installment_deferral: 1,
       amount: { currency: "USD", min_value: 10, max_value: 1000 },
       availability: { start_at: "2024-01-01", finish_at: "2024-12-31" },
-    };
-    const result = await installmentPlanCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies InstallmentPlanCreateSchema;
+    const result = await installmentPlanCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.create).toHaveBeenCalledWith({ ...input, account_id: ["acc_123"] });
     expect(result.content[0].text).toContain("plan_456");
     expect(result.content[0].text).toContain("Full Plan");
@@ -98,7 +99,7 @@ describe("installmentPlanCreateTool", () => {
       installments_plan: [{ installment: 1, rate: 0.5 }],
       country_code: "US",
     };
-    const result = await installmentPlanCreateTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
@@ -121,7 +122,7 @@ describe("installmentPlanUpdateTool", () => {
       planId: "plan_123",
       name: "Updated Plan",
     };
-    const result = await installmentPlanUpdateTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.update).toHaveBeenCalledWith("plan_123", { name: "Updated Plan" });
     expect(result.content[0].text).toContain("plan_123");
     expect(result.content[0].text).toContain("Updated Plan");
@@ -155,8 +156,8 @@ describe("installmentPlanUpdateTool", () => {
       first_installment_deferral: 2,
       amount: { currency: "USD", min_value: 20, max_value: 2000 },
       availability: { start_at: "2024-06-01", finish_at: "2024-12-31" },
-    };
-    const result = await installmentPlanUpdateTool.handler(mockYunoClient as any, input);
+    } as const satisfies InstallmentPlanUpdateSchema;
+    const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     const { planId, ...updateFields } = input;
     expect(mockYunoClient.installmentPlans.update).toHaveBeenCalledWith(planId, updateFields);
     expect(result.content[0].text).toContain("plan_456");
@@ -170,7 +171,7 @@ describe("installmentPlanUpdateTool", () => {
       },
     };
     const input = { planId: "plan_789" };
-    const result = await installmentPlanUpdateTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.update).toHaveBeenCalledWith("plan_789", {});
     expect(result.content[0].text).toContain("plan_789");
     expect(result.content[0].text).toContain("Minimal Update");
@@ -187,7 +188,7 @@ describe("installmentPlanRetrieveTool", () => {
       },
     };
     const input = { planId: "plan_123" };
-    const result = await installmentPlanRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.retrieve).toHaveBeenCalledWith("plan_123");
     expect(result.content[0].text).toContain("plan_123");
     expect(result.content[0].text).toContain("Plan 1");
@@ -211,7 +212,7 @@ describe("installmentPlanDeleteTool", () => {
       },
     };
     const input = { planId: "plan_123" };
-    const result = await installmentPlanDeleteTool.handler(mockYunoClient as any, input);
+    const result = await installmentPlanDeleteTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.delete).toHaveBeenCalledWith("plan_123");
     expect(result.content[0].text).toContain("plan_123");
     expect(result.content[0].text).toContain("true");

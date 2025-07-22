@@ -1,13 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
+import { Output } from "./types";
 
 let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
 
 const yunoMCP = new McpServer(
   {
     name: "yuno-mcp",
-    version: "1.3.1",
+    version: "1.4.0",
   },
   {
     capabilities: {},
@@ -15,12 +16,12 @@ const yunoMCP = new McpServer(
 );
 
 for (const tool of tools) {
-  yunoMCP.tool(tool.method, tool.schema.shape, async (params: any, extra: any) => {
+  yunoMCP.tool(tool.method, tool.schema.shape, async (params: any) => {
     try {
       if (!yunoClient) {
         throw new Error("Yuno client not initialized");
       }
-      return await tool.handler(yunoClient, params, extra);
+      return await tool.handler({ yunoClient, type: "text" })(params);
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text" as const, text: error.message }] };
