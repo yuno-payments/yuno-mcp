@@ -1,13 +1,14 @@
-import { checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool, checkoutSessionCreateOttTool } from "../src/checkouts";
-import { checkoutSessionCreateSchema, ottCreateSchema } from "../src/checkouts/types";
+import { expect, it, describe, rstest } from "@rstest/core";
 import z from "zod";
+import { checkoutSessionCreateSchema, ottCreateSchema } from "../src/schemas";
+import { checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool, checkoutSessionCreateOttTool } from "../src/tools/checkouts";
 
 describe("checkoutSessionCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
       },
     };
     const input = {
@@ -18,7 +19,7 @@ describe("checkoutSessionCreateTool", () => {
       country: "US",
       amount: { currency: "USD", value: 100 },
     };
-    const result = await checkoutSessionCreateTool.handler(mockYunoClient as any, input);
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("chk_123");
     expect(result.content[0].text).toContain("order_1");
@@ -57,7 +58,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
       },
     };
     const input = {
@@ -74,7 +75,7 @@ describe("checkoutSessionCreateTool", () => {
         plan: [{ installment: 3, rate: 1.5 }],
       },
     };
-    const result = await checkoutSessionCreateTool.handler(mockYunoClient as any, input);
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("chk_456");
     expect(result.content[0].text).toContain("order_2");
@@ -84,7 +85,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: jest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
+        create: rstest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
       },
     };
     const input = {
@@ -94,7 +95,7 @@ describe("checkoutSessionCreateTool", () => {
       country: "US",
       amount: { currency: "USD", value: 100 },
     };
-    const result = await checkoutSessionCreateTool.handler(mockYunoClient as any, input);
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
@@ -112,11 +113,11 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        retrievePaymentMethods: jest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
       },
     };
     const input = { sessionId: "sess_123" };
-    const result = await checkoutSessionRetrievePaymentMethodsTool.handler(mockYunoClient as any, input);
+    const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.retrievePaymentMethods).toHaveBeenCalledWith("sess_123");
     expect(result.content[0].text).toContain("card");
     expect(result.content[0].text).toContain("Visa");
@@ -134,7 +135,7 @@ describe("checkoutSessionCreateOttTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        createOtt: jest.fn().mockResolvedValue({
+        createOtt: rstest.fn().mockResolvedValue({
           token: "f3beb554-21c7-46a7-9e22-769c6c012df1",
           vaulted_token: null,
           vault_on_success: false,
@@ -192,7 +193,7 @@ describe("checkoutSessionCreateOttTool", () => {
       third_party_data: null,
       device_fingerprints: null,
     };
-    const result = await checkoutSessionCreateOttTool.handler(mockYunoClient as any, input);
+    const result = await checkoutSessionCreateOttTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.createOtt).toHaveBeenCalledWith("2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a", {
       payment_method: input.payment_method,
       three_d_secure: input.three_d_secure,
