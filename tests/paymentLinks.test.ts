@@ -1,5 +1,6 @@
-import { paymentLinkCreateTool, paymentLinkRetrieveTool, paymentLinkCancelTool } from "../src/paymentLinks";
-import { paymentLinkCreateSchema, paymentLinkCancelSchema } from "../src/paymentLinks/types";
+import { expect, it, describe, rstest } from "@rstest/core";
+import { paymentLinkCreateTool, paymentLinkRetrieveTool, paymentLinkCancelTool } from "../src/tools/paymentLinks";
+import { paymentLinkCreateSchema, paymentLinkCancelSchema } from "../src/schemas";
 import z from "zod";
 
 describe("paymentLinkCreateTool", () => {
@@ -7,7 +8,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
       },
     };
     const input = {
@@ -18,7 +19,7 @@ describe("paymentLinkCreateTool", () => {
       amount: { currency: "USD", value: 100 },
       payment_method_types: ["card"],
     };
-    const result = await paymentLinkCreateTool.handler(mockYunoClient as any, input);
+    const result = await paymentLinkCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentLinks.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("plink_123");
     expect(result.content[0].text).toContain("Test link");
@@ -57,7 +58,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
       },
     };
     const input = {
@@ -77,7 +78,7 @@ describe("paymentLinkCreateTool", () => {
       metadata: [],
       vault_on_success: true,
     };
-    const result = await paymentLinkCreateTool.handler(mockYunoClient as any, input);
+    const result = await paymentLinkCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentLinks.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("plink_456");
     expect(result.content[0].text).toContain("Full link");
@@ -87,7 +88,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: jest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
+        create: rstest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
       },
     };
     const input = {
@@ -97,7 +98,7 @@ describe("paymentLinkCreateTool", () => {
       amount: { currency: "USD", value: 100 },
       payment_method_types: ["card"],
     };
-    const result = await paymentLinkCreateTool.handler(mockYunoClient as any, input);
+    const result = await paymentLinkCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentLinks.create).toHaveBeenCalledWith(
       expect.objectContaining({
         ...input,
@@ -115,11 +116,11 @@ describe("paymentLinkRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        retrieve: jest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
       },
     };
     const input = { paymentLinkId: "plink_123" };
-    const result = await paymentLinkRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await paymentLinkRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentLinks.retrieve).toHaveBeenCalledWith("plink_123");
     expect(result.content[0].text).toContain("plink_123");
     expect(result.content[0].text).toContain("Test link");
@@ -139,11 +140,14 @@ describe("paymentLinkCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        cancel: jest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
       },
     };
-    const input = { paymentLinkId: "plink_123", body: { reason: "REQUESTED_BY_CUSTOMER" } };
-    const result = await paymentLinkCancelTool.handler(mockYunoClient as any, input);
+
+    const result = await paymentLinkCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({
+      paymentLinkId: "plink_123",
+      body: { reason: "REQUESTED_BY_CUSTOMER" as const },
+    });
     expect(mockYunoClient.paymentLinks.cancel).toHaveBeenCalledWith("plink_123", { reason: "REQUESTED_BY_CUSTOMER" });
     expect(result.content[0].text).toContain("plink_123");
     expect(result.content[0].text).toContain("true");

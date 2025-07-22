@@ -1,24 +1,42 @@
-import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../checkouts/types";
-import { YunoCustomer } from "../customers/types";
-import { YunoInstallmentPlan } from "../installmentPlans/types";
-import { YunoPaymentLink } from "../paymentLinks/types";
-import { YunoPaymentMethod } from "../paymentMethods/types";
-import { YunoPayment } from "../payments/types";
-import { YunoRecipient } from "../recipients/types";
-import { YunoSubscription } from "../subscriptions/types";
-import { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from "./types";
+import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../tools/checkouts/types";
+import { YunoCustomer } from "../tools/customers/types";
+import { InstallmentPlanUpdateBody, YunoInstallmentPlan } from "../tools/installmentPlans/types";
+import { PaymentLinkCancelSchema, YunoPaymentLink } from "../tools/paymentLinks/types";
+import { PaymentMethodEnrollSchema, YunoPaymentMethod } from "../tools/paymentMethods/types";
+import {
+  PaymentCancelSchema,
+  PaymentCaptureAuthorizationSchema,
+  PaymentCreateBody,
+  PaymentCreateSchema,
+  PaymentRefundSchema,
+  YunoPayment,
+} from "../tools/payments/types";
+import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../tools/recipients/types";
+import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
+import { RoutingLoginRequest, RoutingLoginResponse, RoutingCreateRequest, RoutingCreateResponse } from "../tools/routing/types";
+import type { PublicApiKey } from "../types/shared";
+import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from "./types";
 
 const apiKeyPrefixToEnvironmentSuffix = {
   dev: "-dev",
   staging: "-staging",
   sandbox: "-sandbox",
   prod: "",
-} as ApiKeyPrefixToEnvironmentSuffix;
+} as const satisfies ApiKeyPrefixToEnvironmentSuffix;
 
 function generateBaseUrlApi(publicApiKey: string) {
   const [apiKeyPrefix] = publicApiKey.split("_");
   const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix as ApiKeyPrefix] as EnvironmentSuffix;
-  const baseURL = `https://api${environmentSuffix}.y.uno/v1`;
+  const baseURL = `https://api${environmentSuffix}.y.uno/v1` as const;
+
+  return baseURL;
+}
+
+function generateBaseUrlRouting(publicApiKey: string) {
+  const [apiKeyPrefix] = publicApiKey.split("_");
+  const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix as ApiKeyPrefix] as EnvironmentSuffix;
+  const suffix = environmentSuffix === "" ? "" : environmentSuffix.substring(1);
+  const baseURL = suffix ? `https://${suffix}.y.uno` : `https://y.uno`;
 
   return baseURL;
 }
@@ -27,16 +45,18 @@ export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
-  private baseUrl: string;
+  private baseUrl: ReturnType<typeof generateBaseUrlApi>;
+  private routingBaseUrl: ReturnType<typeof generateBaseUrlRouting>;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
     this.baseUrl = generateBaseUrlApi(this.publicApiKey);
+    this.routingBaseUrl = generateBaseUrlRouting(this.publicApiKey);
   }
 
-  static async initialize(config: YunoClientConfig): Promise<YunoClient> {
+  static initialize(config: YunoClientConfig): YunoClient {
     const client = new YunoClient(config);
     return client;
   }
@@ -97,7 +117,7 @@ export class YunoClient {
   };
 
   paymentMethods = {
-    enroll: async (customerId: string, body: any, idempotencyKey: string) => {
+    enroll: async (customerId: string, body: PaymentMethodEnrollSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods`, {
@@ -146,7 +166,7 @@ export class YunoClient {
   };
 
   payments = {
-    create: async (payment: YunoPayment, idempotencyKey: string) => {
+    create: async (payment: PaymentCreateBody, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<YunoPayment>("/payments", {
@@ -168,7 +188,7 @@ export class YunoClient {
       });
     },
 
-    refund: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+    refund: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/refund`, {
@@ -178,7 +198,7 @@ export class YunoClient {
       });
     },
 
-    cancelOrRefund: async (paymentId: string, body: any, idempotencyKey: string) => {
+    cancelOrRefund: async (paymentId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<any>(`/payments/${paymentId}/cancel-or-refund`, {
@@ -188,7 +208,7 @@ export class YunoClient {
       });
     },
 
-    cancelOrRefundWithTransaction: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+    cancelOrRefundWithTransaction: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel-or-refund`, {
@@ -198,7 +218,7 @@ export class YunoClient {
       });
     },
 
-    cancel: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+    cancel: async (paymentId: string, transactionId: string, body: PaymentCancelSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel`, {
@@ -208,7 +228,7 @@ export class YunoClient {
       });
     },
 
-    authorize: async (payment: YunoPayment, idempotencyKey: string) => {
+    authorize: async (payment: PaymentCreateSchema["payment"], idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       if (payment && payment.payment_method && payment.payment_method.detail && payment.payment_method.detail.card) {
@@ -221,7 +241,7 @@ export class YunoClient {
       });
     },
 
-    captureAuthorization: async (paymentId: string, transactionId: string, body: any, idempotencyKey: string) => {
+    captureAuthorization: async (paymentId: string, transactionId: string, body: PaymentCaptureAuthorizationSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
       return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/capture`, {
@@ -250,7 +270,7 @@ export class YunoClient {
       });
     },
 
-    cancel: async (paymentLinkId: string, body: any) => {
+    cancel: async (paymentLinkId: string, body: PaymentLinkCancelSchema) => {
       return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}/cancel`, {
         method: "POST",
         body: JSON.stringify(body),
@@ -288,7 +308,7 @@ export class YunoClient {
       });
     },
 
-    update: async (subscriptionId: string, updateFields: YunoSubscription) => {
+    update: async (subscriptionId: string, updateFields: SubscriptionUpdateBody) => {
       return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
@@ -303,7 +323,7 @@ export class YunoClient {
   };
 
   recipients = {
-    create: async (recipient: YunoRecipient) => {
+    create: async (recipient: RecipientCreateSchema) => {
       const recipientWithAccount = {
         ...recipient,
         account_id: recipient.account_id || this.accountCode,
@@ -320,8 +340,8 @@ export class YunoClient {
       });
     },
 
-    update: async (ID: string, updateFields: YunoRecipient) => {
-      return this.request<YunoRecipient>(`/recipients/${ID}?account_id=${this.accountCode}`, {
+    update: async (recipientId: string, updateFields: RecipientUpdateBody) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
@@ -354,7 +374,7 @@ export class YunoClient {
       });
     },
 
-    update: async (planId: string, updateFields: YunoInstallmentPlan) => {
+    update: async (planId: string, updateFields: InstallmentPlanUpdateBody) => {
       return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
@@ -365,6 +385,57 @@ export class YunoClient {
       return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
         method: "DELETE",
       });
+    },
+  };
+
+  routing = {
+    login: async (body: RoutingLoginRequest) => {
+      try {
+        const url = `${this.routingBaseUrl}/dashboard-bff/api-public/auth0/login`;
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        return response.json();
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error("An error occurred while making the routing request");
+      }
+    },
+
+    create: async (body: RoutingCreateRequest, accessToken: string) => {
+      try {
+        const url = `${this.routingBaseUrl}/dashboard-bff/api/smart-routing/create-workflow/${this.accountCode}`;
+
+        const headers = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+          "x-account-code": this.accountCode,
+          "Cache-Control": "no-cache",
+        };
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        return response.json();
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error("An error occurred while creating the routing workflow");
+      }
     },
   };
 }

@@ -1,3 +1,4 @@
+import { expect, it, describe, rstest } from "@rstest/core";
 import {
   subscriptionCreateTool,
   subscriptionRetrieveTool,
@@ -5,15 +6,16 @@ import {
   subscriptionResumeTool,
   subscriptionUpdateTool,
   subscriptionCancelTool,
-} from "../src/subscriptions";
-import { subscriptionCreateSchema, subscriptionUpdateSchema } from "../src/subscriptions/types";
+} from "../src/tools/subscriptions";
+import { subscriptionCreateSchema, subscriptionUpdateSchema } from "../src/schemas";
 import z from "zod";
+import { SubscriptionCreateSchema, SubscriptionUpdateSchema } from "../src/tools/subscriptions/types";
 
 describe("subscriptionCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: jest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
+        create: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
       },
       accountCode: "acc_1",
     };
@@ -22,8 +24,8 @@ describe("subscriptionCreateTool", () => {
       country: "US",
       amount: { currency: "USD", value: 100 },
       customer_payer: { id: "cus_1" },
-    };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionCreateSchema;
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Test Sub");
@@ -55,7 +57,7 @@ describe("subscriptionCreateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: jest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
       },
       accountCode: "acc_1",
     };
@@ -76,8 +78,8 @@ describe("subscriptionCreateTool", () => {
       retries: {},
       initial_payment_validation: true,
       billing_date: {},
-    };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionCreateSchema;
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_456");
     expect(result.content[0].text).toContain("Full Sub");
@@ -86,7 +88,7 @@ describe("subscriptionCreateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: jest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
+        create: rstest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
       },
       accountCode: "acc_1",
     };
@@ -96,7 +98,7 @@ describe("subscriptionCreateTool", () => {
       amount: { currency: "USD", value: 50 },
       customer_payer: { id: "cus_3" },
     };
-    const result = await subscriptionCreateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
     expect(result.content[0].text).toContain("sub_789");
     expect(result.content[0].text).toContain("Minimal Sub");
@@ -108,11 +110,11 @@ describe("subscriptionRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        retrieve: jest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
+        retrieve: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionRetrieveTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.retrieve).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Test Sub");
@@ -131,11 +133,11 @@ describe("subscriptionPauseTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        pause: jest.fn().mockResolvedValue({ id: "sub_123", status: "paused" }),
+        pause: rstest.fn().mockResolvedValue({ id: "sub_123", status: "paused" }),
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionPauseTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionPauseTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.pause).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("paused");
   });
@@ -153,11 +155,11 @@ describe("subscriptionResumeTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        resume: jest.fn().mockResolvedValue({ id: "sub_123", status: "active" }),
+        resume: rstest.fn().mockResolvedValue({ id: "sub_123", status: "active" }),
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionResumeTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionResumeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.resume).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("active");
   });
@@ -174,11 +176,11 @@ describe("subscriptionUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: jest.fn().mockResolvedValue({ id: "sub_123", name: "Updated Sub" }),
+        update: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Updated Sub" }),
       },
     };
     const input = { subscriptionId: "sub_123", name: "Updated Sub" };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_123", { name: "Updated Sub" });
     expect(result.content[0].text).toContain("sub_123");
     expect(result.content[0].text).toContain("Updated Sub");
@@ -199,7 +201,7 @@ describe("subscriptionUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: jest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
+        update: rstest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
       },
     };
     const input = {
@@ -223,8 +225,8 @@ describe("subscriptionUpdateTool", () => {
       availability: { start_at: "2024-01-01", finish_at: "2024-12-31" },
       retries: { retry_on_decline: true, amount: 10 },
       metadata: [],
-    };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    } as const satisfies SubscriptionUpdateSchema;
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     const { subscriptionId, ...updateFields } = input;
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith(subscriptionId, updateFields);
     expect(result.content[0].text).toContain("sub_456");
@@ -234,11 +236,11 @@ describe("subscriptionUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: jest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
+        update: rstest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
       },
     };
     const input = { subscriptionId: "sub_789" };
-    const result = await subscriptionUpdateTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_789", {});
     expect(result.content[0].text).toContain("sub_789");
     expect(result.content[0].text).toContain("Minimal Sub");
@@ -250,11 +252,11 @@ describe("subscriptionCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        cancel: jest.fn().mockResolvedValue({ id: "sub_123", status: "cancelled" }),
+        cancel: rstest.fn().mockResolvedValue({ id: "sub_123", status: "cancelled" }),
       },
     };
     const input = { subscriptionId: "sub_123" };
-    const result = await subscriptionCancelTool.handler(mockYunoClient as any, input);
+    const result = await subscriptionCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.cancel).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("cancelled");
   });
