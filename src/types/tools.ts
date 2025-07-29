@@ -30,6 +30,14 @@ type SubscriptionToolMethod =
   | "subscriptionResume"
   | "subscriptionUpdate"
   | "subscriptionCancel";
+type RoutingToolMethod =
+    | "routingLogin"
+    | "routingCreate"
+    | "routingGetProviders"
+    | "routingRetrieve"
+    | "routingUpdate"
+    | "routingPost"
+    | "routingLogOut";
 
 type ToolMethod =
   | CheckoutToolMethod
@@ -40,7 +48,8 @@ type ToolMethod =
   | PaymentMethodToolMethod
   | PaymentToolMethod
   | RecipientToolMethod
-  | SubscriptionToolMethod;
+  | SubscriptionToolMethod
+    | RoutingToolMethod;
 
 type Content<TType extends "text" | "object" = "object" | "text", TResult extends any = any> = TType extends "text"
   ? { type: "text"; text: string }

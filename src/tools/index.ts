@@ -8,6 +8,7 @@ import { paymentMethodTools } from "./paymentMethods";
 import { paymentTools } from "./payments";
 import { recipientTools } from "./recipients";
 import { subscriptionTools } from "./subscriptions";
+import { routingTools } from "./routing";
 
 export const tools = [
   ...customerTools,
@@ -19,4 +20,5 @@ export const tools = [
   ...recipientTools,
   ...installmentPlanTools,
   ...documentationTools,
+    ...routingTools,
 ] as const satisfies Tool[];
