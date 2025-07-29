@@ -8,3 +8,4 @@ export * from "./recipients";
 export * from "./installmentPlans";
 export * from "./documentation";
 export * from "./shared";
+export * from "./routing";
