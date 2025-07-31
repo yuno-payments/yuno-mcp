@@ -14,7 +14,7 @@ export const paymentMethodEnrollTool = {
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
   }),
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async ({
       customerId,
       body,
@@ -26,7 +26,7 @@ export const paymentMethodEnrollTool = {
     }): Promise<Output<TType, YunoPaymentMethod>> => {
       const enrollmentWithAccount = {
         ...body,
-        account_id: body.account_id || yunoClient.accountCode,
+        account_id: body.account_id || apiKeys.accountCode,
       };
       const idempotencyKey = idempotency_key || randomUUID();
       const response = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, idempotencyKey);

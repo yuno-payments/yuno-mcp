@@ -8,11 +8,11 @@ export const paymentLinkCreateTool = {
   description: "Create a payment link in Yuno.",
   schema: paymentLinkCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async (data: PaymentLinkCreateSchema): Promise<Output<TType, YunoPaymentLink>> => {
       const paymentLinkWithAccount = {
         ...data,
-        account_id: data.account_id || yunoClient.accountCode,
+        account_id: data.account_id || apiKeys.accountCode,
       };
       const paymentLink = await yunoClient.paymentLinks.create(paymentLinkWithAccount);
 

@@ -9,11 +9,11 @@ export const recipientCreateTool = {
   description: "Create a recipient in Yuno.",
   schema: recipientCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async (data: RecipientCreateSchema): Promise<Output<TType, YunoRecipient>> => {
       const recipientWithAccount = {
         ...data,
-        account_id: data.account_id || yunoClient.accountCode,
+        account_id: data.account_id || apiKeys.accountCode,
       };
       const recipient = await yunoClient.recipients.create(recipientWithAccount);
 

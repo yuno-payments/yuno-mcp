@@ -8,12 +8,12 @@ export const installmentPlanCreateTool = {
   description: "Create an installment plan in Yuno.",
   schema: installmentPlanCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async (data: InstallmentPlanCreateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
       const planWithAccount = {
         ...data,
-        account_id: data.account_id || [yunoClient.accountCode],
-      };
+        account_id: data.account_id || [apiKeys.accountCode],
+      } satisfies InstallmentPlanCreateSchema;
       const plan = await yunoClient.installmentPlans.create(planWithAccount);
 
       if (type === "text") {

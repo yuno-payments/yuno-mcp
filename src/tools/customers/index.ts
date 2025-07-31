@@ -12,6 +12,8 @@ export const customerCreateTool = {
     async (data: YunoCustomer): Promise<Output<TType, YunoCustomer>> => {
       const customer = await yunoClient.customers.create(data);
 
+      console.log("customer", JSON.stringify(customer, null, 4));
+
       if (type === "text") {
         return {
           content: [

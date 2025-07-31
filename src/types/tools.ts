@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { YunoClient } from "../client";
+import { YunoClient } from "../client";
 
 type CheckoutToolMethod = "checkoutSessionCreate" | "checkoutSessionRetrievePaymentMethods" | "checkoutSessionCreateOtt";
 type CustomerToolMethod = "customerCreate" | "customerRetrieve" | "customerRetrieveByExternalId" | "customerUpdate";
@@ -51,7 +51,10 @@ type Output<TType extends "text" | "object" = "object" | "text", TResult extends
 };
 
 type HandlerContext<TType extends "object" | "text" = "object" | "text"> = {
-  yunoClient: YunoClient;
+  yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
+  apiKeys: {
+    accountCode: string;
+  };
   type: TType;
 };
 

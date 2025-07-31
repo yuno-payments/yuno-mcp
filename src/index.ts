@@ -1,37 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
-import { Output } from "./types";
-
-let yunoClient: Awaited<ReturnType<typeof YunoClient.initialize>>;
-
-const yunoMCP = new McpServer(
-  {
-    name: "yuno-mcp",
-    version: "1.4.0",
-  },
-  {
-    capabilities: {},
-  },
-);
-
-for (const tool of tools) {
-  yunoMCP.tool(tool.method, tool.schema.shape, async (params: any) => {
-    try {
-      if (!yunoClient) {
-        throw new Error("Yuno client not initialized");
-      }
-      return await tool.handler({ yunoClient, type: "text" })(params);
-    } catch (error) {
-      if (error instanceof Error) {
-        return { content: [{ type: "text" as const, text: error.message }] };
-      }
-      return {
-        content: [{ type: "text" as const, text: "An unknown error occurred" }],
-      };
-    }
-  });
-}
 
 async function initializeYunoMCP({
   accountCode,
@@ -43,17 +12,56 @@ async function initializeYunoMCP({
   privateSecretKey: string;
 }) {
   try {
-    yunoClient = await YunoClient.initialize({
+    const yunoMCP = new McpServer(
+      {
+        name: "yuno-mcp",
+        version: "1.4.0",
+      },
+      {
+        capabilities: {},
+      },
+    );
+
+    const yunoClient = await YunoClient.initialize({
       accountCode,
       publicApiKey,
       privateSecretKey,
     });
 
+    console.log("yunoClient ===== YUNO MCP", yunoClient);
+
+    if (!yunoClient) {
+      console.log("error ===== YUNO MCP", yunoClient);
+      throw new Error("Failed to initialize Yuno client");
+    }
+
+    for (const tool of tools) {
+      yunoMCP.tool(tool.method, tool.schema.shape, async (params: any) => {
+        try {
+          const apiKeys = {
+            accountCode,
+          };
+          return await tool.handler({ yunoClient, apiKeys, type: "text" })(params);
+        } catch (error) {
+          if (error instanceof Error) {
+            return { content: [{ type: "text" as const, text: error.message }] };
+          }
+          return {
+            content: [{ type: "text" as const, text: "An unknown error occurred" }],
+          };
+        }
+      });
+    }
+
     return {
       yunoMCP,
     };
   } catch (error) {
-    console.error("\n🚨  Error initializing Yuno MCP server:\n");
+    if (error instanceof Error) {
+      console.error("\n🚨  Error initializing Yuno MCP server:\n", error.message);
+    } else {
+      console.error("\n🚨  Error initializing Yuno MCP server:\n", error);
+    }
   }
 }
 

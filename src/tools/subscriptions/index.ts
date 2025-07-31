@@ -9,11 +9,11 @@ export const subscriptionCreateTool = {
   description: "Create a subscription in Yuno.",
   schema: subscriptionCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async (data: SubscriptionCreateSchema): Promise<Output<TType, YunoSubscription>> => {
       const subscriptionWithAccount = {
         ...data,
-        account_id: data.account_id || yunoClient.accountCode,
+        account_id: data.account_id || apiKeys.accountCode,
       };
       const subscription = await yunoClient.subscriptions.create(subscriptionWithAccount);
 

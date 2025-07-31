@@ -8,11 +8,11 @@ export const checkoutSessionCreateTool = {
   description: "Create a new checkout session in Yuno.",
   schema: checkoutSessionCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async (data: YunoCheckoutSession): Promise<Output<TType, YunoCheckoutSession>> => {
       const checkoutSessionWithAccount = {
         ...data,
-        account_id: data.account_id || yunoClient.accountCode,
+        account_id: data.account_id || apiKeys.accountCode,
       };
       const checkoutSession = await yunoClient.checkoutSessions.create(checkoutSessionWithAccount);
 

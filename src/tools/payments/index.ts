@@ -16,11 +16,11 @@ export const paymentCreateTool = {
   description: "Create a new payment in Yuno.",
   schema: paymentCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async ({ payment, idempotency_key }: PaymentCreateSchema): Promise<Output<TType, YunoPayment>> => {
       const paymentWithAccount = {
         ...payment,
-        account_id: payment.account_id || yunoClient.accountCode,
+        account_id: payment.account_id || apiKeys.accountCode,
       } satisfies PaymentCreateBody;
       const idempotencyKey = idempotency_key || randomUUID();
       const paymentResponse = await yunoClient.payments.create(paymentWithAccount, idempotencyKey);
@@ -298,7 +298,7 @@ export const paymentAuthorizeTool = {
   description: "Authorize a payment in Yuno.",
   schema: paymentCreateSchema,
   handler:
-    <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
+    <TType extends "object" | "text">({ yunoClient, apiKeys, type }: HandlerContext<TType>) =>
     async ({
       payment,
       idempotency_key,
@@ -308,7 +308,7 @@ export const paymentAuthorizeTool = {
     }): Promise<Output<TType, YunoPayment>> => {
       const paymentWithAccount = {
         ...payment,
-        account_id: payment.account_id || yunoClient.accountCode,
+        account_id: payment.account_id || apiKeys.accountCode,
       };
       const idempotencyKey = idempotency_key || randomUUID();
       const paymentResponse = await yunoClient.payments.authorize(paymentWithAccount, idempotencyKey);
