@@ -101,7 +101,7 @@ const paymentCreateSchema = z.object({
     split_marketplace: z.any().optional(),
     metadata: metadataSchema,
   }),
-  idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payments"),
+  idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payments"),
 });
 
 const operationPaymentResponseAdditionalDataSchema = z

@@ -11,25 +11,25 @@ export const paymentMethodEnrollTool = {
   schema: z.object({
     body: paymentMethodEnrollSchema,
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
   }),
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
       customerId,
       body,
-      idempotency_key,
+      idempotencyKey,
     }: {
       customerId: string;
       body: PaymentMethodEnrollSchema;
-      idempotency_key: string;
+      idempotencyKey: string;
     }): Promise<Output<TType, YunoPaymentMethod>> => {
       const enrollmentWithAccount = {
         ...body,
         account_id: body.account_id || yunoClient.accountCode,
       };
-      const idempotencyKey = idempotency_key || randomUUID();
-      const response = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, idempotencyKey);
+      const finalIdempotencyKey = idempotencyKey || randomUUID();
+      const response = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, finalIdempotencyKey);
 
       if (type === "text") {
         return {

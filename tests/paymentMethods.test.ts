@@ -24,10 +24,10 @@ describe("paymentMethodEnrollTool", () => {
         country: "US",
         type: "CARD",
       },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotency_key);
+    expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotencyKey);
     expect(result.content[0].text).toContain("pm_123");
     expect(result.content[0].text).toContain("CARD");
   });
@@ -43,7 +43,7 @@ describe("paymentMethodEnrollTool", () => {
     const schema = z.object({
       body: paymentMethodEnrollSchema,
       customerId: z.string().min(36).max(64),
-      idempotency_key: z.string().uuid().optional(),
+      idempotencyKey: z.string().uuid().optional(),
     });
     expect(() => schema.parse(minimal)).not.toThrow();
   });
@@ -68,7 +68,7 @@ describe("paymentMethodEnrollTool", () => {
     const schema = z.object({
       body: paymentMethodEnrollSchema,
       customerId: z.string().min(36).max(64),
-      idempotency_key: z.string().uuid().optional(),
+      idempotencyKey: z.string().uuid().optional(),
     });
     expect(() => schema.parse(missingCustomerId)).toThrow();
     expect(() => schema.parse(invalidCustomerId)).toThrow();
@@ -101,10 +101,10 @@ describe("paymentMethodEnrollTool", () => {
         callback_url: "https://callback",
         verify: { vault_on_success: true, currency: "USD" },
       },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotency_key?: string };
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotencyKey?: string };
     const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotency_key);
+    expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(input.customerId, input.body, input.idempotencyKey);
     expect(result.content[0].text).toContain("pm_456");
     expect(result.content[0].text).toContain("CARD");
     expect(result.content[0].text).toContain("4111111111111111");
@@ -123,8 +123,8 @@ describe("paymentMethodEnrollTool", () => {
         country: "US",
         type: "CARD",
       },
-      idempotency_key: "what-ever",
-    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotency_key: string };
+      idempotencyKey: "what-ever",
+    } as const satisfies { customerId: string; body: PaymentMethodEnrollSchema; idempotencyKey: string };
     const result = await paymentMethodEnrollTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentMethods.enroll).toHaveBeenCalledWith(
       input.customerId,
