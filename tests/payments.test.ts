@@ -32,10 +32,10 @@ describe("paymentCreateTool", () => {
         workflow: "DIRECT",
         payment_method: { type: "CARD" },
       },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
+    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("Test payment");
   });
@@ -100,10 +100,10 @@ describe("paymentCreateTool", () => {
         split_marketplace: [],
         metadata: [],
       },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
+    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_456");
     expect(result.content[0].text).toContain("Full payment");
   });
@@ -191,7 +191,7 @@ describe("paymentRefundTool", () => {
     paymentId: z.string().min(36).max(64),
     transactionId: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotency_key: z.string().uuid().optional(),
+    idempotencyKey: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -204,10 +204,10 @@ describe("paymentRefundTool", () => {
       paymentId: "pay_123456789012345678901234567890123456",
       transactionId: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.refund).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotency_key);
+    expect(mockYunoClient.payments.refund).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
@@ -224,7 +224,7 @@ describe("paymentCancelOrRefundTool", () => {
   const cancelOrRefundSchema = z.object({
     paymentId: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotency_key: z.string().uuid().optional(),
+    idempotencyKey: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -236,10 +236,10 @@ describe("paymentCancelOrRefundTool", () => {
     const input = {
       paymentId: "pay_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentCancelOrRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.cancelOrRefund).toHaveBeenCalledWith(input.paymentId, input.body, input.idempotency_key);
+    expect(mockYunoClient.payments.cancelOrRefund).toHaveBeenCalledWith(input.paymentId, input.body, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
@@ -257,7 +257,7 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
     paymentId: z.string().min(36).max(64),
     transactionId: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotency_key: z.string().uuid().optional(),
+    idempotencyKey: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -270,14 +270,14 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
       paymentId: "pay_123456789012345678901234567890123456",
       transactionId: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentCancelOrRefundWithTransactionTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.cancelOrRefundWithTransaction).toHaveBeenCalledWith(
       input.paymentId,
       input.transactionId,
       input.body,
-      input.idempotency_key,
+      input.idempotencyKey,
     );
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
@@ -302,10 +302,10 @@ describe("paymentCancelTool", () => {
       paymentId: "pay_123456789012345678901234567890123456",
       transactionId: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", description: "Test payment", reason: "REQUESTED_BY_CUSTOMER" },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCancelSchema; idempotency_key: string };
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCancelSchema; idempotencyKey: string };
     const result = await paymentCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.cancel).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotency_key);
+    expect(mockYunoClient.payments.cancel).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
@@ -336,10 +336,10 @@ describe("paymentAuthorizeTool", () => {
         workflow: "DIRECT",
         payment_method: { type: "CARD" },
       },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentAuthorizeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.authorize).toHaveBeenCalledWith(input.payment, input.idempotency_key);
+    expect(mockYunoClient.payments.authorize).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
@@ -380,14 +380,14 @@ describe("paymentCaptureAuthorizationTool", () => {
       paymentId: "pay_123456789012345678901234567890123456",
       transactionId: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", reason: "capture" },
-      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCaptureAuthorizationSchema; idempotency_key: string };
+      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCaptureAuthorizationSchema; idempotencyKey: string };
     const result = await paymentCaptureAuthorizationTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.captureAuthorization).toHaveBeenCalledWith(
       input.paymentId,
       input.transactionId,
       input.body,
-      input.idempotency_key,
+      input.idempotencyKey,
     );
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");

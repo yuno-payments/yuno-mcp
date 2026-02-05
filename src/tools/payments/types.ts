@@ -84,7 +84,7 @@ export interface YunoPayment {
 }
 
 export type PaymentCreateSchema = z.infer<typeof paymentCreateSchema>;
-export type PaymentCreateBody = Omit<PaymentCreateSchema, "idempotency_key">["payment"];
+export type PaymentCreateBody = Omit<PaymentCreateSchema, "idempotencyKey">["payment"];
 
 export type PaymentRefundSchema = z.infer<typeof paymentRefundSchema>;
 
