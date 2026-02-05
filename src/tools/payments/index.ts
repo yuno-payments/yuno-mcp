@@ -254,7 +254,12 @@ export const paymentCancelOrRefundWithTransactionTool = {
 export const paymentCancelTool = {
   method: "paymentCancel",
   description: "Cancel a payment in Yuno.",
-  schema: paymentCancelSchema,
+  schema: z.object({
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: paymentCancelSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations"),
+  }),
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -338,7 +343,12 @@ export const paymentAuthorizeTool = {
 export const paymentCaptureAuthorizationTool = {
   method: "paymentCaptureAuthorization",
   description: "Capture an authorized payment in Yuno.",
-  schema: paymentCaptureAuthorizationSchema,
+  schema: z.object({
+    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    body: paymentCaptureAuthorizationSchema,
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate captures"),
+  }),
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -366,7 +376,14 @@ export const paymentCaptureAuthorizationTool = {
         } as Output<TType, YunoPayment>;
       }
 
-      return response as Output<TType, YunoPayment>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: response,
+          },
+        ],
+      } as Output<TType, YunoPayment>;
     },
 } as const satisfies Tool;
 

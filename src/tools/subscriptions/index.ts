@@ -28,7 +28,14 @@ export const subscriptionCreateTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return subscription as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: subscription,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
@@ -54,7 +61,14 @@ export const subscriptionRetrieveTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return subscription as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: subscription,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
@@ -80,7 +94,14 @@ export const subscriptionPauseTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return response as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: response,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
@@ -106,7 +127,14 @@ export const subscriptionResumeTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return response as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: response,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
@@ -130,7 +158,14 @@ export const subscriptionUpdateTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return subscription as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: subscription,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
@@ -156,7 +191,14 @@ export const subscriptionCancelTool = {
         } as Output<TType, YunoSubscription>;
       }
 
-      return response as Output<TType, YunoSubscription>;
+      return {
+        content: [
+          {
+            type: "object" as const,
+            object: response,
+          },
+        ],
+      } as Output<TType, YunoSubscription>;
     },
 } as const satisfies Tool;
 
