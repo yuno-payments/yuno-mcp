@@ -74,14 +74,11 @@ export const paymentLinkRetrieveTool = {
 export const paymentLinkCancelTool = {
   method: "paymentLinkCancel",
   description: "Cancel a payment link in Yuno by its ID.",
-  schema: z.object({
-    paymentLinkId: z.string().describe("The unique identifier of the payment link to cancel"),
-    body: paymentLinkCancelSchema,
-  }),
+  schema: paymentLinkCancelSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ paymentLinkId, body }: { paymentLinkId: string; body: PaymentLinkCancelSchema }): Promise<Output<TType, YunoPaymentLink>> => {
-      const cancelResponse = await yunoClient.paymentLinks.cancel(paymentLinkId, body);
+    async ({ paymentLinkId }: PaymentLinkCancelSchema): Promise<Output<TType, YunoPaymentLink>> => {
+      const cancelResponse = await yunoClient.paymentLinks.cancel(paymentLinkId);
 
       if (type === "text") {
         return {

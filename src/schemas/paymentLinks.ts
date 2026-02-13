@@ -3,30 +3,36 @@ import { addressSchema, amountSchema, documentSchema, metadataSchema, phoneSchem
 
 const customerPayerSchema = z
   .object({
-    id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format (MAX 64 ; MIN 36)").optional(),
-    merchant_customer_id: z.string().min(1).max(255).optional().describe("The unique identifier for a customer in the merchant's system").optional(),
-    first_name: z.string().min(1).max(255).optional().describe("The customer's first name").optional(),
-    last_name: z.string().min(1).max(255).optional().describe("The customer's last name").optional(),
-    gender: z.string().min(1).max(2).optional().describe("The customer's gender (M/F/NB/NA/NK/U)").optional(),
-    date_of_birth: z.string().length(10).optional().describe("The customer's date of birth in the YYYY-MM-DD format").optional(),
-    email: z.string().min(1).max(255).optional().describe("The customer's e-mail").optional(),
-    nationality: z.string().length(2).optional().describe("The customer's nationality (ISO 3166-1)").optional(),
+    id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format"),
+    merchant_customer_id: z.string().min(3).max(255).optional().describe("The unique identifier for a customer in the merchant's system"),
+    first_name: z.string().min(1).max(255).optional().describe("The customer's first name"),
+    last_name: z.string().min(1).max(255).optional().describe("The customer's last name"),
+    gender: z.string().min(1).max(2).optional().describe("The customer's gender (M/F/NA/NK)"),
+    date_of_birth: z.string().length(10).optional().describe("The customer's date of birth in the YYYY-MM-DD format"),
+    email: z.string().min(3).max(255).optional().describe("The customer's e-mail"),
+    nationality: z.string().length(2).optional().describe("The customer's nationality (ISO 3166-1)"),
     document: documentSchema.optional(),
     billing_address: addressSchema.optional(),
     shipping_address: addressSchema.optional(),
     phone: phoneSchema.optional(),
-    ipAddress: z.string().min(1).max(45).optional(),
+    ip_address: z.string().min(1).max(45).optional().describe("The customer's IP address"),
   })
   .passthrough();
 
 const paymentLinkCreateSchema = z
   .object({
     account_id: z.string().optional().describe("Account ID for the payment"),
-    description: z.string().max(255).describe("The description of the payment"),
+    description: z.string().max(255).optional().describe("The description of the payment"),
     country: z.string().min(2).max(2).describe("Country (ISO 3166-1)"),
-    merchant_order_id: z.string().min(3).max(255).describe("The unique identifier of the customer's order"),
+    merchant_order_id: z.string().min(3).max(255).optional().describe("The unique identifier of the customer's order"),
     amount: amountSchema.describe("Specifies the payment amount object"),
     capture: z.boolean().optional().describe("Whether to capture the payment immediately, true by default"),
+    type: z.string().optional().describe("Payment link classification"),
+    payment_method: z.any().optional().describe("Payment method configuration"),
+    installments_plan: z.any().optional().describe("Installment arrangement details"),
+    timezone: z.string().optional().describe("Availability timezone (e.g., UTC +03:00)"),
+    payments_number: z.number().int().optional().describe("Count of linked payments"),
+    split_payment_methods: z.boolean().optional().describe("Enable divided payment options"),
     taxes: z
       .array(
         z
@@ -41,7 +47,7 @@ const paymentLinkCreateSchema = z
       .optional(),
     customer_payer: customerPayerSchema.optional(),
     additional_data: z.any().optional(),
-    callback_url: z.string().url().optional(),
+    callback_url: z.string().optional(),
     one_time_use: z.boolean().optional(),
     availability: z
       .object({
@@ -58,14 +64,9 @@ const paymentLinkCreateSchema = z
 
 const paymentLinkCancelSchema = z
   .object({
-    description: z.string().optional().describe("Reason for the cancellation"),
-    reason: z
-      .enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER", "OTHER"])
-      .optional()
-      .describe("Reason for the cancellation. Values could be DUPLICATE, FRAUDULENT, REQUESTED_BY_CUSTOMER, and OTHER."),
-    merchant_reference: z.string().optional().describe("Merchant reference for the cancellation"),
+    paymentLinkId: z.string().describe("The code of the payment link to cancel"),
   })
   .passthrough()
-  .describe("Body for payment link cancellation");
+  .describe("Parameters for payment link cancellation");
 
 export { paymentLinkCreateSchema, paymentLinkCancelSchema };

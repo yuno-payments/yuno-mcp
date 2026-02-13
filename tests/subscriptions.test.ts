@@ -23,7 +23,6 @@ describe("subscriptionCreateTool", () => {
       name: "Test Sub",
       country: "US",
       amount: { currency: "USD", value: 100 },
-      customer_payer: { id: "cus_1" },
     } as const satisfies SubscriptionCreateSchema;
     const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });
@@ -36,21 +35,18 @@ describe("subscriptionCreateTool", () => {
       name: "Test Sub",
       country: "US",
       amount: { currency: "USD", value: 100 },
-      customer_payer: { id: "cus_1" },
     };
     expect(() => subscriptionCreateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingName = { country: "US", amount: { currency: "USD", value: 100 }, customer_payer: { id: "cus_1" } };
-    const missingCountry = { name: "Test Sub", amount: { currency: "USD", value: 100 }, customer_payer: { id: "cus_1" } };
-    const missingAmount = { name: "Test Sub", country: "US", customer_payer: { id: "cus_1" } };
-    const missingCustomer = { name: "Test Sub", country: "US", amount: { currency: "USD", value: 100 } };
-    const invalidCountry = { name: "Test Sub", country: "U", amount: { currency: "USD", value: 100 }, customer_payer: { id: "cus_1" } };
+    const missingName = { country: "US", amount: { currency: "USD", value: 100 } };
+    const missingCountry = { name: "Test Sub", amount: { currency: "USD", value: 100 } };
+    const missingAmount = { name: "Test Sub", country: "US" };
+    const invalidCountry = { name: "Test Sub", country: "U", amount: { currency: "USD", value: 100 } };
     expect(() => subscriptionCreateSchema.parse(missingName)).toThrow();
     expect(() => subscriptionCreateSchema.parse(missingCountry)).toThrow();
     expect(() => subscriptionCreateSchema.parse(missingAmount)).toThrow();
-    expect(() => subscriptionCreateSchema.parse(missingCustomer)).toThrow();
     expect(() => subscriptionCreateSchema.parse(invalidCountry)).toThrow();
   });
 
@@ -96,7 +92,6 @@ describe("subscriptionCreateTool", () => {
       name: "Minimal Sub",
       country: "US",
       amount: { currency: "USD", value: 50 },
-      customer_payer: { id: "cus_3" },
     };
     const result = await subscriptionCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.create).toHaveBeenCalledWith({ ...input, account_id: "acc_1" });

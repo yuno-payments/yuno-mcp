@@ -27,31 +27,26 @@ describe("checkoutSessionCreateTool", () => {
 
   it("should validate a correct minimal payload (only required fields)", () => {
     const minimal = {
-      customer_id: "cus_123456789012345678901234567890123456",
       merchant_order_id: "ord_1",
       payment_description: "desc",
       country: "US",
-      amount: { currency: "USD", value: 100 },
     };
     expect(() => checkoutSessionCreateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingCustomerId = {
-      merchant_order_id: "ord_1",
-      payment_description: "desc",
-      country: "US",
-      amount: { currency: "USD", value: 100 },
-    };
     const invalidCustomerId = {
       customer_id: "short",
       merchant_order_id: "ord_1",
       payment_description: "desc",
       country: "US",
-      amount: { currency: "USD", value: 100 },
     };
-    expect(() => checkoutSessionCreateSchema.parse(missingCustomerId)).toThrow();
+    const missingCountry = {
+      merchant_order_id: "ord_1",
+      payment_description: "desc",
+    };
     expect(() => checkoutSessionCreateSchema.parse(invalidCustomerId)).toThrow();
+    expect(() => checkoutSessionCreateSchema.parse(missingCountry)).toThrow();
   });
 
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {

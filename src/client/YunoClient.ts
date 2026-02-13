@@ -1,7 +1,7 @@
 import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../tools/checkouts/types";
 import { YunoCustomer } from "../tools/customers/types";
 import { InstallmentPlanUpdateBody, YunoInstallmentPlan } from "../tools/installmentPlans/types";
-import { PaymentLinkCancelSchema, YunoPaymentLink } from "../tools/paymentLinks/types";
+import { YunoPaymentLink } from "../tools/paymentLinks/types";
 import { PaymentMethodEnrollSchema, YunoPaymentMethod } from "../tools/paymentMethods/types";
 import {
   PaymentCancelSchema,
@@ -320,10 +320,9 @@ export class YunoClient {
       });
     },
 
-    cancel: async (paymentLinkId: string, body: PaymentLinkCancelSchema) => {
+    cancel: async (paymentLinkId: string) => {
       return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}/cancel`, {
         method: "POST",
-        body: JSON.stringify(body),
       });
     },
   };

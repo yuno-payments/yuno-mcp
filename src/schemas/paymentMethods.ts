@@ -10,14 +10,13 @@ const paymentMethodEnrollSchema = z
       .optional()
       .describe("The unique identifier of the account. You find this information on Yuno's Dashboard (MAX 64; MIN 36)."),
     country: z.string().min(2).max(2).describe("The transaction's country code (ISO 3166-1)."),
-    type: z.string().min(3).max(255).describe("The payment method type (MAX 255; MIN 3; e.g. 'CARD')."),
+    type: z.string().min(3).max(255).describe("The payment method type (MAX 255; MIN 3; e.g. 'CARD', 'NU_PAY_ENROLLMENT')."),
     workflow: z.enum(["DIRECT"]).optional().describe("The payment workflow. For direct integration, use 'DIRECT'."),
     provider_data: z
       .object({
         id: z.string(),
         payment_method_token: z.string(),
       })
-      .partial()
       .passthrough()
       .optional()
       .describe("Provider data for token migration, only if agreed with Yuno."),
@@ -25,7 +24,7 @@ const paymentMethodEnrollSchema = z
     callback_url: z.string().min(3).max(255).optional().describe("URL to return the customer after enrollment (for APMs)."),
     verify: z
       .object({
-        vault_on_success: z.boolean().optional(),
+        vault_on_success: z.boolean(),
         currency: z.string().optional(),
       })
       .passthrough()

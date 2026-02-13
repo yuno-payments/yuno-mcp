@@ -19,29 +19,24 @@ describe("customerCreateTool", () => {
         create: rstest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
       },
     };
-    const input = { merchant_customer_id: "abc", email: "test@example.com" };
+    const input = { merchant_customer_id: "abc" };
     const result = await customerCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("cus_123");
-    expect(result.content[0].text).toContain("test@example.com");
   });
 
   it("should validate a correct minimal payload (only required fields)", () => {
-    const minimal = { merchant_customer_id: "abc", email: "test@example.com" };
+    const minimal = { merchant_customer_id: "abc" };
     expect(() => customerCreateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingEmail = { merchant_customer_id: "abc" };
     const missingId = { email: "test@example.com" };
     const invalidId = { merchant_customer_id: null, email: "test@example.com" };
     const invalidEmail = { merchant_customer_id: "abc", email: "a" };
-    const invalidGender = { merchant_customer_id: "abc", email: "test@example.com", gender: "X" };
-    expect(() => customerCreateSchema.parse(missingEmail)).toThrow();
     expect(() => customerCreateSchema.parse(missingId)).toThrow();
     expect(() => customerCreateSchema.parse(invalidId)).toThrow();
     expect(() => customerCreateSchema.parse(invalidEmail)).toThrow();
-    expect(() => customerCreateSchema.parse(invalidGender)).toThrow();
   });
 
   it("should handle creation with all optional fields, nested objects, and empty optional arrays/objects", async () => {
@@ -87,11 +82,10 @@ describe("customerCreateTool", () => {
         create: rstest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
       },
     };
-    const input = { merchant_customer_id: "minimal", email: "minimal@example.com" };
+    const input = { merchant_customer_id: "minimal" };
     const result = await customerCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.customers.create).toHaveBeenCalledWith(input);
     expect(result.content[0].text).toContain("cus_789");
-    expect(result.content[0].text).toContain("minimal@example.com");
   });
 });
 

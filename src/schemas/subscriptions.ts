@@ -13,7 +13,7 @@ const subscriptionCreateSchema = z
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
-        value: z.number(),
+        value: z.number().optional(),
       })
       .passthrough()
       .optional()
@@ -29,27 +29,77 @@ const subscriptionCreateSchema = z
       .object({
         id: z.string().describe("The unique identifier of the customer"),
       })
-      .passthrough(),
+      .passthrough()
+      .optional(),
     payment_method: z
       .object({
-        type: z.string(),
-        vaulted_token: z.string().optional(),
+        type: z.enum(["CARD"]).describe("Payment method type"),
+        vaulted_token: z.string().optional().describe("Vaulted token for enrolled card"),
+        card: z
+          .object({
+            installments: z.number().int().min(1).max(50).optional().describe("Number of installments"),
+            network_transaction_id: z.string().optional().describe("Visa/Mastercard ID from initial payment"),
+          })
+          .passthrough()
+          .optional(),
       })
       .passthrough()
       .optional()
       .describe("Payment method for the subscription"),
-    trial_period: z.any().optional().describe("Trial period for the subscription"),
-    availability: z.any().optional().describe("Availability for the subscription"),
+    trial_period: z
+      .object({
+        billing_cycles: z.number().int().min(1).optional().describe("Trial duration in billing cycles"),
+        amount: amountSchema.optional().describe("Discounted amount during trial"),
+      })
+      .passthrough()
+      .optional()
+      .describe("Trial period for the subscription"),
+    availability: z
+      .object({
+        start_at: z.string().optional().describe("Start date (ISO 8601)"),
+        finish_at: z.string().optional().describe("End date (ISO 8601)"),
+      })
+      .passthrough()
+      .optional()
+      .describe("Availability for the subscription"),
     metadata: metadataSchema,
-    retries: z.any().optional().describe("Retries for the subscription"),
+    retries: z
+      .object({
+        retry_on_decline: z.boolean().optional().describe("Enable retry logic"),
+        amount: z.number().int().max(6).optional().describe("Retry count (max 6)"),
+        strategy: z.string().optional().describe("Schedule strategy"),
+        schedule: z
+          .array(
+            z
+              .object({
+                attempt: z.number().optional(),
+                delay_seconds: z.number().optional(),
+              })
+              .passthrough(),
+          )
+          .optional()
+          .describe("Per-attempt schedule"),
+        stop_on_hard_decline: z.boolean().optional().describe("Halt retries after hard decline"),
+      })
+      .passthrough()
+      .optional()
+      .describe("Retries for the subscription"),
     initial_payment_validation: z.boolean().optional().describe("Initial payment validation flag"),
-    billing_date: z.any().optional().describe("Billing date for the subscription"),
+    billing_date: z
+      .object({
+        type: z.enum(["PREPAID", "POSTDATE", "DAY"]).optional().describe("Billing date type"),
+        day: z.number().int().min(1).max(31).optional().describe("Day of month for DAY type"),
+      })
+      .passthrough()
+      .optional()
+      .describe("Billing date for the subscription"),
   })
   .passthrough();
 
 const subscriptionUpdateSchema = z
   .object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to update"),
+    account_id: z.string().optional().describe("Account ID"),
     name: z.string().optional(),
     description: z.string().optional(),
     merchant_reference: z.string().optional(),
@@ -64,7 +114,8 @@ const subscriptionUpdateSchema = z
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
-        value: z.number(),
+        value: z.number().optional(),
+        monthly_billing_day: z.number().int().min(1).max(31).optional().describe("Monthly billing day"),
       })
       .passthrough()
       .optional(),
@@ -82,8 +133,8 @@ const subscriptionUpdateSchema = z
       .optional(),
     payment_method: z
       .object({
-        type: z.string(),
-        vaulted_token: z.string(),
+        type: z.enum(["CARD"]).optional(),
+        vaulted_token: z.string().optional(),
         card: z
           .object({
             verify: z.boolean().optional(),

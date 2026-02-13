@@ -8,9 +8,13 @@ export interface YunoInstallmentPlan {
   installments_plan?: Array<{
     installment: number;
     rate: number;
+    financial_costs?: Array<{
+      type: string;
+      rate: number;
+    }>;
     type?: "MERCHANT_INSTALLMENTS" | "ISSUER_INSTALLMENTS";
   }>;
-  country_code: string;
+  country_code?: string;
   brand?: string[];
   issuer?: string;
   iin?: string[];
@@ -21,8 +25,8 @@ export interface YunoInstallmentPlan {
     max_value?: number;
   };
   availability?: {
-    start_at: string;
-    finish_at: string;
+    start_at?: string;
+    finish_at?: string;
   };
 }
 
