@@ -19,7 +19,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: rstest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "pay_123", description: "Test payment" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -82,7 +82,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: rstest.fn().mockResolvedValue({ id: "pay_456", description: "Full payment", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "pay_456", description: "Full payment", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -112,7 +112,7 @@ describe("paymentCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        create: rstest.fn().mockResolvedValue({ id: "pay_789", description: "Minimal payment" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "pay_789", description: "Minimal payment" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -144,7 +144,7 @@ describe("paymentRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "pay_123", description: "Test payment" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "pay_123", description: "Test payment" }, status: 200, headers: {} }),
       },
     };
     const input = { payment_id: "pay_123" };
@@ -168,7 +168,7 @@ describe("paymentRetrieveByMerchantOrderIdTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        retrieveByMerchantOrderId: rstest.fn().mockResolvedValue([{ id: "pay_123", description: "Test payment" }]),
+        retrieveByMerchantOrderId: rstest.fn().mockResolvedValue({ body: [{ id: "pay_123", description: "Test payment" }], status: 200, headers: {} }),
       },
     };
     const input = { merchant_order_id: "order_123" };
@@ -197,7 +197,7 @@ describe("paymentRefundTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        refund: rstest.fn().mockResolvedValue({ id: "pay_123", refunded: true }),
+        refund: rstest.fn().mockResolvedValue({ body: { id: "pay_123", refunded: true }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -230,7 +230,7 @@ describe("paymentCancelOrRefundTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancelOrRefund: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancelOrRefund: rstest.fn().mockResolvedValue({ body: { id: "pay_123", cancelled: true }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -263,7 +263,7 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancelOrRefundWithTransaction: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancelOrRefundWithTransaction: rstest.fn().mockResolvedValue({ body: { id: "pay_123", cancelled: true }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -295,7 +295,7 @@ describe("paymentCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        cancel: rstest.fn().mockResolvedValue({ id: "pay_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ body: { id: "pay_123", cancelled: true }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -323,7 +323,7 @@ describe("paymentAuthorizeTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       payments: {
-        authorize: rstest.fn().mockResolvedValue({ id: "pay_123", authorized: true }),
+        authorize: rstest.fn().mockResolvedValue({ body: { id: "pay_123", authorized: true }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -373,7 +373,7 @@ describe("paymentCaptureAuthorizationTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       payments: {
-        captureAuthorization: rstest.fn().mockResolvedValue({ id: "pay_123", captured: true }),
+        captureAuthorization: rstest.fn().mockResolvedValue({ body: { id: "pay_123", captured: true }, status: 200, headers: {} }),
       },
     };
     const input = {

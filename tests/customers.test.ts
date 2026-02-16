@@ -16,7 +16,7 @@ describe("customerCreateTool", () => {
   it("should create a customer, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        create: rstest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "cus_123", email: "test@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { merchant_customer_id: "abc" };
@@ -42,7 +42,7 @@ describe("customerCreateTool", () => {
   it("should handle creation with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       customers: {
-        create: rstest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -79,7 +79,7 @@ describe("customerCreateTool", () => {
   it("should handle creation with only required fields", async () => {
     const mockYunoClient = {
       customers: {
-        create: rstest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "cus_789", email: "minimal@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { merchant_customer_id: "minimal" };
@@ -93,7 +93,7 @@ describe("customerRetrieveTool", () => {
   it("should retrieve a customer, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "cus_123", email: "test@example.com" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "cus_123", email: "test@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { customerId: "cus_123" };
@@ -115,7 +115,7 @@ describe("customerRetrieveByExternalIdTool", () => {
   it("should retrieve a customer by external id, call YunoClient, and return the result", async () => {
     const mockYunoClient = {
       customers: {
-        retrieveByExternalId: rstest.fn().mockResolvedValue({ id: "cus_456", email: "external@example.com" }),
+        retrieveByExternalId: rstest.fn().mockResolvedValue({ body: { id: "cus_456", email: "external@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { merchant_customer_id: "external_123" };
@@ -137,7 +137,7 @@ describe("customerUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       customers: {
-        update: rstest.fn().mockResolvedValue({ id: "cus_123", email: "updated@example.com" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "cus_123", email: "updated@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456", email: "updated@example.com" };
@@ -162,7 +162,7 @@ describe("customerUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       customers: {
-        update: rstest.fn().mockResolvedValue({ id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "cus_456", email: "full@example.com", first_name: "Full", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -202,7 +202,7 @@ describe("customerUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       customers: {
-        update: rstest.fn().mockResolvedValue({ id: "cus_789", email: "minimal@example.com" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "cus_789", email: "minimal@example.com" }, status: 200, headers: {} }),
       },
     };
     const input = { customerId: "cus_123456789012345678901234567890123456" };

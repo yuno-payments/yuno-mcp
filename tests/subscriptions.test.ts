@@ -15,7 +15,7 @@ describe("subscriptionCreateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "sub_123", name: "Test Sub" }, status: 200, headers: {} }),
       },
       accountCode: "acc_1",
     };
@@ -53,7 +53,7 @@ describe("subscriptionCreateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: rstest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "sub_456", name: "Full Sub", metadata: [] }, status: 200, headers: {} }),
       },
       accountCode: "acc_1",
     };
@@ -84,7 +84,7 @@ describe("subscriptionCreateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       subscriptions: {
-        create: rstest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "sub_789", name: "Minimal Sub" }, status: 200, headers: {} }),
       },
       accountCode: "acc_1",
     };
@@ -105,7 +105,7 @@ describe("subscriptionRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Test Sub" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "sub_123", name: "Test Sub" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_123" };
@@ -128,7 +128,7 @@ describe("subscriptionPauseTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        pause: rstest.fn().mockResolvedValue({ id: "sub_123", status: "paused" }),
+        pause: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "paused" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_123" };
@@ -150,7 +150,7 @@ describe("subscriptionResumeTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        resume: rstest.fn().mockResolvedValue({ id: "sub_123", status: "active" }),
+        resume: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "active" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_123" };
@@ -171,7 +171,7 @@ describe("subscriptionUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: rstest.fn().mockResolvedValue({ id: "sub_123", name: "Updated Sub" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "sub_123", name: "Updated Sub" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_123", name: "Updated Sub" };
@@ -196,7 +196,7 @@ describe("subscriptionUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: rstest.fn().mockResolvedValue({ id: "sub_456", name: "Full Sub", metadata: [] }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "sub_456", name: "Full Sub", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -231,7 +231,7 @@ describe("subscriptionUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       subscriptions: {
-        update: rstest.fn().mockResolvedValue({ id: "sub_789", name: "Minimal Sub" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "sub_789", name: "Minimal Sub" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_789" };
@@ -247,7 +247,7 @@ describe("subscriptionCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
-        cancel: rstest.fn().mockResolvedValue({ id: "sub_123", status: "cancelled" }),
+        cancel: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "cancelled" }, status: 200, headers: {} }),
       },
     };
     const input = { subscriptionId: "sub_123" };

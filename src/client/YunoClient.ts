@@ -14,7 +14,7 @@ import {
 import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../tools/recipients/types";
 import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
 import type { PublicApiKey } from "../types/shared";
-import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoClientConfig } from "./types";
+import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoApiResponse, YunoClientConfig } from "./types";
 import {
   YunoRoutingLogin,
   YunoRoutingCreateSchema,
@@ -75,7 +75,7 @@ export class YunoClient {
     return client;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
     try {
       const url = `${this.baseUrl}${endpoint}`;
 
@@ -93,7 +93,12 @@ export class YunoClient {
         },
       });
 
-      return response.json();
+      const body: T = await response.json();
+      return {
+        body,
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);
@@ -102,7 +107,7 @@ export class YunoClient {
     }
   }
 
-  private async requestDashboard<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async requestDashboard<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
     try {
       const url = `${this.baseUrlDashboard}${endpoint}`;
 
@@ -129,7 +134,12 @@ export class YunoClient {
           ...(options.headers || {}),
         },
       });
-      return response.json();
+      const body: T = await response.json();
+      return {
+        body,
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);
@@ -443,8 +453,8 @@ export class YunoClient {
         method: "POST",
         body: JSON.stringify(body),
       });
-      if (response.access_token) {
-        this.accessToken = response.access_token;
+      if (response.body.access_token) {
+        this.accessToken = response.body.access_token;
       }
       return response;
     },

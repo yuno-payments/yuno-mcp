@@ -8,7 +8,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_123", description: "Test link" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -54,7 +54,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_456", description: "Full link", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -84,7 +84,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_789", description: "Minimal link" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -112,7 +112,7 @@ describe("paymentLinkRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "plink_123", description: "Test link" }, status: 200, headers: {} }),
       },
     };
     const input = { paymentLinkId: "plink_123" };
@@ -134,7 +134,7 @@ describe("paymentLinkCancelTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        cancel: rstest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ body: { id: "plink_123", cancelled: true }, status: 200, headers: {} }),
       },
     };
 

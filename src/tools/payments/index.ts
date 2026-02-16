@@ -23,7 +23,7 @@ export const paymentCreateTool = {
         account_id: payment.account_id || yunoClient.accountCode,
       } satisfies PaymentCreateBody;
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const paymentResponse = await yunoClient.payments.create(paymentWithAccount, finalIdempotencyKey);
+      const { body: paymentResponse, status, headers } = await yunoClient.payments.create(paymentWithAccount, finalIdempotencyKey);
 
       if (type === "text") {
         return {
@@ -31,6 +31,10 @@ export const paymentCreateTool = {
             {
               type: "text" as const,
               text: JSON.stringify(paymentResponse, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -41,6 +45,10 @@ export const paymentCreateTool = {
           {
             type: "object" as const,
             object: paymentResponse,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -56,7 +64,7 @@ export const paymentRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ payment_id }: { payment_id: string }): Promise<Output<TType, YunoPayment>> => {
-      const payment = await yunoClient.payments.retrieve(payment_id);
+      const { body: payment, status, headers } = await yunoClient.payments.retrieve(payment_id);
 
       if (type === "text") {
         return {
@@ -64,6 +72,10 @@ export const paymentRetrieveTool = {
             {
               type: "text" as const,
               text: JSON.stringify(payment, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -74,6 +86,10 @@ export const paymentRetrieveTool = {
           {
             type: "object" as const,
             object: payment,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -89,7 +105,7 @@ export const paymentRetrieveByMerchantOrderIdTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ merchant_order_id }: { merchant_order_id: string }): Promise<Output<TType, YunoPayment[]>> => {
-      const payments = await yunoClient.payments.retrieveByMerchantOrderId(merchant_order_id);
+      const { body: payments, status, headers } = await yunoClient.payments.retrieveByMerchantOrderId(merchant_order_id);
 
       if (type === "text") {
         return {
@@ -97,6 +113,10 @@ export const paymentRetrieveByMerchantOrderIdTool = {
             {
               type: "text" as const,
               text: JSON.stringify(payments, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment[]>;
@@ -107,6 +127,10 @@ export const paymentRetrieveByMerchantOrderIdTool = {
           {
             type: "object" as const,
             object: payments,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment[]>;
@@ -136,7 +160,7 @@ export const paymentRefundTool = {
       idempotencyKey: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const refundResponse = await yunoClient.payments.refund(paymentId, transactionId, body, finalIdempotencyKey);
+      const { body: refundResponse, status, headers } = await yunoClient.payments.refund(paymentId, transactionId, body, finalIdempotencyKey);
 
       if (type === "text") {
         return {
@@ -144,6 +168,10 @@ export const paymentRefundTool = {
             {
               type: "text" as const,
               text: JSON.stringify(refundResponse, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -154,6 +182,10 @@ export const paymentRefundTool = {
           {
             type: "object" as const,
             object: refundResponse,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -180,14 +212,18 @@ export const paymentCancelOrRefundTool = {
       idempotencyKey: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const response = await yunoClient.payments.cancelOrRefund(paymentId, body, finalIdempotencyKey);
+      const { body: cancelOrRefundBody, status, headers } = await yunoClient.payments.cancelOrRefund(paymentId, body, finalIdempotencyKey);
 
       if (type === "text") {
         return {
           content: [
             {
               type: "text" as const,
-              text: JSON.stringify(response, null, 4),
+              text: JSON.stringify(cancelOrRefundBody, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -197,7 +233,11 @@ export const paymentCancelOrRefundTool = {
         content: [
           {
             type: "object" as const,
-            object: response,
+            object: cancelOrRefundBody,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -227,14 +267,18 @@ export const paymentCancelOrRefundWithTransactionTool = {
       idempotencyKey: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const response = await yunoClient.payments.cancelOrRefundWithTransaction(paymentId, transactionId, body, finalIdempotencyKey);
+      const { body: cancelOrRefundWithTxBody, status, headers } = await yunoClient.payments.cancelOrRefundWithTransaction(paymentId, transactionId, body, finalIdempotencyKey);
 
       if (type === "text") {
         return {
           content: [
             {
               type: "text" as const,
-              text: JSON.stringify(response, null, 4),
+              text: JSON.stringify(cancelOrRefundWithTxBody, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -244,7 +288,11 @@ export const paymentCancelOrRefundWithTransactionTool = {
         content: [
           {
             type: "object" as const,
-            object: response,
+            object: cancelOrRefundWithTxBody,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -274,7 +322,7 @@ export const paymentCancelTool = {
       idempotencyKey: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const cancelResponse = await yunoClient.payments.cancel(paymentId, transactionId, body, finalIdempotencyKey);
+      const { body: cancelResponse, status, headers } = await yunoClient.payments.cancel(paymentId, transactionId, body, finalIdempotencyKey);
 
       if (type === "text") {
         return {
@@ -282,6 +330,10 @@ export const paymentCancelTool = {
             {
               type: "text" as const,
               text: JSON.stringify(cancelResponse, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -292,6 +344,10 @@ export const paymentCancelTool = {
           {
             type: "object" as const,
             object: cancelResponse,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -316,7 +372,7 @@ export const paymentAuthorizeTool = {
         account_id: payment.account_id || yunoClient.accountCode,
       };
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const paymentResponse = await yunoClient.payments.authorize(paymentWithAccount, finalIdempotencyKey);
+      const { body: paymentResponse, status, headers } = await yunoClient.payments.authorize(paymentWithAccount, finalIdempotencyKey);
 
       if (type === "text") {
         return {
@@ -324,6 +380,10 @@ export const paymentAuthorizeTool = {
             {
               type: "text" as const,
               text: JSON.stringify(paymentResponse, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -334,6 +394,10 @@ export const paymentAuthorizeTool = {
           {
             type: "object" as const,
             object: paymentResponse,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -363,14 +427,18 @@ export const paymentCaptureAuthorizationTool = {
       idempotencyKey: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const response = await yunoClient.payments.captureAuthorization(paymentId, transactionId, body, finalIdempotencyKey);
+      const { body: captureBody, status, headers } = await yunoClient.payments.captureAuthorization(paymentId, transactionId, body, finalIdempotencyKey);
 
       if (type === "text") {
         return {
           content: [
             {
               type: "text" as const,
-              text: JSON.stringify(response, null, 4),
+              text: JSON.stringify(captureBody, null, 4),
+            },
+            {
+              type: "text" as const,
+              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -380,7 +448,11 @@ export const paymentCaptureAuthorizationTool = {
         content: [
           {
             type: "object" as const,
-            object: response,
+            object: captureBody,
+          },
+          {
+            type: "text" as const,
+            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;

@@ -14,7 +14,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plan_123", name: "Plan 1" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -61,7 +61,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: rstest.fn().mockResolvedValue({ id: "plan_456", name: "Full Plan", brand: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plan_456", name: "Full Plan", brand: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -87,7 +87,7 @@ describe("installmentPlanCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       installmentPlans: {
-        create: rstest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Plan" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plan_789", name: "Minimal Plan" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -112,7 +112,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Updated Plan" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "plan_123", name: "Updated Plan" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -140,7 +140,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: rstest.fn().mockResolvedValue({ id: "plan_456", name: "Full Update", brand: [] }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "plan_456", name: "Full Update", brand: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -164,7 +164,7 @@ describe("installmentPlanUpdateTool", () => {
   it("should handle execution with only required fields", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        update: rstest.fn().mockResolvedValue({ id: "plan_789", name: "Minimal Update" }),
+        update: rstest.fn().mockResolvedValue({ body: { id: "plan_789", name: "Minimal Update" }, status: 200, headers: {} }),
       },
     };
     const input = { planId: "plan_789" };
@@ -181,7 +181,7 @@ describe("installmentPlanRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "plan_123", name: "Plan 1" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "plan_123", name: "Plan 1" }, status: 200, headers: {} }),
       },
     };
     const input = { planId: "plan_123" };
@@ -205,7 +205,7 @@ describe("installmentPlanDeleteTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       installmentPlans: {
-        delete: rstest.fn().mockResolvedValue({ id: "plan_123", deleted: true }),
+        delete: rstest.fn().mockResolvedValue({ body: { id: "plan_123", deleted: true }, status: 200, headers: {} }),
       },
     };
     const input = { planId: "plan_123" };

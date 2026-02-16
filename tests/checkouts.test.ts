@@ -8,7 +8,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_123", merchant_order_id: "order_1" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -53,7 +53,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_456", merchant_order_id: "order_2", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -80,7 +80,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_789", merchant_order_id: "order_3" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -108,7 +108,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        retrievePaymentMethods: rstest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: { payment_methods: [{ type: "card", name: "Visa" }] }, status: 200, headers: {} }),
       },
     };
     const input = { sessionId: "sess_123" };
@@ -130,7 +130,7 @@ describe("checkoutSessionCreateOttTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        createOtt: rstest.fn().mockResolvedValue({
+        createOtt: rstest.fn().mockResolvedValue({ body: {
           token: "f3beb554-21c7-46a7-9e22-769c6c012df1",
           vaulted_token: null,
           vault_on_success: false,
@@ -148,7 +148,7 @@ describe("checkoutSessionCreateOttTool", () => {
             issuer_code: null,
           },
           country: "CO",
-        }),
+        }, status: 200, headers: {} }),
       },
     };
     const input = {

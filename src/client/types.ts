@@ -4,6 +4,8 @@ export interface YunoClientConfig {
   privateSecretKey: string;
 }
 
+export type YunoApiResponse<T> = { body: T; status: number; headers: Record<string, string> };
+
 export type ApiKeyPrefixToEnvironmentSuffix = {
   dev: "-dev";
   staging: "-staging";

@@ -15,25 +15,21 @@ export const recipientCreateTool = {
         ...data,
         account_id: data.account_id || yunoClient.accountCode,
       };
-      const recipient = await yunoClient.recipients.create(recipientWithAccount);
+      const { body: recipient, status, headers } = await yunoClient.recipients.create(recipientWithAccount);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(recipient, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: recipient,
-          },
+          { type: "object" as const, object: recipient },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -48,25 +44,21 @@ export const recipientRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {
-      const recipient = await yunoClient.recipients.retrieve(recipientId);
+      const { body: recipient, status, headers } = await yunoClient.recipients.retrieve(recipientId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(recipient, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: recipient,
-          },
+          { type: "object" as const, object: recipient },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -79,25 +71,21 @@ export const recipientUpdateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
-      const recipient = await yunoClient.recipients.update(recipientId, updateFields);
+      const { body: recipient, status, headers } = await yunoClient.recipients.update(recipientId, updateFields);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(recipient, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: recipient,
-          },
+          { type: "object" as const, object: recipient },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -112,25 +100,21 @@ export const recipientDeleteTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {
-      const response = await yunoClient.recipients.delete(recipientId);
+      const { body, status, headers } = await yunoClient.recipients.delete(recipientId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },

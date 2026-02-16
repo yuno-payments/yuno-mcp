@@ -10,25 +10,21 @@ export const customerCreateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoCustomer): Promise<Output<TType, YunoCustomer>> => {
-      const customer = await yunoClient.customers.create(data);
+      const { body: customer, status, headers } = await yunoClient.customers.create(data);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(customer, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(customer, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: customer,
-          },
+          { type: "object" as const, object: customer },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -43,25 +39,21 @@ export const customerRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customerId }: { customerId: string }): Promise<Output<TType, YunoCustomer>> => {
-      const customer = await yunoClient.customers.retrieve(customerId);
+      const { body: customer, status, headers } = await yunoClient.customers.retrieve(customerId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(customer, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(customer, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: customer,
-          },
+          { type: "object" as const, object: customer },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -76,25 +68,21 @@ export const customerRetrieveByExternalIdTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ merchant_customer_id }: { merchant_customer_id: string }): Promise<Output<TType, YunoCustomer>> => {
-      const customer = await yunoClient.customers.retrieveByExternalId(merchant_customer_id);
+      const { body: customer, status, headers } = await yunoClient.customers.retrieveByExternalId(merchant_customer_id);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(customer, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(customer, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: customer,
-          },
+          { type: "object" as const, object: customer },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -107,25 +95,21 @@ export const customerUpdateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customerId, ...updateFields }: CustomerUpdateSchema): Promise<Output<TType, YunoCustomer>> => {
-      const customer = await yunoClient.customers.update(customerId, updateFields);
+      const { body: customer, status, headers } = await yunoClient.customers.update(customerId, updateFields);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(customer, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(customer, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: customer,
-          },
+          { type: "object" as const, object: customer },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },

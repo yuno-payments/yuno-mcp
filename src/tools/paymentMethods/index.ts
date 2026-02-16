@@ -29,25 +29,21 @@ export const paymentMethodEnrollTool = {
         account_id: body.account_id || yunoClient.accountCode,
       };
       const finalIdempotencyKey = idempotencyKey || randomUUID();
-      const response = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, finalIdempotencyKey);
+      const { body: responseBody, status, headers } = await yunoClient.paymentMethods.enroll(customerId, enrollmentWithAccount, finalIdempotencyKey);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(responseBody, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: responseBody },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },
@@ -63,25 +59,21 @@ export const paymentMethodRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customer_id, payment_method_id }: { customer_id: string; payment_method_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {
-      const response = await yunoClient.paymentMethods.retrieve(customer_id, payment_method_id);
+      const { body, status, headers } = await yunoClient.paymentMethods.retrieve(customer_id, payment_method_id);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },
@@ -96,25 +88,21 @@ export const paymentMethodRetrieveEnrolledTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customer_id }: { customer_id: string }): Promise<Output<TType, YunoPaymentMethod[]>> => {
-      const response = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
+      const { body, status, headers } = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod[]>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod[]>;
     },
@@ -130,25 +118,21 @@ export const paymentMethodUnenrollTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customer_id, payment_method_id }: { customer_id: string; payment_method_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {
-      const response = await yunoClient.paymentMethods.unenroll(customer_id, payment_method_id);
+      const { body, status, headers } = await yunoClient.paymentMethods.unenroll(customer_id, payment_method_id);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },

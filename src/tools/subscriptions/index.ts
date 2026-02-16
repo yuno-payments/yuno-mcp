@@ -15,25 +15,21 @@ export const subscriptionCreateTool = {
         ...data,
         account_id: data.account_id || yunoClient.accountCode,
       };
-      const subscription = await yunoClient.subscriptions.create(subscriptionWithAccount);
+      const { body: subscription, status, headers } = await yunoClient.subscriptions.create(subscriptionWithAccount);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(subscription, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: subscription,
-          },
+          { type: "object" as const, object: subscription },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -48,25 +44,21 @@ export const subscriptionRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
-      const subscription = await yunoClient.subscriptions.retrieve(subscriptionId);
+      const { body: subscription, status, headers } = await yunoClient.subscriptions.retrieve(subscriptionId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(subscription, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: subscription,
-          },
+          { type: "object" as const, object: subscription },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -81,25 +73,21 @@ export const subscriptionPauseTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
-      const response = await yunoClient.subscriptions.pause(subscriptionId);
+      const { body, status, headers } = await yunoClient.subscriptions.pause(subscriptionId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -114,25 +102,21 @@ export const subscriptionResumeTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
-      const response = await yunoClient.subscriptions.resume(subscriptionId);
+      const { body, status, headers } = await yunoClient.subscriptions.resume(subscriptionId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -145,25 +129,21 @@ export const subscriptionUpdateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId, ...updateFields }: SubscriptionUpdateSchema): Promise<Output<TType, YunoSubscription>> => {
-      const subscription = await yunoClient.subscriptions.update(subscriptionId, updateFields);
+      const { body: subscription, status, headers } = await yunoClient.subscriptions.update(subscriptionId, updateFields);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(subscription, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: subscription,
-          },
+          { type: "object" as const, object: subscription },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -178,25 +158,21 @@ export const subscriptionCancelTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
-      const response = await yunoClient.subscriptions.cancel(subscriptionId);
+      const { body, status, headers } = await yunoClient.subscriptions.cancel(subscriptionId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
