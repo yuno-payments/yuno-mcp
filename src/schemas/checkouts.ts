@@ -4,12 +4,21 @@ import { addressSchema, amountSchema, metadataSchema, browserInfoSchema, cardDat
 const checkoutSessionCreateSchema = z
   .object({
     account_id: z.string().min(36).max(64).describe("The unique identifier of the Yuno account").optional(),
-    customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer"),
+    customer_id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer"),
     merchant_order_id: z.string().min(3).max(255).describe("The unique identifier of the customer's order"),
     payment_description: z.string().min(1).max(255).describe("The description of the payment"),
     callback_url: z.string().min(3).max(526).optional().describe("The URL where we will redirect your customer after making the purchase"),
     country: z.string().min(2).max(2).describe("The customer's country (ISO 3166-1)"),
-    amount: amountSchema.describe("Specifies the payment amount object"),
+    amount: amountSchema.optional().describe("Specifies the payment amount object"),
+    alternative_amount: z
+      .object({
+        currency: z.string().min(3).max(3).optional().nullable(),
+        value: z.number().optional(),
+      })
+      .passthrough()
+      .optional()
+      .describe("Alternative currency representation"),
+    workflow: z.enum(["SDK_CHECKOUT", "CHECKOUT", "SDK_SEAMLESS"]).optional().describe("Checkout workflow type"),
     metadata: metadataSchema,
     installments: z
       .object({

@@ -8,7 +8,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_123", merchant_order_id: "order_1" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_123", merchant_order_id: "order_1" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -27,38 +27,33 @@ describe("checkoutSessionCreateTool", () => {
 
   it("should validate a correct minimal payload (only required fields)", () => {
     const minimal = {
-      customer_id: "cus_123456789012345678901234567890123456",
       merchant_order_id: "ord_1",
       payment_description: "desc",
       country: "US",
-      amount: { currency: "USD", value: 100 },
     };
     expect(() => checkoutSessionCreateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingCustomerId = {
-      merchant_order_id: "ord_1",
-      payment_description: "desc",
-      country: "US",
-      amount: { currency: "USD", value: 100 },
-    };
     const invalidCustomerId = {
       customer_id: "short",
       merchant_order_id: "ord_1",
       payment_description: "desc",
       country: "US",
-      amount: { currency: "USD", value: 100 },
     };
-    expect(() => checkoutSessionCreateSchema.parse(missingCustomerId)).toThrow();
+    const missingCountry = {
+      merchant_order_id: "ord_1",
+      payment_description: "desc",
+    };
     expect(() => checkoutSessionCreateSchema.parse(invalidCustomerId)).toThrow();
+    expect(() => checkoutSessionCreateSchema.parse(missingCountry)).toThrow();
   });
 
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_456", merchant_order_id: "order_2", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_456", merchant_order_id: "order_2", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -85,7 +80,7 @@ describe("checkoutSessionCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       checkoutSessions: {
-        create: rstest.fn().mockResolvedValue({ id: "chk_789", merchant_order_id: "order_3" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "chk_789", merchant_order_id: "order_3" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -113,7 +108,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        retrievePaymentMethods: rstest.fn().mockResolvedValue({ payment_methods: [{ type: "card", name: "Visa" }] }),
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: { payment_methods: [{ type: "card", name: "Visa" }] }, status: 200, headers: {} }),
       },
     };
     const input = { sessionId: "sess_123" };
@@ -135,7 +130,7 @@ describe("checkoutSessionCreateOttTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        createOtt: rstest.fn().mockResolvedValue({
+        createOtt: rstest.fn().mockResolvedValue({ body: {
           token: "f3beb554-21c7-46a7-9e22-769c6c012df1",
           vaulted_token: null,
           vault_on_success: false,
@@ -153,7 +148,7 @@ describe("checkoutSessionCreateOttTool", () => {
             issuer_code: null,
           },
           country: "CO",
-        }),
+        }, status: 200, headers: {} }),
       },
     };
     const input = {

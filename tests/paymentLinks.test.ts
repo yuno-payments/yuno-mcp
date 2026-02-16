@@ -8,7 +8,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_123", description: "Test link" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -27,9 +27,7 @@ describe("paymentLinkCreateTool", () => {
 
   it("should validate a correct minimal payload (only required fields)", () => {
     const minimal = {
-      description: "Test link",
       country: "US",
-      merchant_order_id: "order_1",
       amount: { currency: "USD", value: 100 },
       payment_method_types: ["card"],
     };
@@ -37,12 +35,6 @@ describe("paymentLinkCreateTool", () => {
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingDescription = {
-      country: "US",
-      merchant_order_id: "order_1",
-      amount: { currency: "USD", value: 100 },
-      payment_method_types: ["card"],
-    };
     const invalidCountry = {
       description: "Test link",
       country: "U",
@@ -50,15 +42,19 @@ describe("paymentLinkCreateTool", () => {
       amount: { currency: "USD", value: 100 },
       payment_method_types: ["card"],
     };
-    expect(() => paymentLinkCreateSchema.parse(missingDescription)).toThrow();
+    const missingAmount = {
+      country: "US",
+      payment_method_types: ["card"],
+    };
     expect(() => paymentLinkCreateSchema.parse(invalidCountry)).toThrow();
+    expect(() => paymentLinkCreateSchema.parse(missingAmount)).toThrow();
   });
 
   it("should handle execution with all optional fields, nested objects, and empty optional arrays/objects", async () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_456", description: "Full link", metadata: [] }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_456", description: "Full link", metadata: [] }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -88,7 +84,7 @@ describe("paymentLinkCreateTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123",
       paymentLinks: {
-        create: rstest.fn().mockResolvedValue({ id: "plink_789", description: "Minimal link" }),
+        create: rstest.fn().mockResolvedValue({ body: { id: "plink_789", description: "Minimal link" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -116,7 +112,7 @@ describe("paymentLinkRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "plink_123", description: "Test link" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "plink_123", description: "Test link" }, status: 200, headers: {} }),
       },
     };
     const input = { paymentLinkId: "plink_123" };
@@ -135,30 +131,25 @@ describe("paymentLinkRetrieveTool", () => {
 });
 
 describe("paymentLinkCancelTool", () => {
-  const cancelSchema = z.object({ paymentLinkId: z.string(), body: paymentLinkCancelSchema });
-
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentLinks: {
-        cancel: rstest.fn().mockResolvedValue({ id: "plink_123", cancelled: true }),
+        cancel: rstest.fn().mockResolvedValue({ body: { id: "plink_123", cancelled: true }, status: 200, headers: {} }),
       },
     };
 
     const result = await paymentLinkCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({
       paymentLinkId: "plink_123",
-      body: { reason: "REQUESTED_BY_CUSTOMER" as const },
     });
-    expect(mockYunoClient.paymentLinks.cancel).toHaveBeenCalledWith("plink_123", { reason: "REQUESTED_BY_CUSTOMER" });
+    expect(mockYunoClient.paymentLinks.cancel).toHaveBeenCalledWith("plink_123");
     expect(result.content[0].text).toContain("plink_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingId = { body: { reason: "REQUESTED_BY_CUSTOMER" } };
-    const invalidId = { paymentLinkId: null, body: { reason: "REQUESTED_BY_CUSTOMER" } };
-    const missingBody = { paymentLinkId: "plink_123" };
-    expect(() => cancelSchema.parse(missingId)).toThrow();
-    expect(() => cancelSchema.parse(invalidId)).toThrow();
-    expect(() => cancelSchema.parse(missingBody)).toThrow();
+    const missingId = {};
+    const invalidId = { paymentLinkId: null };
+    expect(() => paymentLinkCancelSchema.parse(missingId)).toThrow();
+    expect(() => paymentLinkCancelSchema.parse(invalidId)).toThrow();
   });
 });

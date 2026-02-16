@@ -4,9 +4,9 @@ import type { YunoAmount, YunoMetadata, YunoAdditionalData } from "../../types";
 
 export interface YunoPaymentLink {
   account_id?: string;
-  description: string;
+  description?: string;
   country: string;
-  merchant_order_id: string;
+  merchant_order_id?: string;
   additional_data?: YunoAdditionalData;
   url?: string;
   status?: string;

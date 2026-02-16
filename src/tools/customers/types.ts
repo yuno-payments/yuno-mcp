@@ -6,7 +6,7 @@ export interface YunoCustomer {
   merchant_customer_id: string;
   first_name?: string;
   last_name?: string;
-  gender?: "M" | "F" | "NB";
+  gender?: string;
   date_of_birth?: string;
   email?: string;
   document?: YunoDocument;

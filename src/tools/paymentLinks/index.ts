@@ -14,25 +14,21 @@ export const paymentLinkCreateTool = {
         ...data,
         account_id: data.account_id || yunoClient.accountCode,
       };
-      const paymentLink = await yunoClient.paymentLinks.create(paymentLinkWithAccount);
+      const { body: paymentLink, status, headers } = await yunoClient.paymentLinks.create(paymentLinkWithAccount);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(paymentLink, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(paymentLink, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: paymentLink,
-          },
+          { type: "object" as const, object: paymentLink },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },
@@ -47,25 +43,21 @@ export const paymentLinkRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ paymentLinkId }: { paymentLinkId: string }): Promise<Output<TType, YunoPaymentLink>> => {
-      const paymentLink = await yunoClient.paymentLinks.retrieve(paymentLinkId);
+      const { body: paymentLink, status, headers } = await yunoClient.paymentLinks.retrieve(paymentLinkId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(paymentLink, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(paymentLink, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: paymentLink,
-          },
+          { type: "object" as const, object: paymentLink },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },
@@ -74,32 +66,25 @@ export const paymentLinkRetrieveTool = {
 export const paymentLinkCancelTool = {
   method: "paymentLinkCancel",
   description: "Cancel a payment link in Yuno by its ID.",
-  schema: z.object({
-    paymentLinkId: z.string().describe("The unique identifier of the payment link to cancel"),
-    body: paymentLinkCancelSchema,
-  }),
+  schema: paymentLinkCancelSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ paymentLinkId, body }: { paymentLinkId: string; body: PaymentLinkCancelSchema }): Promise<Output<TType, YunoPaymentLink>> => {
-      const cancelResponse = await yunoClient.paymentLinks.cancel(paymentLinkId, body);
+    async ({ paymentLinkId }: PaymentLinkCancelSchema): Promise<Output<TType, YunoPaymentLink>> => {
+      const { body: cancelResponse, status, headers } = await yunoClient.paymentLinks.cancel(paymentLinkId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text",
-              text: JSON.stringify(cancelResponse, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(cancelResponse, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: cancelResponse,
-          },
+          { type: "object" as const, object: cancelResponse },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },

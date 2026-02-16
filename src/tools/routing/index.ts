@@ -14,25 +14,21 @@ export const routingLoginTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingLogin): Promise<Output<TType, YunoRoutingLoginResponse>> => {
-                const YunoLoginResponse = await yunoClient.routing.login(data);
+                const { body: YunoLoginResponse, status, headers } = await yunoClient.routing.login(data);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(YunoLoginResponse, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(YunoLoginResponse, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingLoginResponse>;
                 }
-                
+
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: YunoLoginResponse,
-                        },
+                        { type: "object" as const, object: YunoLoginResponse },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingLoginResponse>;
             },
@@ -45,25 +41,21 @@ export const routingCreateTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingCreateSchema): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
-                const routingResponse = await yunoClient.routing.create(data);
+                const { body: routingResponse, status, headers } = await yunoClient.routing.create(data);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(routingResponse, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(routingResponse, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingWorkflowResponse>;
                 }
-                
+
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: routingResponse,
-                        },
+                        { type: "object" as const, object: routingResponse },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingWorkflowResponse>;
             },
@@ -76,24 +68,20 @@ export const routingGetProvidersTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { paymentMethod: string }): Promise<Output<TType, YunoRoutingIntegrationResponse>> => {
-                const connections = await yunoClient.routing.getConnections(data.paymentMethod);
+                const { body: connections, status, headers } = await yunoClient.routing.getConnections(data.paymentMethod);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(connections, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(connections, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingIntegrationResponse>;
                 }
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: connections,
-                        },
+                        { type: "object" as const, object: connections },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingIntegrationResponse>;
             },
@@ -108,24 +96,20 @@ export const routingRetrieveTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { versionCode: string }): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
-                const workflow = await yunoClient.routing.retrieve(data.versionCode);
+                const { body: workflow, status, headers } = await yunoClient.routing.retrieve(data.versionCode);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(workflow, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(workflow, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingWorkflowResponse>;
                 }
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: workflow,
-                        },
+                        { type: "object" as const, object: workflow },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingWorkflowResponse>;
             },
@@ -138,24 +122,20 @@ export const routingUpdateTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingUpdateWorkflow): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
-                const result = await yunoClient.routing.update(data);
+                const { body: result, status, headers } = await yunoClient.routing.update(data);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(result, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(result, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingWorkflowResponse>;
                 }
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: result,
-                        },
+                        { type: "object" as const, object: result },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingWorkflowResponse>;
             },
@@ -170,24 +150,20 @@ export const routingPostTool = {
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { versionCode: string }): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
-                const result = await yunoClient.routing.post(data.versionCode);
+                const { body: result, status, headers } = await yunoClient.routing.post(data.versionCode);
 
                 if (type === "text") {
                     return {
                         content: [
-                            {
-                                type: "text" as const,
-                                text: JSON.stringify(result, null, 4),
-                            },
+                            { type: "text" as const, text: JSON.stringify(result, null, 4) },
+                            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                         ],
                     } as Output<TType, YunoRoutingWorkflowResponse>;
                 }
                 return {
                     content: [
-                        {
-                            type: "object" as const,
-                            object: result,
-                        },
+                        { type: "object" as const, object: result },
+                        { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
                     ],
                 } as Output<TType, YunoRoutingWorkflowResponse>;
             },

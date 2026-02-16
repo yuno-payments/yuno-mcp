@@ -26,16 +26,16 @@ describe("routingLoginTool", () => {
   it("should authenticate user and return login response", async () => {
     const mockYunoClient = {
       routing: {
-        login: rstest.fn().mockResolvedValue({ 
-          access_token: "token_123", 
-          mfa_token: "mfa_456" 
-        }),
+        login: rstest.fn().mockResolvedValue({ body: {
+          access_token: "token_123",
+          mfa_token: "mfa_456"
+        }, status: 200, headers: {} }),
       },
     };
-    const input: YunoRoutingLogin = { 
-      username: "test@example.com", 
-      password: "password123", 
-      remember_device: false 
+    const input: YunoRoutingLogin = {
+      username: "test@example.com",
+      password: "password123",
+      remember_device: false
     };
     const result = await routingLoginTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.routing.login).toHaveBeenCalledWith(input);
@@ -46,10 +46,10 @@ describe("routingLoginTool", () => {
   it("should return object type when type is object", async () => {
     const mockYunoClient = {
       routing: {
-        login: rstest.fn().mockResolvedValue({ 
-          access_token: "token_123", 
-          mfa_token: "mfa_456" 
-        }),
+        login: rstest.fn().mockResolvedValue({ body: {
+          access_token: "token_123",
+          mfa_token: "mfa_456"
+        }, status: 200, headers: {} }),
       },
     };
     const input: YunoRoutingLogin = { 
@@ -100,11 +100,11 @@ describe("routingCreateTool", () => {
   it("should create routing configuration and return response", async () => {
     const mockYunoClient = {
       routing: {
-        create: rstest.fn().mockResolvedValue({ 
-          id: "routing_123", 
-          name: "Test Routing", 
-          payment_method: "CARD" 
-        }),
+        create: rstest.fn().mockResolvedValue({ body: {
+          id: "routing_123",
+          name: "Test Routing",
+          payment_method: "CARD"
+        }, status: 200, headers: {} }),
       },
     };
     const input: YunoRoutingCreateSchema = { 
@@ -142,15 +142,15 @@ describe("routingGetProvidersTool", () => {
   it("should retrieve providers for payment method and return response", async () => {
     const mockYunoClient = {
       routing: {
-        getConnections: rstest.fn().mockResolvedValue({ 
+        getConnections: rstest.fn().mockResolvedValue({ body: {
           integrations: [
-            { 
-              integration_code: "provider_123", 
-              name: "Test Provider", 
-              active: true 
+            {
+              integration_code: "provider_123",
+              name: "Test Provider",
+              active: true
             }
           ]
-        }),
+        }, status: 200, headers: {} }),
       },
     };
     const input = { paymentMethod: "CARD" };
@@ -178,18 +178,18 @@ describe("routingRetrieveTool", () => {
   it("should retrieve workflow by version code and return response", async () => {
     const mockYunoClient = {
       routing: {
-        retrieve: rstest.fn().mockResolvedValue({ 
-          workflow: { 
-            id: 1, 
-            name: "Test Workflow", 
-            code: "wf_123" 
+        retrieve: rstest.fn().mockResolvedValue({ body: {
+          workflow: {
+            id: 1,
+            name: "Test Workflow",
+            code: "wf_123"
           },
-          version: { 
-            id: 1, 
-            code: "v_123", 
-            number: 1 
+          version: {
+            id: 1,
+            code: "v_123",
+            number: 1
           }
-        }),
+        }, status: 200, headers: {} }),
       },
     };
     const input = { versionCode: "v_123" };
@@ -217,10 +217,10 @@ describe("routingUpdateTool", () => {
   it("should update workflow configuration and return response", async () => {
     const mockYunoClient = {
       routing: {
-        update: rstest.fn().mockResolvedValue({ 
-          success: true, 
-          workflow_id: "wf_123" 
-        }),
+        update: rstest.fn().mockResolvedValue({ body: {
+          success: true,
+          workflow_id: "wf_123"
+        }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -312,10 +312,10 @@ describe("routingPostTool", () => {
   it("should post workflow configuration and return response", async () => {
     const mockYunoClient = {
       routing: {
-        post: rstest.fn().mockResolvedValue({ 
-          success: true, 
-          published_at: "2024-01-01T00:00:00Z" 
-        }),
+        post: rstest.fn().mockResolvedValue({ body: {
+          success: true,
+          published_at: "2024-01-01T00:00:00Z"
+        }, status: 200, headers: {} }),
       },
     };
     const input = { versionCode: "v_123" };

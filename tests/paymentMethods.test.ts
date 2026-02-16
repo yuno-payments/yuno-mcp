@@ -14,7 +14,7 @@ describe("paymentMethodEnrollTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       paymentMethods: {
-        enroll: rstest.fn().mockResolvedValue({ id: "pm_123", type: "CARD" }),
+        enroll: rstest.fn().mockResolvedValue({ body: { id: "pm_123", type: "CARD" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -79,7 +79,7 @@ describe("paymentMethodEnrollTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       paymentMethods: {
-        enroll: rstest.fn().mockResolvedValue({ id: "pm_456", type: "CARD", card_data: { number: "4111111111111111" } }),
+        enroll: rstest.fn().mockResolvedValue({ body: { id: "pm_456", type: "CARD", card_data: { number: "4111111111111111" } }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -114,7 +114,7 @@ describe("paymentMethodEnrollTool", () => {
     const mockYunoClient = {
       accountCode: "acc_123456789012345678901234567890123456",
       paymentMethods: {
-        enroll: rstest.fn().mockResolvedValue({ id: "pm_789", type: "CARD" }),
+        enroll: rstest.fn().mockResolvedValue({ body: { id: "pm_789", type: "CARD" }, status: 200, headers: {} }),
       },
     };
     const input = {
@@ -148,7 +148,7 @@ describe("paymentMethodRetrieveTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentMethods: {
-        retrieve: rstest.fn().mockResolvedValue({ id: "pm_123", type: "CARD" }),
+        retrieve: rstest.fn().mockResolvedValue({ body: { id: "pm_123", type: "CARD" }, status: 200, headers: {} }),
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456", payment_method_id: "pm_123456789012345678901234567890123456" };
@@ -174,7 +174,7 @@ describe("paymentMethodRetrieveEnrolledTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentMethods: {
-        retrieveEnrolled: rstest.fn().mockResolvedValue([{ id: "pm_123", type: "CARD" }]),
+        retrieveEnrolled: rstest.fn().mockResolvedValue({ body: [{ id: "pm_123", type: "CARD" }], status: 200, headers: {} }),
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456" };
@@ -201,7 +201,7 @@ describe("paymentMethodUnenrollTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       paymentMethods: {
-        unenroll: rstest.fn().mockResolvedValue({ id: "pm_123", unenrolled: true }),
+        unenroll: rstest.fn().mockResolvedValue({ body: { id: "pm_123", unenrolled: true }, status: 200, headers: {} }),
       },
     };
     const input = { customer_id: "cus_123456789012345678901234567890123456", payment_method_id: "pm_123456789012345678901234567890123456" };

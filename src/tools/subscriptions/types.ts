@@ -15,15 +15,18 @@ export interface YunoSubscription {
   additional_data?: YunoAdditionalData;
   frequency?: {
     type: "DAY" | "WEEK" | "MONTH";
-    value: number;
+    value?: number;
   };
   billing_cycles?: {
     total: number;
   };
   payment_method?: {
-    type?: string;
+    type?: "CARD";
     vaulted_token?: string;
     card?: {
+      installments?: number;
+      network_transaction_id?: string;
+      verify?: boolean;
       card_data?: {
         number: string;
         expiration_month: number;
@@ -35,7 +38,7 @@ export interface YunoSubscription {
     [key: string]: any;
   };
   trial_period?: {
-    billing_cycles?: string;
+    billing_cycles?: number;
     amount?: YunoAmount;
   };
   availability?: {

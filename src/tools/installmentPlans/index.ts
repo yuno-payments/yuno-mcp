@@ -14,25 +14,21 @@ export const installmentPlanCreateTool = {
         ...data,
         account_id: data.account_id || [yunoClient.accountCode],
       };
-      const plan = await yunoClient.installmentPlans.create(planWithAccount);
+      const { body: plan, status, headers } = await yunoClient.installmentPlans.create(planWithAccount);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(plan, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(plan, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: plan,
-          },
+          { type: "object" as const, object: plan },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -47,25 +43,21 @@ export const installmentPlanRetrieveTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
-      const plan = await yunoClient.installmentPlans.retrieve(planId);
+      const { body: plan, status, headers } = await yunoClient.installmentPlans.retrieve(planId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(plan, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(plan, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: plan,
-          },
+          { type: "object" as const, object: plan },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -80,25 +72,21 @@ export const installmentPlanRetrieveAllTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ accountId }: { accountId: string }): Promise<Output<TType, YunoInstallmentPlan[]>> => {
-      const plans = await yunoClient.installmentPlans.retrieveAll(accountId);
+      const { body: plans, status, headers } = await yunoClient.installmentPlans.retrieveAll(accountId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(plans, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(plans, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan[]>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: plans,
-          },
+          { type: "object" as const, object: plans },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan[]>;
     },
@@ -111,25 +99,21 @@ export const installmentPlanUpdateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId, ...updateFields }: InstallmentPlanUpdateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
-      const plan = await yunoClient.installmentPlans.update(planId, updateFields);
+      const { body: plan, status, headers } = await yunoClient.installmentPlans.update(planId, updateFields);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(plan, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(plan, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: plan,
-          },
+          { type: "object" as const, object: plan },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -144,25 +128,21 @@ export const installmentPlanDeleteTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
-      const response = await yunoClient.installmentPlans.delete(planId);
+      const { body, status, headers } = await yunoClient.installmentPlans.delete(planId);
 
       if (type === "text") {
         return {
           content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(response, null, 4),
-            },
+            { type: "text" as const, text: JSON.stringify(body, null, 4) },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
 
       return {
         content: [
-          {
-            type: "object" as const,
-            object: response,
-          },
+          { type: "object" as const, object: body },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },

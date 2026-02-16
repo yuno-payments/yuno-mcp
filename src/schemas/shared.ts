@@ -4,10 +4,12 @@ const addressSchema = z
   .object({
     address_line_1: z.string(),
     address_line_2: z.string().optional(),
+    building_number_1: z.string().optional(),
+    building_number_2: z.string().optional(),
     country: z.string().min(2).max(2).optional().describe("Country (ISO 3166-1)"),
-    state: z.string(),
+    state: z.string().optional(),
     city: z.string(),
-    zip_code: z.string(),
+    zip_code: z.string().optional(),
     neighborhood: z.string().optional(),
   })
   .passthrough()

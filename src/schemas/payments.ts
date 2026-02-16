@@ -3,22 +3,21 @@ import { addressSchema, amountSchema, cardDataSchema, documentSchema, metadataSc
 
 const customerPayerSchema = z
   .object({
-    id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format (MAX 64 ; MIN 36)").optional(),
-    merchant_customer_id: z.string().min(1).max(255).optional().describe("The unique identifier for a customer in the merchant's system").optional(),
+    id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format (MAX 64 ; MIN 36)"),
+    merchant_customer_id: z.string().min(1).max(255).optional().describe("The unique identifier for a customer in the merchant's system"),
     merchant_customer_created_at: z
       .string()
       .min(27)
       .max(27)
       .optional()
-      .describe("Customer´s registration date on the merchants platform (ISO 8601)")
-      .optional(),
-    first_name: z.string().min(1).max(255).optional().describe("The customer's first name").optional(),
-    last_name: z.string().min(1).max(255).optional().describe("The customer's last name").optional(),
-    gender: z.string().min(1).max(2).optional().describe("The customer's gender (M/F/NB/NA/NK/U)").optional(),
-    date_of_birth: z.string().length(10).optional().describe("The customer's date of birth in the YYYY-MM-DD format").optional(),
-    email: z.string().min(1).max(255).optional().describe("The customer's e-mail").optional(),
-    nationality: z.string().length(2).optional().describe("The customer's nationality (ISO 3166-1)").optional(),
-    ip_address: z.string().min(1).max(45).optional().describe("The customer's IP address").optional(),
+      .describe("Customer´s registration date on the merchants platform (ISO 8601)"),
+    first_name: z.string().min(1).max(255).optional().describe("The customer's first name"),
+    last_name: z.string().min(1).max(255).optional().describe("The customer's last name"),
+    gender: z.string().min(1).max(2).optional().describe("The customer's gender (M/F/NB/NA/NK/U)"),
+    date_of_birth: z.string().length(10).optional().describe("The customer's date of birth in the YYYY-MM-DD format"),
+    email: z.string().min(1).max(255).optional().describe("The customer's e-mail"),
+    nationality: z.string().length(2).optional().describe("The customer's nationality (ISO 3166-1)"),
+    ip_address: z.string().min(1).max(45).optional().describe("The customer's IP address"),
     device_fingerprints: z
       .array(
         z
@@ -73,6 +72,13 @@ const paymentCreateSchema = z
         merchant_reference: z.string().optional(),
         amount: amountSchema.describe("Payment amount details"),
         customer_payer: customerPayerSchema.describe("Customer payer info").optional(),
+        checkout: z
+          .object({
+            session: z.string().describe("The checkout session ID"),
+          })
+          .passthrough()
+          .optional()
+          .describe("Checkout session information"),
         workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).describe("Payment workflow type"),
         payment_method: z
           .object({
@@ -87,7 +93,7 @@ const paymentCreateSchema = z
                     installments: z.number().optional(),
                     first_installment_deferral: z.number().optional(),
                     soft_descriptor: z.string().optional(),
-                    card_data: cardDataSchema,
+                    card_data: cardDataSchema.optional(),
                     verify: z.boolean().optional(),
                     stored_credentials: z
                       .object({
@@ -133,10 +139,8 @@ const paymentRefundSchema = z
     merchant_reference: z.string().min(3).max(255),
     amount: z
       .object({
-        currency: z
-          .enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"])
-          .optional(),
-        value: z.string().optional(),
+        currency: z.string().min(3).max(3).optional(),
+        value: z.number().optional(),
       })
       .passthrough()
       .optional(),
@@ -144,20 +148,51 @@ const paymentRefundSchema = z
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
     customer_payer: z
       .object({
-        id: z.string().describe("Customer unique identifier").optional(),
-        first_name: z.string().describe("First name of the customer").optional(),
-        last_name: z.string().describe("Last name of the customer").optional(),
-        email: z.string().describe("Email of the customer").optional(),
+        first_name: z.string().min(3).max(255).optional().describe("First name of the customer"),
+        last_name: z.string().min(3).max(255).optional().describe("Last name of the customer"),
+        gender: z.string().optional().describe("Gender of the customer (M/F/NB/NA/NK/U)"),
+        date_of_birth: z.string().length(10).optional().describe("Date of birth (YYYY-MM-DD)"),
+        email: z.string().min(3).max(255).optional().describe("Email of the customer"),
+        nationality: z.string().length(2).optional().describe("Nationality (ISO 3166-1)"),
+        document: documentSchema.optional(),
+        phone: phoneSchema.optional(),
+        billing_address: addressSchema.optional(),
+        shipping_address: addressSchema.optional(),
       })
       .passthrough()
+      .optional()
       .describe("Customer payer info"),
+    payment_method: z
+      .object({
+        detail: z
+          .object({
+            bank_transfer: z
+              .object({
+                account_type: z.enum(["CHECKINGS", "SAVINGS"]).optional(),
+                bank_name: z.string().optional(),
+                bank_id: z.string().optional(),
+                beneficiary_name: z.string().optional(),
+                bank_account: z.string().optional(),
+                beneficiary_document_type: z.string().optional(),
+                beneficiary_document: z.string().optional(),
+                reference: z.string().optional(),
+              })
+              .passthrough()
+              .optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional()
+      .describe("Payment method details for the refund"),
   })
   .passthrough();
 
 const paymentCancelSchema = z
   .object({
     description: z.string().min(3).max(255).optional(),
-    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER", ""]).optional(),
+    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).optional(),
     merchant_reference: z.string().min(3).max(255),
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
   })
@@ -168,8 +203,8 @@ const paymentCaptureAuthorizationSchema = z
     merchant_reference: z.string().min(3).max(255),
     amount: z
       .object({
-        currency: z.enum(["ARS", "BOV", "BOB", "BRL", "CLP", "COP", "CRC", "USD", "SVC", "GTQ", "HNL", "MXN", "NIO", "PAB", "PYG", "PEN", "UYU"]),
-        value: z.string(),
+        currency: z.string().min(3).max(3),
+        value: z.number(),
       })
       .passthrough()
       .optional(),
