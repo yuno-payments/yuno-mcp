@@ -46,7 +46,7 @@ for (const tool of tools) {
         };
       }
 
-      return await tool.handler({ yunoClient, type: "text" })(validation.data);
+      return await tool.handler({ yunoClient, type: "text" })(validation.data as any);
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text" as const, text: error.message }] };
