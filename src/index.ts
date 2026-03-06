@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { Output } from "./types";
@@ -16,12 +17,36 @@ const yunoMCP = new McpServer(
 );
 
 for (const tool of tools) {
-  yunoMCP.tool(tool.method, tool.schema.shape, async (params: any) => {
+  // Pass the schema shape to the SDK for tool discovery/description,
+  // but wrap with a permissive schema so the SDK doesn't throw on validation.
+  // We validate manually inside the handler with safeParse to return
+  // user-friendly error messages instead of crashing with a 400.
+  const permissiveSchema = tool.schema.passthrough();
+
+  yunoMCP.tool(tool.method, permissiveSchema.shape, async (params: any) => {
     try {
       if (!yunoClient) {
         throw new Error("Yuno client not initialized");
       }
-      return await tool.handler({ yunoClient, type: "text" })(params);
+
+      // Validate params with the original strict schema using safeParse
+      const validation = tool.schema.safeParse(params);
+      if (!validation.success) {
+        const errors = validation.error.issues
+          .map((issue: z.ZodIssue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join("; ");
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Validation error: ${errors}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      return await tool.handler({ yunoClient, type: "text" })(validation.data);
     } catch (error) {
       if (error instanceof Error) {
         return { content: [{ type: "text" as const, text: error.message }] };
