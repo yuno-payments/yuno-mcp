@@ -61,43 +61,36 @@ const DOCUMENTATION = {
     },
   },
   GUIDES: {
-    SKDS: "https://docs.y.uno/docs/yuno-sdks.md",
-    COUNTRY_COVERAGE: "https://docs.y.uno/docs/country-coverage-yuno-sdk.md",
+    CHOOSE_INTEGRATION: "https://docs.y.uno/docs/choose-your-integration.md",
+    QUICKSTART: "https://docs.y.uno/docs/quickstart-guide.md",
+    COUNTRY_COVERAGE: "https://docs.y.uno/docs/country-coverage.md",
+    UNDERSTANDING_FLOWS: "https://docs.y.uno/docs/understanding-payment-and-enrollment-flows.md",
     WEB: {
-      INTEGRATIONS: "https://docs.y.uno/docs/web-sdk-integrations.md",
-      FULL: "https://docs.y.uno/docs/full-checkout-sdk.md",
-      LITE_PAYMENT: "https://docs.y.uno/docs/lite-checkout-sdk.md",
-      LITE_ENROLLMENT: "https://docs.y.uno/docs/enrollment-lite-sdk.md",
-      SEAMLESS_PAYMENT: "https://docs.y.uno/docs/seamless-sdk-payment-web.md",
-      SECURE_FIELDS_PAYMENT: "https://docs.y.uno/docs/secure-fields-payment.md",
-      SECURE_FIELDS_ENROLLMENT: "https://docs.y.uno/docs/secure-fields-enrollment.md",
-      HEADLESS_PAYMENT: "https://docs.y.uno/docs/headless-sdk-payment.md",
-      HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment.md",
-      CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations.md",
+      PAYMENT_FLOWS: "https://docs.y.uno/docs/payment-flows-web.md",
+      ENROLLMENT_FLOWS: "https://docs.y.uno/docs/enrollment-flows-web.md",
+      SECURE_FIELDS: "https://docs.y.uno/docs/secure-fields.md",
+      SECURE_FIELDS_PAYMENT: "https://docs.y.uno/docs/payment-secure-fields.md",
+      SECURE_FIELDS_ENROLLMENT: "https://docs.y.uno/docs/enrollment-secure-fields.md",
+      CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations-web.md",
+      COMMON_REFERENCE: "https://docs.y.uno/docs/web-sdk-common-reference.md",
+      RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-web.md",
     },
-    WEB_V_1_1: "https://docs.y.uno/docs/yuno-web-sdk-v11",
     ANDROID: {
-      INTEGRATIONS: "https://docs.y.uno/docs/android-sdk-integrations.md",
-      REQUIREMENTS: "https://docs.y.uno/docs/requirements-android.md",
-      FULL: "https://docs.y.uno/docs/full-checkout-android.md",
-      LITE_PAYMENT: "https://docs.y.uno/docs/lite-checkout-android.md",
-      LITE_ENROLLMENT: "https://docs.y.uno/docs/enrollment-android.md",
-      SEAMLESS_PAYMENT: "https://docs.y.uno/docs/seamless-sdk-payment-android.md",
-      HEADLESS_PAYMENT: "https://docs.y.uno/docs/headless-sdk-payment-android.md",
-      HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment-android.md",
-      CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations-android.md",
+      PAYMENT_FLOWS: "https://docs.y.uno/docs/payment-flows-android.md",
+      ENROLLMENT_FLOWS: "https://docs.y.uno/docs/enrollment-flows-android.md",
+      CUSTOMIZATIONS: "https://docs.y.uno/docs/android-customizations.md",
+      COMMON_REFERENCE: "https://docs.y.uno/docs/android-sdk-common-reference.md",
+      RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-android.md",
     },
-    ANDROID_RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-android-sdk.md",
     IOS: {
-      INTEGRATIONS: "https://docs.y.uno/docs/ios-sdk-integrations.md",
-      REQUIREMENTS: "https://docs.y.uno/docs/requirements-ios.md",
-      FULL: "https://docs.y.uno/docs/full-checkout-ios.md",
-      LITE_PAYMENT: "https://docs.y.uno/docs/lite-checkout-ios.md",
-      LITE_ENROLLMENT: "https://docs.y.uno/docs/enrollment-ios.md",
-      SEAMLESS_PAYMENT: "https://docs.y.uno/docs/seamless-sdk-payment-ios.md",
-      HEADLESS_PAYMENT: "https://docs.y.uno/docs/headless-sdk-payment-ios.md",
-      HEADLESS_ENROLLMENT: "https://docs.y.uno/docs/headless-sdk-enrollment-ios.md",
-      CUSTOMIZATIONS: "https://docs.y.uno/docs/sdk-customizations-ios.md",
+      PAYMENT_FLOWS: "https://docs.y.uno/docs/payment-flows-ios.md",
+      ENROLLMENT_FLOWS: "https://docs.y.uno/docs/enrollment-flows-ios.md",
+      CUSTOMIZATIONS: "https://docs.y.uno/docs/ios-customizations.md",
+      COMMON_REFERENCE: "https://docs.y.uno/docs/ios-sdk-common-reference.md",
+      RELEASE_NOTES: "https://docs.y.uno/docs/release-notes-ios.md",
+    },
+    FLUTTER: {
+      LITE: "https://docs.y.uno/docs/lite-flutter.md",
     },
   },
   UNOFFICIAL: {
@@ -427,16 +420,17 @@ const documentationReadTool = {
         }
 
         if (documentation_type === "guides") {
-          const skdsDocs = await fetch(DOCUMENTATION.GUIDES.SKDS);
-          const skdsDocsText = await skdsDocs.text();
-          const countryCoverageDocs = await fetch(DOCUMENTATION.GUIDES.COUNTRY_COVERAGE);
-          const countryCoverageDocsText = await countryCoverageDocs.text();
+          const guideUrls = [
+            DOCUMENTATION.GUIDES.CHOOSE_INTEGRATION,
+            DOCUMENTATION.GUIDES.QUICKSTART,
+            DOCUMENTATION.GUIDES.COUNTRY_COVERAGE,
+            DOCUMENTATION.GUIDES.UNDERSTANDING_FLOWS,
+          ];
+          const guideDocs = await Promise.all(guideUrls.map((url) => fetch(url)));
+          const guideTexts = await Promise.all(guideDocs.map((doc) => doc.text()));
 
           return {
-            content: [
-              { type: "text" as const, text: skdsDocsText },
-              { type: "text" as const, text: countryCoverageDocsText },
-            ],
+            content: guideTexts.map((text) => ({ type: "text" as const, text })),
           } as Output<TType>;
         }
 
@@ -450,32 +444,13 @@ const documentationReadTool = {
           } as Output<TType>;
         }
 
-        if (documentation_type === "web_v_1_1") {
-          const webV11Docs = await fetch(DOCUMENTATION.GUIDES.WEB_V_1_1);
-          const webV11DocsText = await webV11Docs.text();
-
-          return {
-            content: [{ type: "text" as const, text: webV11DocsText }],
-          } as Output<TType>;
-        }
-
         if (documentation_type === "android") {
           const androidPromises = Object.values(DOCUMENTATION.GUIDES.ANDROID).map((doc) => fetch(doc));
-
           const androidDocs = await Promise.all(androidPromises);
           const androidDocsText = await Promise.all(androidDocs.map((doc) => doc.text()));
 
           return {
             content: [{ type: "text" as const, text: androidDocsText.join("\n\n") }],
-          } as Output<TType>;
-        }
-
-        if (documentation_type === "android_release_notes") {
-          const androidReleaseNotesDocs = await fetch(DOCUMENTATION.GUIDES.ANDROID_RELEASE_NOTES);
-          const androidReleaseNotesDocsText = await androidReleaseNotesDocs.text();
-
-          return {
-            content: [{ type: "text" as const, text: androidReleaseNotesDocsText }],
           } as Output<TType>;
         }
 
@@ -486,6 +461,16 @@ const documentationReadTool = {
 
           return {
             content: [{ type: "text" as const, text: iosDocsText.join("\n\n") }],
+          } as Output<TType>;
+        }
+
+        if (documentation_type === "flutter") {
+          const flutterPromises = Object.values(DOCUMENTATION.GUIDES.FLUTTER).map((doc) => fetch(doc));
+          const flutterDocs = await Promise.all(flutterPromises);
+          const flutterDocsText = await Promise.all(flutterDocs.map((doc) => doc.text()));
+
+          return {
+            content: [{ type: "text" as const, text: flutterDocsText.join("\n\n") }],
           } as Output<TType>;
         }
 
