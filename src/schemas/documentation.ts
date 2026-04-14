@@ -1,54 +1,12 @@
 import { z } from "zod";
 
+const documentationIndexSchema = z.object({});
+
 const documentationReadSchema = z.object({
-  documentation_type: z.enum([
-    "createCustomer",
-    "retrieveCustomer",
-    "retrieveCustomerByExternalId",
-    "updateCustomer",
-    "enrollPaymentMethod",
-    "retrievePaymentMethod",
-    "retrieveEnrolledPaymentMethods",
-    "unenrollPaymentMethod",
-    "createCheckoutSession",
-    "retrievePaymentMethodsForCheckoutSession",
-    "createOttForCheckoutSession",
-    "createPayment",
-    "retrievePayment",
-    "retrievePaymentByMerchantOrderId",
-    "refundPayment",
-    "cancelOrRefundPayment",
-    "cancelOrRefundWithTransactionPayment",
-    "cancelPayment",
-    "authorizePayment",
-    "captureAuthorizationPayment",
-    "createPaymentLink",
-    "retrievePaymentLink",
-    "cancelPaymentLink",
-    "createSubscription",
-    "retrieveSubscription",
-    "pauseSubscription",
-    "resumeSubscription",
-    "updateSubscription",
-    "cancelSubscription",
-    "createRecipient",
-    "retrieveRecipient",
-    "updateRecipient",
-    "deleteRecipient",
-    "createRecipientOnboarding",
-    "createInstallmentPlan",
-    "retrieveInstallmentPlan",
-    "retrieveAllInstallmentPlans",
-    "updateInstallmentPlan",
-    "deleteInstallmentPlan",
-    "guides",
-    "web",
-    "android",
-    "ios",
-    "flutter",
-    "unofficial.node",
-    "unofficial.react",
-  ]),
+  url: z
+    .string()
+    .url()
+    .describe("The documentation URL to fetch (from the documentation index)"),
 });
 
-export { documentationReadSchema };
+export { documentationIndexSchema, documentationReadSchema };

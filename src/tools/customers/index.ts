@@ -6,6 +6,7 @@ import type { CustomerUpdateSchema, YunoCustomer } from "./types";
 export const customerCreateTool = {
   method: "customerCreate",
   description: "Create a new customer in Yuno.",
+  annotations: { title: "Create Customer", destructiveHint: false, idempotentHint: false },
   schema: customerCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -33,6 +34,7 @@ export const customerCreateTool = {
 export const customerRetrieveTool = {
   method: "customerRetrieve",
   description: "Retrieve a customer by ID.",
+  annotations: { title: "Retrieve Customer", readOnlyHint: true },
   schema: z.object({
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
   }),
@@ -62,6 +64,7 @@ export const customerRetrieveTool = {
 export const customerRetrieveByExternalIdTool = {
   method: "customerRetrieveByExternalId",
   description: "Retrieve a customer by external merchant_customer_id.",
+  annotations: { title: "Retrieve Customer by External ID", readOnlyHint: true },
   schema: z.object({
     merchant_customer_id: z.string().describe("The external merchant_customer_id to retrieve the customer"),
   }),
@@ -91,6 +94,7 @@ export const customerRetrieveByExternalIdTool = {
 export const customerUpdateTool = {
   method: "customerUpdate",
   description: "Update a customer by ID.",
+  annotations: { title: "Update Customer", destructiveHint: false, idempotentHint: true },
   schema: customerUpdateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>

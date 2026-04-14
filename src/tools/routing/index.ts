@@ -10,6 +10,7 @@ import { z } from "zod";
 export const routingLoginTool = {
     method: "routingLogin",
     description: "Authenticate to the Yuno dashboard. You must provide your username (email) and password. The remember_device option is automatically set to false for security.",
+    annotations: { title: "Login to Yuno Dashboard", destructiveHint: false, idempotentHint: true },
     schema: routingLoginSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -37,6 +38,7 @@ export const routingLoginTool = {
 export const routingCreateTool = {
     method: "routingCreate",
     description: "Create a routing configuration. You must provide the name and payment method.",
+    annotations: { title: "Create Routing Configuration", destructiveHint: false, idempotentHint: false },
     schema: routingCreateSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -64,6 +66,7 @@ export const routingCreateTool = {
 export const routingGetProvidersTool = {
     method: "routingGetProviders",
     description: "Retrieve all routing connections for a specific payment method. The account_code is automatically taken from the client configuration.",
+    annotations: { title: "Retrieve Routing Providers", readOnlyHint: true },
     schema: routingGetConnectionsSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -90,6 +93,7 @@ export const routingGetProvidersTool = {
 export const routingRetrieveTool = {
     method: "routingRetrieve",
     description: "Retrieve a routing workflow configuration by version code.",
+    annotations: { title: "Retrieve Routing Workflow", readOnlyHint: true },
     schema: z.object({
         versionCode: z.string().min(1).describe("The version code to retrieve"),
     }),
@@ -118,6 +122,7 @@ export const routingRetrieveTool = {
 export const routingUpdateTool = {
     method: "routingUpdate",
     description: "Configure a routing provider by setting up the provider connection in an existing workflow.",
+    annotations: { title: "Update Routing Workflow", destructiveHint: false, idempotentHint: true },
     schema: workflowRequestSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -143,7 +148,8 @@ export const routingUpdateTool = {
 
 export const routingPostTool = {
     method: "routingPost",
-    description: "Post a routing workflow configuration to the Yuno API.",
+    description: "Publish a routing workflow configuration to make it active in the Yuno API.",
+    annotations: { title: "Publish Routing Workflow", destructiveHint: true, idempotentHint: true },
     schema: z.object({
         versionCode: z.string().min(1).describe("The version code to post"),
     }),
@@ -172,6 +178,7 @@ export const routingPostTool = {
 export const routingLogOutTool = {
     method: "routingLogOut",
     description: "Log out from the Yuno dashboard. This will invalidate the current session.",
+    annotations: { title: "Logout from Yuno Dashboard", destructiveHint: true, idempotentHint: true },
     schema: z.object({}),
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>

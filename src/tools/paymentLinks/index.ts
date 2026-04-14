@@ -6,6 +6,7 @@ import type { PaymentLinkCancelSchema, PaymentLinkCreateSchema, YunoPaymentLink 
 export const paymentLinkCreateTool = {
   method: "paymentLinkCreate",
   description: "Create a payment link in Yuno.",
+  annotations: { title: "Create Payment Link", destructiveHint: false, idempotentHint: false },
   schema: paymentLinkCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -37,6 +38,7 @@ export const paymentLinkCreateTool = {
 export const paymentLinkRetrieveTool = {
   method: "paymentLinkRetrieve",
   description: "Retrieve a payment link in Yuno by its ID.",
+  annotations: { title: "Retrieve Payment Link", readOnlyHint: true },
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
   }),
@@ -66,6 +68,7 @@ export const paymentLinkRetrieveTool = {
 export const paymentLinkCancelTool = {
   method: "paymentLinkCancel",
   description: "Cancel a payment link in Yuno by its ID.",
+  annotations: { title: "Cancel Payment Link", destructiveHint: true, idempotentHint: true },
   schema: paymentLinkCancelSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
