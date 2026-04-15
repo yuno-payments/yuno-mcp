@@ -1,8 +1,17 @@
-import { documentationIndexSchema, documentationReadSchema } from "../../schemas/documentation";
+import { ALLOWED_DOCUMENTATION_HOST, documentationIndexSchema, documentationReadSchema } from "../../schemas/documentation";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { DocumentationReadSchema } from "./types";
 
-const LLMS_TXT_URL = "https://docs.y.uno/llms.txt";
+const LLMS_TXT_URL = `https://${ALLOWED_DOCUMENTATION_HOST}/llms.txt`;
+
+function isAllowedDocumentationUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname === ALLOWED_DOCUMENTATION_HOST;
+  } catch {
+    return false;
+  }
+}
 
 const documentationIndexTool = {
   method: "documentationIndex",
@@ -44,6 +53,17 @@ const documentationReadTool = {
     async ({ url }: DocumentationReadSchema): Promise<Output<TType>> => {
       if (type === "object") {
         throw new Error("Documentation read tool only supports text output");
+      }
+
+      if (!isAllowedDocumentationUrl(url)) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Refused: URL must be an https:// URL on ${ALLOWED_DOCUMENTATION_HOST}`,
+            },
+          ],
+        } as Output<TType>;
       }
 
       try {
