@@ -1,9 +1,10 @@
 import { z } from "zod";
+import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import type { YunoClient } from "../client";
 
 type CheckoutToolMethod = "checkoutSessionCreate" | "checkoutSessionRetrievePaymentMethods" | "checkoutSessionCreateOtt";
 type CustomerToolMethod = "customerCreate" | "customerRetrieve" | "customerRetrieveByExternalId" | "customerUpdate";
-type DocumentationToolMethod = "documentationRead";
+type DocumentationToolMethod = "documentationIndex" | "documentationRead";
 type InstallmentPlanToolMethod =
   | "installmentPlanCreate"
   | "installmentPlanRetrieve"
@@ -67,6 +68,7 @@ type HandlerContext<TType extends "object" | "text" = "object" | "text"> = {
 type Tool = {
   method: ToolMethod;
   description: string;
+  annotations: ToolAnnotations;
   schema: z.ZodObject<any>;
   handler: <TType extends "object" | "text">(context: HandlerContext<TType>) => (input: any) => Promise<Output<TType>>;
 };

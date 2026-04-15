@@ -6,6 +6,7 @@ import type { InstallmentPlanCreateSchema, InstallmentPlanUpdateSchema, YunoInst
 export const installmentPlanCreateTool = {
   method: "installmentPlanCreate",
   description: "Create an installment plan in Yuno.",
+  annotations: { title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
   schema: installmentPlanCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -37,6 +38,7 @@ export const installmentPlanCreateTool = {
 export const installmentPlanRetrieveTool = {
   method: "installmentPlanRetrieve",
   description: "Retrieve an installment plan in Yuno by its ID.",
+  annotations: { title: "Retrieve Installment Plan", readOnlyHint: true },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
   }),
@@ -66,6 +68,7 @@ export const installmentPlanRetrieveTool = {
 export const installmentPlanRetrieveAllTool = {
   method: "installmentPlanRetrieveAll",
   description: "Retrieve all installment plans in Yuno for an account.",
+  annotations: { title: "Retrieve All Installment Plans", readOnlyHint: true },
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
@@ -95,6 +98,7 @@ export const installmentPlanRetrieveAllTool = {
 export const installmentPlanUpdateTool = {
   method: "installmentPlanUpdate",
   description: "Update an installment plan in Yuno by its ID.",
+  annotations: { title: "Update Installment Plan", destructiveHint: false, idempotentHint: true },
   schema: installmentPlanUpdateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -122,6 +126,7 @@ export const installmentPlanUpdateTool = {
 export const installmentPlanDeleteTool = {
   method: "installmentPlanDelete",
   description: "Delete an installment plan in Yuno by its ID.",
+  annotations: { title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),
   }),

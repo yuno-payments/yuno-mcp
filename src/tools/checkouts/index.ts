@@ -6,6 +6,7 @@ import type { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttCr
 export const checkoutSessionCreateTool = {
   method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
+  annotations: { title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
   schema: checkoutSessionCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -37,6 +38,7 @@ export const checkoutSessionCreateTool = {
 export const checkoutSessionRetrievePaymentMethodsTool = {
   method: "checkoutSessionRetrievePaymentMethods",
   description: "Retrieve payment methods for a checkout session in Yuno.",
+  annotations: { title: "Retrieve Checkout Payment Methods", readOnlyHint: true },
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
@@ -66,6 +68,7 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
 export const checkoutSessionCreateOttTool = {
   method: "checkoutSessionCreateOtt",
   description: "Generate a One Time Token (OTT) for a checkout session in Yuno.",
+  annotations: { title: "Create Checkout One-Time Token", destructiveHint: false, idempotentHint: false },
   schema: ottCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>

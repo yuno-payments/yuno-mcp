@@ -7,6 +7,7 @@ import type { RecipientCreateSchema, RecipientUpdateSchema, YunoRecipient } from
 export const recipientCreateTool = {
   method: "recipientCreate",
   description: "Create a recipient in Yuno.",
+  annotations: { title: "Create Recipient", destructiveHint: false, idempotentHint: false },
   schema: recipientCreateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -38,6 +39,7 @@ export const recipientCreateTool = {
 export const recipientRetrieveTool = {
   method: "recipientRetrieve",
   description: "Retrieve a recipient in Yuno by its ID.",
+  annotations: { title: "Retrieve Recipient", readOnlyHint: true },
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
@@ -67,6 +69,7 @@ export const recipientRetrieveTool = {
 export const recipientUpdateTool = {
   method: "recipientUpdate",
   description: "Update a recipient in Yuno by its ID.",
+  annotations: { title: "Update Recipient", destructiveHint: false, idempotentHint: true },
   schema: recipientUpdateSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
@@ -94,6 +97,7 @@ export const recipientUpdateTool = {
 export const recipientDeleteTool = {
   method: "recipientDelete",
   description: "Delete a recipient in Yuno by its ID.",
+  annotations: { title: "Delete Recipient", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),
   }),

@@ -18,7 +18,7 @@ function createYunoMCPServer(yunoClient: YunoClient) {
   for (const tool of tools) {
     const permissiveSchema = tool.schema.passthrough();
 
-    server.tool(tool.method, permissiveSchema.shape, async (params: any) => {
+    server.tool(tool.method, tool.description, permissiveSchema.shape, tool.annotations, async (params: any) => {
       try {
         const validation = tool.schema.safeParse(params);
         if (!validation.success) {
