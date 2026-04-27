@@ -1,10 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
-import { tools } from "./tools";
-import { Output } from "./types";
+import { tools, routingTools } from "./tools";
+import { Output, Tool } from "./types";
 
-function createYunoMCPServer(yunoClient: YunoClient) {
+type CreateOptions = {
+  includeRoutingTools?: boolean;
+};
+
+function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
     {
       name: "yuno-mcp",
@@ -15,7 +19,11 @@ function createYunoMCPServer(yunoClient: YunoClient) {
     },
   );
 
-  for (const tool of tools) {
+  const enabledTools: readonly Tool[] = options.includeRoutingTools
+    ? [...tools, ...routingTools]
+    : tools;
+
+  for (const tool of enabledTools) {
     const permissiveSchema = tool.schema.passthrough();
 
     server.tool(tool.method, tool.description, permissiveSchema.shape, tool.annotations, async (params: any) => {
@@ -53,10 +61,12 @@ async function initializeYunoMCP({
   accountCode,
   publicApiKey,
   privateSecretKey,
+  includeRoutingTools,
 }: {
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
+  includeRoutingTools?: boolean;
 }) {
   try {
     const yunoClient = await YunoClient.initialize({
@@ -65,7 +75,7 @@ async function initializeYunoMCP({
       privateSecretKey,
     });
 
-    const yunoMCP = createYunoMCPServer(yunoClient);
+    const yunoMCP = createYunoMCPServer(yunoClient, { includeRoutingTools });
 
     return {
       yunoMCP,
