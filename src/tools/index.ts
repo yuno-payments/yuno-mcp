@@ -20,5 +20,6 @@ export const tools = [
   ...recipientTools,
   ...installmentPlanTools,
   ...documentationTools,
-    ...routingTools,
 ] as const satisfies Tool[];
+
+export { routingTools };
