@@ -1,6 +1,77 @@
 import { z } from "zod";
 import { amountSchema, cardDataSchema, metadataSchema } from "./shared";
 
+const yunoSubscriptionOutputSchema = z
+  .object({
+    account_id: z.string().optional(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    merchant_reference: z.string().optional(),
+    amount: z
+      .object({
+        currency: z.string(),
+        value: z.number(),
+      })
+      .passthrough()
+      .optional(),
+    status: z.string().optional(),
+    additional_data: z.any().optional(),
+    frequency: z
+      .object({
+        type: z.enum(["DAY", "WEEK", "MONTH"]),
+        value: z.number().optional(),
+      })
+      .passthrough()
+      .optional(),
+    billing_cycles: z
+      .object({
+        total: z.number(),
+      })
+      .passthrough()
+      .optional(),
+    payment_method: z
+      .object({
+        type: z.enum(["CARD"]).optional(),
+        vaulted_token: z.string().optional(),
+        card: z
+          .object({
+            installments: z.number().optional(),
+            network_transaction_id: z.string().optional(),
+            verify: z.boolean().optional(),
+            card_data: z
+              .object({
+                number: z.string(),
+                expiration_month: z.number(),
+                expiration_year: z.number(),
+                security_code: z.union([z.string(), z.number()]),
+                holder_name: z.string(),
+              })
+              .passthrough()
+              .optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+    trial_period: z
+      .object({
+        billing_cycles: z.number().optional(),
+        amount: amountSchema.optional(),
+      })
+      .passthrough()
+      .optional(),
+    availability: z
+      .object({
+        start_at: z.string().optional(),
+        finish_at: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+    metadata: metadataSchema,
+  })
+  .passthrough();
+
 const subscriptionCreateSchema = z
   .object({
     account_id: z.string().optional().describe("Account ID for the subscription"),
@@ -163,4 +234,4 @@ const subscriptionUpdateSchema = z
   })
   .passthrough();
 
-export { subscriptionCreateSchema, subscriptionUpdateSchema };
+export { subscriptionCreateSchema, subscriptionUpdateSchema, yunoSubscriptionOutputSchema };

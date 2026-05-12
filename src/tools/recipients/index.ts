@@ -1,5 +1,5 @@
 import z from "zod";
-import { recipientCreateSchema, recipientUpdateSchema } from "../../schemas";
+import { recipientCreateSchema, recipientUpdateSchema, yunoRecipientOutputSchema } from "../../schemas";
 import type { HandlerContext, Tool } from "../../types";
 import type { Output } from "../../types";
 import type { RecipientCreateSchema, RecipientUpdateSchema, YunoRecipient } from "./types";
@@ -9,6 +9,7 @@ export const recipientCreateTool = {
   description: "Create a recipient in Yuno.",
   annotations: { title: "Create Recipient", destructiveHint: false, idempotentHint: false },
   schema: recipientCreateSchema,
+  outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: RecipientCreateSchema): Promise<Output<TType, YunoRecipient>> => {
@@ -43,6 +44,7 @@ export const recipientRetrieveTool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
+  outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {
@@ -71,6 +73,7 @@ export const recipientUpdateTool = {
   description: "Update a recipient in Yuno by its ID.",
   annotations: { title: "Update Recipient", destructiveHint: false, idempotentHint: true },
   schema: recipientUpdateSchema,
+  outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
@@ -101,6 +104,7 @@ export const recipientDeleteTool = {
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),
   }),
+  outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {

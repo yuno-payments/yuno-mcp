@@ -1,5 +1,12 @@
 import z from "zod";
-import { paymentCancelSchema, paymentCaptureAuthorizationSchema, paymentCreateSchema, paymentRefundSchema } from "../../schemas";
+import {
+  paymentCancelSchema,
+  paymentCaptureAuthorizationSchema,
+  paymentCreateSchema,
+  paymentRefundSchema,
+  yunoPaymentOutputSchema,
+  yunoPaymentListOutputSchema,
+} from "../../schemas";
 import { randomUUID } from "node:crypto";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type {
@@ -16,6 +23,7 @@ export const paymentCreateTool = {
   description: "Create a new payment in Yuno.",
   annotations: { title: "Create Payment", destructiveHint: false, idempotentHint: false },
   schema: paymentCreateSchema,
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ payment, idempotencyKey }: PaymentCreateSchema): Promise<Output<TType, YunoPayment>> => {
@@ -63,6 +71,7 @@ export const paymentRetrieveTool = {
   schema: z.object({
     payment_id: z.string().describe("The unique identifier of the payment"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ payment_id }: { payment_id: string }): Promise<Output<TType, YunoPayment>> => {
@@ -105,9 +114,10 @@ export const paymentRetrieveByMerchantOrderIdTool = {
   schema: z.object({
     merchant_order_id: z.string().describe("The unique identifier of the order for the payment (merchant_order_id)"),
   }),
+  outputSchema: yunoPaymentListOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ merchant_order_id }: { merchant_order_id: string }): Promise<Output<TType, YunoPayment[]>> => {
+    async ({ merchant_order_id }: { merchant_order_id: string }): Promise<Output<TType, { items: YunoPayment[] }>> => {
       const { body: payments, status, headers } = await yunoClient.payments.retrieveByMerchantOrderId(merchant_order_id);
 
       if (type === "text") {
@@ -122,21 +132,21 @@ export const paymentRetrieveByMerchantOrderIdTool = {
               text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
-        } as Output<TType, YunoPayment[]>;
+        } as Output<TType, { items: YunoPayment[] }>;
       }
 
       return {
         content: [
           {
             type: "object" as const,
-            object: payments,
+            object: { items: payments },
           },
           {
             type: "text" as const,
             text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
-      } as Output<TType, YunoPayment[]>;
+      } as Output<TType, { items: YunoPayment[] }>;
     },
 } as const satisfies Tool;
 
@@ -150,6 +160,7 @@ export const paymentRefundTool = {
     body: paymentRefundSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -205,6 +216,7 @@ export const paymentCancelOrRefundTool = {
     body: paymentRefundSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -259,6 +271,7 @@ export const paymentCancelOrRefundWithTransactionTool = {
     body: paymentRefundSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -315,6 +328,7 @@ export const paymentCancelTool = {
     body: paymentCancelSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -366,6 +380,7 @@ export const paymentAuthorizeTool = {
   description: "Authorize a payment in Yuno.",
   annotations: { title: "Authorize Payment", destructiveHint: false, idempotentHint: false },
   schema: paymentCreateSchema,
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -422,6 +437,7 @@ export const paymentCaptureAuthorizationTool = {
     body: paymentCaptureAuthorizationSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate captures"),
   }),
+  outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({

@@ -33,4 +33,16 @@ const paymentMethodEnrollSchema = z
   })
   .passthrough();
 
-export { paymentMethodEnrollSchema };
+const yunoPaymentMethodOutputSchema = z
+  .object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    type: z.string().optional(),
+    country: z.string().optional(),
+    status: z.string().optional(),
+    sub_status: z.string().optional(),
+    vaulted_token: z.string().optional(),
+  })
+  .passthrough();
+
+export { paymentMethodEnrollSchema, yunoPaymentMethodOutputSchema };

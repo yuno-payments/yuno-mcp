@@ -1,6 +1,27 @@
 import { z } from "zod";
 import { addressSchema, amountSchema, documentSchema, metadataSchema, phoneSchema } from "./shared";
 
+const yunoPaymentLinkOutputSchema = z
+  .object({
+    account_id: z.string().optional(),
+    description: z.string().optional(),
+    country: z.string(),
+    merchant_order_id: z.string().optional(),
+    additional_data: z.any().optional(),
+    url: z.string().optional(),
+    status: z.string().optional(),
+    amount: z
+      .object({
+        currency: z.string(),
+        value: z.number(),
+      })
+      .passthrough(),
+    payment_method_types: z.array(z.string()),
+    metadata: metadataSchema,
+    cancelled_at: z.string().optional(),
+  })
+  .passthrough();
+
 const customerPayerSchema = z
   .object({
     id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format"),
@@ -69,4 +90,4 @@ const paymentLinkCancelSchema = z
   .passthrough()
   .describe("Parameters for payment link cancellation");
 
-export { paymentLinkCreateSchema, paymentLinkCancelSchema };
+export { paymentLinkCreateSchema, paymentLinkCancelSchema, yunoPaymentLinkOutputSchema };

@@ -1,5 +1,5 @@
 import z from "zod";
-import { paymentLinkCreateSchema, paymentLinkCancelSchema } from "../../schemas";
+import { paymentLinkCreateSchema, paymentLinkCancelSchema, yunoPaymentLinkOutputSchema } from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { PaymentLinkCancelSchema, PaymentLinkCreateSchema, YunoPaymentLink } from "./types";
 
@@ -8,6 +8,7 @@ export const paymentLinkCreateTool = {
   description: "Create a payment link in Yuno.",
   annotations: { title: "Create Payment Link", destructiveHint: false, idempotentHint: false },
   schema: paymentLinkCreateSchema,
+  outputSchema: yunoPaymentLinkOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: PaymentLinkCreateSchema): Promise<Output<TType, YunoPaymentLink>> => {
@@ -42,6 +43,7 @@ export const paymentLinkRetrieveTool = {
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
   }),
+  outputSchema: yunoPaymentLinkOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ paymentLinkId }: { paymentLinkId: string }): Promise<Output<TType, YunoPaymentLink>> => {
@@ -70,6 +72,7 @@ export const paymentLinkCancelTool = {
   description: "Cancel a payment link in Yuno by its ID.",
   annotations: { title: "Cancel Payment Link", destructiveHint: true, idempotentHint: true },
   schema: paymentLinkCancelSchema,
+  outputSchema: yunoPaymentLinkOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ paymentLinkId }: PaymentLinkCancelSchema): Promise<Output<TType, YunoPaymentLink>> => {

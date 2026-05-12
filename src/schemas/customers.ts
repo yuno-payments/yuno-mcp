@@ -1,6 +1,23 @@
 import { z } from "zod";
 import { addressSchema, metadataSchema, phoneSchema, documentSchema } from "./shared";
 
+const yunoCustomerOutputSchema = z
+  .object({
+    merchant_customer_id: z.string().optional(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    gender: z.string().optional(),
+    date_of_birth: z.string().optional(),
+    email: z.string().optional(),
+    document: documentSchema,
+    phone: phoneSchema,
+    billing_address: addressSchema,
+    shipping_address: addressSchema,
+    metadata: metadataSchema,
+    merchant_customer_created_at: z.string().optional(),
+  })
+  .passthrough();
+
 const customerCreateSchema = z
   .object({
     merchant_customer_id: z.string().min(3).max(255),
@@ -40,4 +57,4 @@ const customerUpdateSchema = z
   })
   .passthrough();
 
-export { customerCreateSchema, customerUpdateSchema };
+export { customerCreateSchema, customerUpdateSchema, yunoCustomerOutputSchema };

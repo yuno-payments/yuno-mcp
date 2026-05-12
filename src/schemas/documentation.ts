@@ -25,4 +25,22 @@ const documentationReadSchema = z.object({
   ),
 });
 
-export { documentationIndexSchema, documentationReadSchema, ALLOWED_DOCUMENTATION_HOST };
+const documentationIndexOutputSchema = z
+  .object({
+    content: z.string().optional().describe("Raw llms.txt documentation index text"),
+  })
+  .passthrough();
+
+const documentationReadOutputSchema = z
+  .object({
+    content: z.string().optional().describe("Raw documentation page text"),
+  })
+  .passthrough();
+
+export {
+  documentationIndexSchema,
+  documentationReadSchema,
+  documentationIndexOutputSchema,
+  documentationReadOutputSchema,
+  ALLOWED_DOCUMENTATION_HOST,
+};
