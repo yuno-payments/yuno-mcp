@@ -27,13 +27,13 @@ const documentationReadSchema = z.object({
 
 const documentationIndexOutputSchema = z
   .object({
-    content: z.string().optional().describe("Raw llms.txt documentation index text"),
+    content: z.string().nullish().describe("Raw llms.txt documentation index text"),
   })
   .passthrough();
 
 const documentationReadOutputSchema = z
   .object({
-    content: z.string().optional().describe("Raw documentation page text"),
+    content: z.string().nullish().describe("Raw documentation page text"),
   })
   .passthrough();
 

@@ -30,17 +30,17 @@ const conditionSchema = z.object({
     condition_type: z.string().describe("Type of condition"),
     values: z.array(z.any()).describe("Values for the condition"),
     conditional: z.string().describe("Conditional operator"),
-    complex_name: z.string().nullable().optional().describe("Complex name for the condition"),
-    complex_index: z.string().nullable().optional().describe("Complex index for the condition"),
-    additional_field_name: z.string().nullable().optional().describe("Additional field name"),
+    complex_name: z.string().nullish().describe("Complex name for the condition"),
+    complex_index: z.string().nullish().describe("Complex index for the condition"),
+    additional_field_name: z.string().nullish().describe("Additional field name"),
     detail: conditionDetailSchema.describe("Detailed information about the condition"),
     visible: z.boolean().describe("Whether the condition is visible"),
-    metadata_key: z.string().nullable().optional().describe("Metadata key"),
-    time_period_repeat_amount: z.number().nullable().optional().describe("Time period repeat amount"),
-    time_period_repetition_days: z.number().nullable().optional().describe("Time period repetition days"),
-    time_period_repeat_frequency: z.string().nullable().optional().describe("Time period repeat frequency"),
-    time_period_start_time: z.string().nullable().optional().describe("Time period start time"),
-    time_period_end_time: z.string().nullable().optional().describe("Time period end time"),
+    metadata_key: z.string().nullish().describe("Metadata key"),
+    time_period_repeat_amount: z.number().nullish().describe("Time period repeat amount"),
+    time_period_repetition_days: z.number().nullish().describe("Time period repetition days"),
+    time_period_repeat_frequency: z.string().nullish().describe("Time period repeat frequency"),
+    time_period_start_time: z.string().nullish().describe("Time period start time"),
+    time_period_end_time: z.string().nullish().describe("Time period end time"),
 });
 
 const routeOutputSchema = z.object({
@@ -49,13 +49,13 @@ const routeOutputSchema = z.object({
     type: z.enum(["SUCCESS", "WARNING", "ERROR"]).describe("Type of the output - must be SUCCESS, WARNING, or ERROR"),
     has_split: z.boolean().describe("Whether the output has split"),
     decline_types: z.array(z.string()).describe("Types of declines"),
-    next_route_index: z.number().nullable().optional().describe("Next route index"),
+    next_route_index: z.number().nullish().describe("Next route index"),
     next_route_indexes: z.array(z.number()).describe("Next route indexes"),
-    id: z.string().nullable().optional().describe("Output ID"),
+    id: z.string().nullish().describe("Output ID"),
 });
 
 const routeDataSchema = z.object({
-    action: z.string().nullable().optional().describe("Action for the route"),
+    action: z.string().nullish().describe("Action for the route"),
     provider_id: z.string().describe("Provider ID"),
     integration_code: z.string().describe("Integration code"),
     provider_type: z.enum(["PAYMENT", "PROCESSOR"]).describe("Type of provider - must be PAYMENT or PROCESSOR"),
@@ -84,12 +84,12 @@ const conditionSetSchema = z.object({
     updated_at: z.string().describe("Last update timestamp"),
     category: z.string().describe("Category of the condition set"),
     expired: z.boolean().describe("Whether the condition set is expired"),
-    threshold_code: z.string().nullable().optional().describe("Threshold code"),
-    monitor_active: z.boolean().nullable().optional().describe("Whether monitoring is active"),
+    threshold_code: z.string().nullish().describe("Threshold code"),
+    monitor_active: z.boolean().nullish().describe("Whether monitoring is active"),
     id: z.number().describe("Condition set ID"),
-    name: z.string().nullable().optional().describe("Name of the condition set"),
-    description: z.string().nullable().optional().describe("Description of the condition set"),
-    smart_routing_mode: z.string().nullable().optional().describe("Smart routing mode"),
+    name: z.string().nullish().describe("Name of the condition set"),
+    description: z.string().nullish().describe("Description of the condition set"),
+    smart_routing_mode: z.string().nullish().describe("Smart routing mode"),
 });
 
 const workflowSchema = z.object({
@@ -112,7 +112,7 @@ const versionSchema = z.object({
     number: z.number().describe("Version number"),
     created_at: z.string().describe("Creation timestamp"),
     updated_at: z.string().describe("Last update timestamp"),
-    published_at: z.string().nullable().optional().describe("Publication timestamp"),
+    published_at: z.string().nullish().describe("Publication timestamp"),
     name: z.string().describe("Version name"),
     publishable: z.boolean().describe("Whether the version is publishable"),
     favorite: z.boolean().describe("Whether the version is marked as favorite"),
@@ -121,30 +121,30 @@ const versionSchema = z.object({
     payment_enabled: z.boolean().describe("Whether payments are enabled"),
     fraud_enabled: z.boolean().describe("Whether fraud detection is enabled"),
     paused: z.boolean().describe("Whether the version is paused"),
-    deleted_at: z.string().nullable().optional().describe("Deletion timestamp"),
+    deleted_at: z.string().nullish().describe("Deletion timestamp"),
 });
 
 const routingIntegrationSchema = z.object({
-    integration_code: z.string().optional().describe("Integration code identifier"),
-    type: z.string().optional().describe("Type of integration"),
-    provider_id: z.string().optional().describe("Provider identifier"),
-    icon: z.string().optional().describe("Icon URL or identifier"),
-    name: z.string().optional().describe("Integration name"),
-    description: z.string().optional().describe("Integration description"),
-    active: z.boolean().optional().describe("Whether the integration is active"),
-    connection_name: z.string().optional().describe("Connection name"),
-    provider_icon: z.string().optional().describe("Provider icon URL or identifier"),
-    category: z.string().optional().describe("Integration category"),
-    created_at: z.string().optional().describe("Creation timestamp"),
-    updated_at: z.string().optional().describe("Last update timestamp"),
-    provider_name: z.string().optional().describe("Provider name"),
-    connection_state: z.string().optional().describe("Connection state"),
-    flow_type: z.string().optional().describe("Flow type"),
-    costs: z.array(z.any()).optional().describe("Associated costs"),
+    integration_code: z.string().nullish().describe("Integration code identifier"),
+    type: z.string().nullish().describe("Type of integration"),
+    provider_id: z.string().nullish().describe("Provider identifier"),
+    icon: z.string().nullish().describe("Icon URL or identifier"),
+    name: z.string().nullish().describe("Integration name"),
+    description: z.string().nullish().describe("Integration description"),
+    active: z.boolean().nullish().describe("Whether the integration is active"),
+    connection_name: z.string().nullish().describe("Connection name"),
+    provider_icon: z.string().nullish().describe("Provider icon URL or identifier"),
+    category: z.string().nullish().describe("Integration category"),
+    created_at: z.string().nullish().describe("Creation timestamp"),
+    updated_at: z.string().nullish().describe("Last update timestamp"),
+    provider_name: z.string().nullish().describe("Provider name"),
+    connection_state: z.string().nullish().describe("Connection state"),
+    flow_type: z.string().nullish().describe("Flow type"),
+    costs: z.array(z.any()).nullish().describe("Associated costs"),
 });
 
 const routingIntegrationsResponseSchema = z.object({
-    integrations: z.array(routingIntegrationSchema).optional().describe("List of integrations"),
+    integrations: z.array(routingIntegrationSchema).nullish().describe("List of integrations"),
 });
 
 const updateRouteRequestSchema = z.object({
@@ -163,199 +163,199 @@ const workflowRequestSchema = z.object({
 const yunoRoutingLoginOutputSchema = z
     .object({
         access_token: z.string(),
-        mfa_token: z.string().optional(),
-        next_step: z.string().optional(),
-        authenticator_type: z.string().optional(),
-        secret: z.string().optional(),
-        barcode_uri: z.string().optional(),
+        mfa_token: z.string().nullish(),
+        next_step: z.string().nullish(),
+        authenticator_type: z.string().nullish(),
+        secret: z.string().nullish(),
+        barcode_uri: z.string().nullish(),
     })
     .passthrough();
 
 const yunoConditionDetailOutputSchema = z
     .object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        criteria: z.string().optional(),
-        operators: z.array(z.string()).optional(),
-        payment_methods: z.array(z.string()).optional(),
-        value_source: z.string().optional(),
-        icon: z.string().optional(),
+        name: z.string().nullish(),
+        description: z.string().nullish(),
+        criteria: z.string().nullish(),
+        operators: z.array(z.string()).nullish(),
+        payment_methods: z.array(z.string()).nullish(),
+        value_source: z.string().nullish(),
+        icon: z.string().nullish(),
     })
     .passthrough();
 
 const yunoConditionOutputSchema = z
     .object({
-        condition_set_id: z.number().optional(),
-        condition_type: z.string().optional(),
-        values: z.array(z.any()).optional(),
-        conditional: z.string().optional(),
-        complex_name: z.string().nullable().optional(),
-        complex_index: z.string().nullable().optional(),
-        additional_field_name: z.string().nullable().optional(),
-        detail: yunoConditionDetailOutputSchema.optional(),
-        visible: z.boolean().optional(),
-        metadata_key: z.string().nullable().optional(),
-        time_period_repeat_amount: z.number().nullable().optional(),
-        time_period_repetition_days: z.number().nullable().optional(),
-        time_period_repeat_frequency: z.string().nullable().optional(),
-        time_period_start_time: z.string().nullable().optional(),
-        time_period_end_time: z.string().nullable().optional(),
+        condition_set_id: z.number().nullish(),
+        condition_type: z.string().nullish(),
+        values: z.array(z.any()).nullish(),
+        conditional: z.string().nullish(),
+        complex_name: z.string().nullish(),
+        complex_index: z.string().nullish(),
+        additional_field_name: z.string().nullish(),
+        detail: yunoConditionDetailOutputSchema.nullish(),
+        visible: z.boolean().nullish(),
+        metadata_key: z.string().nullish(),
+        time_period_repeat_amount: z.number().nullish(),
+        time_period_repetition_days: z.number().nullish(),
+        time_period_repeat_frequency: z.string().nullish(),
+        time_period_start_time: z.string().nullish(),
+        time_period_end_time: z.string().nullish(),
     })
     .passthrough();
 
 const yunoRouteNextIndexOutputSchema = z
     .object({
-        index: z.number().optional(),
-        percentage: z.number().optional(),
+        index: z.number().nullish(),
+        percentage: z.number().nullish(),
     })
     .passthrough();
 
 const yunoRouteOutputOutputSchema = z
     .object({
-        has_split: z.boolean().optional(),
-        output: z.string().optional(),
-        order: z.number().optional(),
-        type: z.string().optional(),
-        next_route_indexes: z.array(yunoRouteNextIndexOutputSchema).optional(),
-        next_route_index: z.number().nullable().optional(),
-        name: z.string().nullable().optional(),
-        id: z.string().nullable().optional(),
-        decline_types: z.array(z.any()).optional(),
+        has_split: z.boolean().nullish(),
+        output: z.string().nullish(),
+        order: z.number().nullish(),
+        type: z.string().nullish(),
+        next_route_indexes: z.array(yunoRouteNextIndexOutputSchema).nullish(),
+        next_route_index: z.number().nullish(),
+        name: z.string().nullish(),
+        id: z.string().nullish(),
+        decline_types: z.array(z.any()).nullish(),
     })
     .passthrough();
 
 const yunoRouteDataOutputSchema = z
     .object({
-        action: z.string().nullable().optional(),
-        integration_code: z.string().optional(),
-        provider_id: z.string().optional(),
-        provider_type: z.enum(["PAYMENT", "PROCESSOR"]).optional(),
-        provider_icon: z.string().optional(),
-        provider_name: z.string().optional(),
-        time_out: z.number().optional(),
-        monitor_message: z.boolean().optional(),
-        network_token_on: z.boolean().optional(),
-        network_token_enable: z.boolean().optional(),
-        smart_routing: z.boolean().optional(),
-        three_d_secure_exemptions: z.array(z.any()).optional(),
-        percentage: z.string().optional(),
+        action: z.string().nullish(),
+        integration_code: z.string().nullish(),
+        provider_id: z.string().nullish(),
+        provider_type: z.enum(["PAYMENT", "PROCESSOR"]).nullish(),
+        provider_icon: z.string().nullish(),
+        provider_name: z.string().nullish(),
+        time_out: z.number().nullish(),
+        monitor_message: z.boolean().nullish(),
+        network_token_on: z.boolean().nullish(),
+        network_token_enable: z.boolean().nullish(),
+        smart_routing: z.boolean().nullish(),
+        three_d_secure_exemptions: z.array(z.any()).nullish(),
+        percentage: z.string().nullish(),
     })
     .passthrough();
 
 const yunoRouteOutputSchema = z
     .object({
-        index: z.number().optional(),
-        outputs: z.array(yunoRouteOutputOutputSchema).optional(),
-        data: yunoRouteDataOutputSchema.optional(),
-        type: z.enum(["PROVIDER", "CONDITION"]).optional(),
-        updated_at: z.string().optional(),
-        repair: z.boolean().optional(),
-        paused: z.boolean().optional(),
-        alerted: z.boolean().optional(),
+        index: z.number().nullish(),
+        outputs: z.array(yunoRouteOutputOutputSchema).nullish(),
+        data: yunoRouteDataOutputSchema.nullish(),
+        type: z.enum(["PROVIDER", "CONDITION"]).nullish(),
+        updated_at: z.string().nullish(),
+        repair: z.boolean().nullish(),
+        paused: z.boolean().nullish(),
+        alerted: z.boolean().nullish(),
     })
     .passthrough();
 
 const yunoConditionSetStartOutputSchema = z
     .object({
-        index: z.number().optional(),
-        percentage: z.number().optional(),
+        index: z.number().nullish(),
+        percentage: z.number().nullish(),
     })
     .passthrough();
 
 const yunoConditionSetOutputSchema = z
     .object({
-        editable: z.boolean().optional(),
-        sort_number: z.number().optional(),
-        conditions: z.array(yunoConditionOutputSchema).optional(),
-        routes: z.array(yunoRouteOutputSchema).optional(),
-        start: z.array(yunoConditionSetStartOutputSchema).optional(),
-        updated_at: z.string().optional(),
-        category: z.string().optional(),
-        expired: z.boolean().optional(),
-        threshold_code: z.string().nullable().optional(),
-        monitor_active: z.boolean().nullable().optional(),
-        id: z.number().optional(),
-        name: z.string().nullable().optional(),
-        description: z.string().nullable().optional(),
-        smart_routing_mode: z.string().nullable().optional(),
+        editable: z.boolean().nullish(),
+        sort_number: z.number().nullish(),
+        conditions: z.array(yunoConditionOutputSchema).nullish(),
+        routes: z.array(yunoRouteOutputSchema).nullish(),
+        start: z.array(yunoConditionSetStartOutputSchema).nullish(),
+        updated_at: z.string().nullish(),
+        category: z.string().nullish(),
+        expired: z.boolean().nullish(),
+        threshold_code: z.string().nullish(),
+        monitor_active: z.boolean().nullish(),
+        id: z.number().nullish(),
+        name: z.string().nullish(),
+        description: z.string().nullish(),
+        smart_routing_mode: z.string().nullish(),
     })
     .passthrough();
 
 const yunoWorkflowOutputSchema = z
     .object({
-        id: z.number().optional(),
-        code: z.string().optional(),
-        name: z.string().optional(),
-        status: z.string().optional(),
-        account_code: z.string().optional(),
-        created_at: z.string().optional(),
-        updated_at: z.string().optional(),
-        payment_method_type: z.string().optional(),
-        is_active: z.boolean().optional(),
+        id: z.number().nullish(),
+        code: z.string().nullish(),
+        name: z.string().nullish(),
+        status: z.string().nullish(),
+        account_code: z.string().nullish(),
+        created_at: z.string().nullish(),
+        updated_at: z.string().nullish(),
+        payment_method_type: z.string().nullish(),
+        is_active: z.boolean().nullish(),
     })
     .passthrough();
 
 const yunoWorkflowVersionOutputSchema = z
     .object({
-        id: z.number().optional(),
-        workflow_id: z.number().optional(),
-        code: z.string().optional(),
-        status: z.string().optional(),
-        number: z.number().optional(),
-        created_at: z.string().optional(),
-        updated_at: z.string().optional(),
-        published_at: z.string().nullable().optional(),
-        name: z.string().optional(),
-        publishable: z.boolean().optional(),
-        favorite: z.boolean().optional(),
-        repair: z.boolean().optional(),
-        updated_by: z.string().optional(),
-        payment_enabled: z.boolean().optional(),
-        fraud_enabled: z.boolean().optional(),
-        paused: z.boolean().optional(),
-        deleted_at: z.string().nullable().optional(),
+        id: z.number().nullish(),
+        workflow_id: z.number().nullish(),
+        code: z.string().nullish(),
+        status: z.string().nullish(),
+        number: z.number().nullish(),
+        created_at: z.string().nullish(),
+        updated_at: z.string().nullish(),
+        published_at: z.string().nullish(),
+        name: z.string().nullish(),
+        publishable: z.boolean().nullish(),
+        favorite: z.boolean().nullish(),
+        repair: z.boolean().nullish(),
+        updated_by: z.string().nullish(),
+        payment_enabled: z.boolean().nullish(),
+        fraud_enabled: z.boolean().nullish(),
+        paused: z.boolean().nullish(),
+        deleted_at: z.string().nullish(),
     })
     .passthrough();
 
 const yunoRoutingWorkflowOutputSchema = z
     .object({
-        workflow: yunoWorkflowOutputSchema.optional(),
-        version: yunoWorkflowVersionOutputSchema.optional(),
-        condition_sets: z.array(yunoConditionSetOutputSchema).optional(),
+        workflow: yunoWorkflowOutputSchema.nullish(),
+        version: yunoWorkflowVersionOutputSchema.nullish(),
+        condition_sets: z.array(yunoConditionSetOutputSchema).nullish(),
     })
     .passthrough();
 
 const yunoRoutingIntegrationOutputSchema = z
     .object({
-        integration_code: z.string().optional(),
-        type: z.string().optional(),
-        provider_id: z.string().optional(),
-        icon: z.string().optional(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        active: z.boolean().optional(),
-        connection_name: z.string().optional(),
-        provider_icon: z.string().optional(),
-        category: z.string().optional(),
-        created_at: z.string().optional(),
-        updated_at: z.string().optional(),
-        provider_name: z.string().optional(),
-        connection_state: z.string().optional(),
-        flow_type: z.string().optional(),
-        costs: z.array(z.any()).optional(),
+        integration_code: z.string().nullish(),
+        type: z.string().nullish(),
+        provider_id: z.string().nullish(),
+        icon: z.string().nullish(),
+        name: z.string().nullish(),
+        description: z.string().nullish(),
+        active: z.boolean().nullish(),
+        connection_name: z.string().nullish(),
+        provider_icon: z.string().nullish(),
+        category: z.string().nullish(),
+        created_at: z.string().nullish(),
+        updated_at: z.string().nullish(),
+        provider_name: z.string().nullish(),
+        connection_state: z.string().nullish(),
+        flow_type: z.string().nullish(),
+        costs: z.array(z.any()).nullish(),
     })
     .passthrough();
 
 const yunoRoutingIntegrationsOutputSchema = z
     .object({
-        integrations: z.array(yunoRoutingIntegrationOutputSchema).optional(),
+        integrations: z.array(yunoRoutingIntegrationOutputSchema).nullish(),
     })
     .passthrough();
 
 const yunoRoutingLogoutOutputSchema = z
     .object({
-        success: z.boolean().optional(),
-        message: z.string().optional(),
+        success: z.boolean().nullish(),
+        message: z.string().nullish(),
     })
     .passthrough();
 

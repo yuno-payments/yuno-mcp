@@ -3,60 +3,60 @@ import { addressSchema, amountSchema, cardDataSchema, documentSchema, metadataSc
 
 const customerPayerSchema = z
   .object({
-    id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer in uuid v4 format (MAX 64 ; MIN 36)"),
-    merchant_customer_id: z.string().min(1).max(255).optional().describe("The unique identifier for a customer in the merchant's system"),
+    id: z.string().min(36).max(64).nullish().describe("The unique identifier of the customer in uuid v4 format (MAX 64 ; MIN 36)"),
+    merchant_customer_id: z.string().min(1).max(255).nullish().describe("The unique identifier for a customer in the merchant's system"),
     merchant_customer_created_at: z
       .string()
       .min(27)
       .max(27)
-      .optional()
+      .nullish()
       .describe("Customer´s registration date on the merchants platform (ISO 8601)"),
-    first_name: z.string().min(1).max(255).optional().describe("The customer's first name"),
-    last_name: z.string().min(1).max(255).optional().describe("The customer's last name"),
-    gender: z.string().min(1).max(2).optional().describe("The customer's gender (M/F/NB/NA/NK/U)"),
-    date_of_birth: z.string().length(10).optional().describe("The customer's date of birth in the YYYY-MM-DD format"),
-    email: z.string().min(1).max(255).optional().describe("The customer's e-mail"),
-    nationality: z.string().length(2).optional().describe("The customer's nationality (ISO 3166-1)"),
-    ip_address: z.string().min(1).max(45).optional().describe("The customer's IP address"),
+    first_name: z.string().min(1).max(255).nullish().describe("The customer's first name"),
+    last_name: z.string().min(1).max(255).nullish().describe("The customer's last name"),
+    gender: z.string().min(1).max(2).nullish().describe("The customer's gender (M/F/NB/NA/NK/U)"),
+    date_of_birth: z.string().length(10).nullish().describe("The customer's date of birth in the YYYY-MM-DD format"),
+    email: z.string().min(1).max(255).nullish().describe("The customer's e-mail"),
+    nationality: z.string().length(2).nullish().describe("The customer's nationality (ISO 3166-1)"),
+    ip_address: z.string().min(1).max(45).nullish().describe("The customer's IP address"),
     device_fingerprints: z
       .array(
         z
           .object({
-            provider_id: z.string().describe("The fraud screening provider id").optional(),
-            id: z.string().describe("The device fingerprint associated to the provider").optional(),
+            provider_id: z.string().describe("The fraud screening provider id").nullish(),
+            id: z.string().describe("The device fingerprint associated to the provider").nullish(),
           })
           .passthrough(),
       )
       .max(4000)
-      .optional(),
+      .nullish(),
     browser_info: z
       .object({
-        user_agent: z.string().min(3).max(255).optional(),
-        accept_header: z.string().optional(),
-        platform: z.string().optional(),
-        color_depth: z.string().min(1).max(5).optional(),
-        screen_height: z.string().min(3).max(255).optional(),
-        screen_width: z.string().min(3).max(255).optional(),
-        javascript_enabled: z.boolean().optional(),
-        language: z.string().min(1).max(5).optional(),
-        accept_browser: z.string().optional(),
-        accept_content: z.string().optional(),
-        java_enabled: z.boolean().optional(),
-        browser_time_difference: z.string().optional(),
+        user_agent: z.string().min(3).max(255).nullish(),
+        accept_header: z.string().nullish(),
+        platform: z.string().nullish(),
+        color_depth: z.string().min(1).max(5).nullish(),
+        screen_height: z.string().min(3).max(255).nullish(),
+        screen_width: z.string().min(3).max(255).nullish(),
+        javascript_enabled: z.boolean().nullish(),
+        language: z.string().min(1).max(5).nullish(),
+        accept_browser: z.string().nullish(),
+        accept_content: z.string().nullish(),
+        java_enabled: z.boolean().nullish(),
+        browser_time_difference: z.string().nullish(),
       })
       .passthrough()
-      .optional(),
-    document: documentSchema.optional(),
-    billing_address: addressSchema.optional(),
-    shipping_address: addressSchema.optional(),
-    phone: phoneSchema.optional(),
+      .nullish(),
+    document: documentSchema.nullish(),
+    billing_address: addressSchema.nullish(),
+    shipping_address: addressSchema.nullish(),
+    phone: phoneSchema.nullish(),
     geolocation: z
       .object({
-        latitude: z.string().min(1).max(11).optional(),
-        longitude: z.string().min(1).max(11).optional(),
+        latitude: z.string().min(1).max(11).nullish(),
+        longitude: z.string().min(1).max(11).nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 
@@ -64,103 +64,110 @@ const paymentCreateSchema = z
   .object({
     payment: z
       .object({
-        account_id: z.string().optional().describe("Account ID for the payment"),
+        account_id: z.string().nullish().describe("Account ID for the payment"),
         description: z.string().describe("Payment description"),
-        additional_data: z.any().optional(),
+        additional_data: z.any().nullish(),
         country: z.string().describe("Customer's country (ISO 3166-1)"),
         merchant_order_id: z.string().describe("Unique identifier for the order"),
-        merchant_reference: z.string().optional(),
+        merchant_reference: z.string().nullish(),
         amount: amountSchema.describe("Payment amount details"),
-        customer_payer: customerPayerSchema.describe("Customer payer info").optional(),
+        customer_payer: customerPayerSchema.describe("Customer payer info").nullish(),
         checkout: z
           .object({
             session: z.string().describe("The checkout session ID"),
           })
           .passthrough()
-          .optional()
+          .nullish()
           .describe("Checkout session information"),
         workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).describe("Payment workflow type"),
         payment_method: z
           .object({
-            token: z.string().optional(),
-            vaulted_token: z.string().optional(),
+            token: z.string().nullish(),
+            vaulted_token: z.string().nullish(),
             type: z.string().describe("Payment method type"),
             detail: z
               .object({
                 card: z
                   .object({
-                    capture: z.boolean().optional(),
-                    installments: z.number().optional(),
-                    first_installment_deferral: z.number().optional(),
-                    soft_descriptor: z.string().optional(),
-                    card_data: cardDataSchema.optional(),
-                    verify: z.boolean().optional(),
+                    capture: z.boolean().nullish(),
+                    installments: z.number().nullish(),
+                    first_installment_deferral: z.number().nullish(),
+                    soft_descriptor: z.string().nullish(),
+                    card_data: cardDataSchema.nullish(),
+                    verify: z.boolean().nullish(),
                     stored_credentials: z
                       .object({
-                        reason: z.string().optional(),
-                        usage: z.string().optional(),
-                        subscription_agreement_id: z.string().optional(),
-                        network_transaction_id: z.string().optional(),
+                        reason: z.string().nullish(),
+                        usage: z.string().nullish(),
+                        subscription_agreement_id: z.string().nullish(),
+                        network_transaction_id: z.string().nullish(),
                       })
                       .passthrough()
-                      .optional(),
+                      .nullish(),
                   })
                   .passthrough()
-                  .optional(),
+                  .nullish(),
               })
               .passthrough()
-              .optional(),
-            vault_on_success: z.boolean().optional(),
+              .nullish(),
+            vault_on_success: z.boolean().nullish(),
           })
           .passthrough()
           .describe("Payment method details"),
-        callback_url: z.string().optional(),
-        fraud_screening: z.any().optional(),
-        split_marketplace: z.any().optional(),
+        callback_url: z.string().nullish(),
+        fraud_screening: z.any().nullish(),
+        split_marketplace: z.any().nullish(),
         metadata: metadataSchema,
       })
-      .passthrough(),
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payments"),
+      .passthrough()
+      .refine(
+        (payment) => payment.workflow !== "SDK_CHECKOUT" || (payment.checkout != null && payment.checkout.session != null),
+        {
+          message: "checkout.session is required when workflow is SDK_CHECKOUT",
+          path: ["checkout", "session"],
+        },
+      ),
+    idempotencyKey: z.string().uuid().nullish().describe("Unique key to prevent duplicate payments"),
   })
   .passthrough();
 
 const operationPaymentResponseAdditionalDataSchema = z
   .object({
-    receipt: z.boolean().optional(),
-    receipt_language: z.enum(["ES", "EN", "PT"]).optional(),
+    receipt: z.boolean().nullish(),
+    receipt_language: z.enum(["ES", "EN", "PT"]).nullish(),
   })
   .passthrough()
-  .optional();
+  .nullish();
 
 const paymentRefundSchema = z
   .object({
-    description: z.string().min(3).max(255).optional(),
-    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).optional(),
+    description: z.string().min(3).max(255).nullish(),
+    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).nullish(),
     merchant_reference: z.string().min(3).max(255),
     amount: z
       .object({
-        currency: z.string().min(3).max(3).optional(),
-        value: z.number().optional(),
+        currency: z.string().min(3).max(3).nullish(),
+        value: z.number().nullish(),
       })
       .passthrough()
-      .optional(),
-    simplified_mode: z.boolean().optional(),
+      .nullish(),
+    simplified_mode: z.boolean().nullish(),
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
     customer_payer: z
       .object({
-        first_name: z.string().min(3).max(255).optional().describe("First name of the customer"),
-        last_name: z.string().min(3).max(255).optional().describe("Last name of the customer"),
-        gender: z.string().optional().describe("Gender of the customer (M/F/NB/NA/NK/U)"),
-        date_of_birth: z.string().length(10).optional().describe("Date of birth (YYYY-MM-DD)"),
-        email: z.string().min(3).max(255).optional().describe("Email of the customer"),
-        nationality: z.string().length(2).optional().describe("Nationality (ISO 3166-1)"),
-        document: documentSchema.optional(),
-        phone: phoneSchema.optional(),
-        billing_address: addressSchema.optional(),
-        shipping_address: addressSchema.optional(),
+        first_name: z.string().min(3).max(255).nullish().describe("First name of the customer"),
+        last_name: z.string().min(3).max(255).nullish().describe("Last name of the customer"),
+        gender: z.string().nullish().describe("Gender of the customer (M/F/NB/NA/NK/U)"),
+        date_of_birth: z.string().length(10).nullish().describe("Date of birth (YYYY-MM-DD)"),
+        email: z.string().min(3).max(255).nullish().describe("Email of the customer"),
+        nationality: z.string().length(2).nullish().describe("Nationality (ISO 3166-1)"),
+        document: documentSchema.nullish(),
+        phone: phoneSchema.nullish(),
+        billing_address: addressSchema.nullish(),
+        shipping_address: addressSchema.nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Customer payer info"),
     payment_method: z
       .object({
@@ -168,31 +175,31 @@ const paymentRefundSchema = z
           .object({
             bank_transfer: z
               .object({
-                account_type: z.enum(["CHECKINGS", "SAVINGS"]).optional(),
-                bank_name: z.string().optional(),
-                bank_id: z.string().optional(),
-                beneficiary_name: z.string().optional(),
-                bank_account: z.string().optional(),
-                beneficiary_document_type: z.string().optional(),
-                beneficiary_document: z.string().optional(),
-                reference: z.string().optional(),
+                account_type: z.enum(["CHECKINGS", "SAVINGS"]).nullish(),
+                bank_name: z.string().nullish(),
+                bank_id: z.string().nullish(),
+                beneficiary_name: z.string().nullish(),
+                bank_account: z.string().nullish(),
+                beneficiary_document_type: z.string().nullish(),
+                beneficiary_document: z.string().nullish(),
+                reference: z.string().nullish(),
               })
               .passthrough()
-              .optional(),
+              .nullish(),
           })
           .passthrough()
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Payment method details for the refund"),
   })
   .passthrough();
 
 const paymentCancelSchema = z
   .object({
-    description: z.string().min(3).max(255).optional(),
-    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).optional(),
+    description: z.string().min(3).max(255).nullish(),
+    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).nullish(),
     merchant_reference: z.string().min(3).max(255),
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
   })
@@ -206,107 +213,106 @@ const paymentCaptureAuthorizationSchema = z
         currency: z.string().min(3).max(3),
         value: z.number(),
       })
-      .passthrough()
-      .optional(),
+      .passthrough(),
     reason: z.string().min(3).max(255),
-    simplified_mode: z.boolean().optional(),
+    simplified_mode: z.boolean().nullish(),
   })
   .passthrough();
 
 const yunoPaymentOutputSchema = z
   .object({
-    account_id: z.string().optional(),
-    description: z.string().optional(),
-    additional_data: z.any().optional(),
-    country: z.string().optional(),
-    merchant_order_id: z.string().optional(),
-    merchant_reference: z.string().optional(),
-    amount: amountSchema.optional(),
+    account_id: z.string().nullish(),
+    description: z.string().nullish(),
+    additional_data: z.any().nullish(),
+    country: z.string().nullish(),
+    merchant_order_id: z.string().nullish(),
+    merchant_reference: z.string().nullish(),
+    amount: amountSchema.nullish(),
     customer_payer: z
       .object({
-        id: z.string().optional(),
-        first_name: z.string().optional(),
-        last_name: z.string().optional(),
-        email: z.string().optional(),
+        id: z.string().nullish(),
+        first_name: z.string().nullish(),
+        last_name: z.string().nullish(),
+        email: z.string().nullish(),
       })
       .passthrough()
-      .optional(),
-    workflow: z.string().optional(),
+      .nullish(),
+    workflow: z.string().nullish(),
     payment_method: z
       .object({
-        token: z.string().optional(),
-        vaulted_token: z.string().optional(),
-        type: z.string().optional(),
+        token: z.string().nullish(),
+        vaulted_token: z.string().nullish(),
+        type: z.string().nullish(),
         detail: z
           .object({
             card: z
               .object({
-                capture: z.boolean().optional(),
-                installments: z.number().optional(),
-                first_installment_deferral: z.number().optional(),
-                soft_descriptor: z.string().optional(),
+                capture: z.boolean().nullish(),
+                installments: z.number().nullish(),
+                first_installment_deferral: z.number().nullish(),
+                soft_descriptor: z.string().nullish(),
                 card_data: z
                   .object({
-                    number: z.string().optional(),
-                    expiration_month: z.number().optional(),
-                    expiration_year: z.number().optional(),
-                    security_code: z.string().optional(),
-                    holder_name: z.string().optional(),
-                    type: z.string().optional(),
+                    number: z.string().nullish(),
+                    expiration_month: z.number().nullish(),
+                    expiration_year: z.number().nullish(),
+                    security_code: z.string().nullish(),
+                    holder_name: z.string().nullish(),
+                    type: z.string().nullish(),
                   })
                   .passthrough()
-                  .optional(),
-                verify: z.boolean().optional(),
+                  .nullish(),
+                verify: z.boolean().nullish(),
                 stored_credentials: z
                   .object({
-                    reason: z.string().optional(),
-                    usage: z.string().optional(),
-                    subscription_agreement_id: z.string().optional(),
-                    network_transaction_id: z.string().optional(),
+                    reason: z.string().nullish(),
+                    usage: z.string().nullish(),
+                    subscription_agreement_id: z.string().nullish(),
+                    network_transaction_id: z.string().nullish(),
                   })
                   .passthrough()
-                  .optional(),
+                  .nullish(),
               })
               .passthrough()
-              .optional(),
+              .nullish(),
           })
           .passthrough()
-          .optional(),
-        vault_on_success: z.boolean().optional(),
+          .nullish(),
+        vault_on_success: z.boolean().nullish(),
       })
       .passthrough()
-      .optional(),
-    callback_url: z.string().optional(),
+      .nullish(),
+    callback_url: z.string().nullish(),
     fraud_screening: z
-      .object({ stand_alone: z.boolean().optional() })
+      .object({ stand_alone: z.boolean().nullish() })
       .passthrough()
-      .optional(),
+      .nullish(),
     split_marketplace: z
       .array(
         z
           .object({
-            recipient_id: z.string().optional(),
-            provider_recipient_id: z.string().optional(),
-            type: z.string().optional(),
-            merchant_reference: z.string().optional(),
+            recipient_id: z.string().nullish(),
+            provider_recipient_id: z.string().nullish(),
+            type: z.string().nullish(),
+            merchant_reference: z.string().nullish(),
             amount: z
               .object({
-                value: z.number().optional(),
-                currency: z.string().optional(),
+                value: z.number().nullish(),
+                currency: z.string().nullish(),
               })
               .passthrough()
-              .optional(),
+              .nullish(),
             liability: z
               .object({
-                processing_fee: z.string().optional(),
-                chargebacks: z.boolean().optional(),
+                processing_fee: z.string().nullish(),
+                chargebacks: z.boolean().nullish(),
               })
               .passthrough()
-              .optional(),
+              .nullish(),
           })
           .passthrough(),
       )
-      .optional(),
+      .nullish(),
     metadata: metadataSchema,
   })
   .passthrough();

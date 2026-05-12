@@ -27,6 +27,7 @@ describe("paymentLinkCreateTool", () => {
 
   it("should validate a correct minimal payload (only required fields)", () => {
     const minimal = {
+      description: "Test link",
       country: "US",
       amount: { currency: "USD", value: 100 },
       payment_method_types: ["card"],

@@ -2,6 +2,7 @@ import z from "zod";
 import {
   paymentMethodEnrollSchema,
   yunoPaymentMethodOutputSchema,
+  yunoPaymentMethodListOutputSchema,
 } from "../../schemas";
 import { randomUUID } from "node:crypto";
 import type { YunoClient } from "../../client";
@@ -93,10 +94,10 @@ export const paymentMethodRetrieveEnrolledTool = {
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
   }),
-  outputSchema: yunoPaymentMethodOutputSchema,
+  outputSchema: yunoPaymentMethodListOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ customer_id }: { customer_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {
+    async ({ customer_id }: { customer_id: string }): Promise<Output<TType, { payment_methods?: YunoPaymentMethod[] | null }>> => {
       const { body, status, headers } = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
 
       if (type === "text") {
@@ -105,7 +106,7 @@ export const paymentMethodRetrieveEnrolledTool = {
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
-        } as Output<TType, YunoPaymentMethod>;
+        } as Output<TType, { payment_methods?: YunoPaymentMethod[] | null }>;
       }
 
       return {
@@ -113,7 +114,7 @@ export const paymentMethodRetrieveEnrolledTool = {
           { type: "object" as const, object: body },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
-      } as Output<TType, YunoPaymentMethod>;
+      } as Output<TType, { payment_methods?: YunoPaymentMethod[] | null }>;
     },
 } as const satisfies Tool;
 

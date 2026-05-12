@@ -39,6 +39,8 @@ describe("installmentPlanCreateTool", () => {
       name: "Plan 1",
       merchant_reference: "ref_1",
       installments_plan: [{ installment: 3, rate: 1.5 }],
+      country_code: "US",
+      amount: { currency: "USD" },
     };
     expect(() => installmentPlanCreateSchema.parse(minimal)).not.toThrow();
   });

@@ -103,7 +103,7 @@ export const customerUpdateTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customerId, ...updateFields }: CustomerUpdateSchema): Promise<Output<TType, YunoCustomer>> => {
-      const { body: customer, status, headers } = await yunoClient.customers.update(customerId, updateFields);
+      const { body: customer, status, headers } = await yunoClient.customers.update(customerId, updateFields as Partial<YunoCustomer>);
 
       if (type === "text") {
         return {

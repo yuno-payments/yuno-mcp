@@ -3,16 +3,16 @@ import { addressSchema, documentSchema, phoneSchema } from "./shared";
 
 const legalRepresentativeSchema = z
   .object({
-    merchant_reference: z.string().optional(),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    email: z.string().optional(),
-    date_of_birth: z.string().optional(),
-    country: z.string().min(2).max(2).optional(),
-    nationality: z.string().min(2).max(2).optional(),
-    title: z.string().optional(),
-    publicly_exposed_person: z.boolean().optional(),
-    ultimate_beneficial_owner: z.boolean().optional(),
+    merchant_reference: z.string().nullish(),
+    first_name: z.string().nullish(),
+    last_name: z.string().nullish(),
+    email: z.string().nullish(),
+    date_of_birth: z.string().nullish(),
+    country: z.string().min(2).max(2).nullish(),
+    nationality: z.string().min(2).max(2).nullish(),
+    title: z.string().nullish(),
+    publicly_exposed_person: z.boolean().nullish(),
+    ultimate_beneficial_owner: z.boolean().nullish(),
   })
   .passthrough();
 
@@ -20,14 +20,14 @@ const withdrawalMethodsBankSchema = z
   .object({
     code: z.string().min(3).max(3),
     branch: z.string().min(3).max(3),
-    branch_digit: z.string().min(3).max(3).optional(),
+    branch_digit: z.string().min(3).max(3).nullish(),
     account: z.string().min(3).max(250),
-    account_digit: z.string().min(3).max(250).optional(),
+    account_digit: z.string().min(3).max(250).nullish(),
     account_type: z.enum(["CHECKINGS", "SAVINGS"]),
-    routing: z.string().optional(),
+    routing: z.string().nullish(),
     country: z.string().min(2).max(2),
     currency: z.string().min(3).max(3),
-    payout_schedule: z.enum(["DAY", "WEEK", "MONTH", "HOLD"]).optional(),
+    payout_schedule: z.enum(["DAY", "WEEK", "MONTH", "HOLD"]).nullish(),
   })
   .passthrough();
 
@@ -42,68 +42,68 @@ const documentationItemSchema = z
 
 const onboardingSchema = z
   .object({
-    account_id: z.string().optional(),
+    account_id: z.string().nullish(),
     type: z.enum(["PREVIOUSLY_ONBOARDED", "ONBOARD_ONTO_THE_PROVIDER"]),
     workflow: z.enum(["HOSTED_BY_PROVIDER", "DIRECT"]),
-    description: z.string().optional(),
-    callback_url: z.string().optional(),
+    description: z.string().nullish(),
+    callback_url: z.string().nullish(),
     provider: z
       .object({
         id: z.string().describe("Provider ID (e.g., PAGARME, STRIPE, ADYEN)"),
         connection_id: z.string(),
-        recipient_id: z.string().optional(),
-        recipient_type: z.enum(["MEAL", "FOOD", "MULTI_BENEFITS", "FLEET"]).optional(),
+        recipient_id: z.string().nullish(),
+        recipient_type: z.enum(["MEAL", "FOOD", "MULTI_BENEFITS", "FLEET"]).nullish(),
       })
       .passthrough(),
-    documentation: z.array(documentationItemSchema).optional(),
+    documentation: z.array(documentationItemSchema).nullish(),
     withdrawal_methods: z
       .object({
-        bank: withdrawalMethodsBankSchema.optional(),
+        bank: withdrawalMethodsBankSchema.nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 
 const recipientCreateSchema = z
   .object({
-    account_id: z.string().min(36).max(64).optional().describe("Account ID for the recipient"),
-    merchant_recipient_id: z.string().optional().describe("The unique identifier for the recipient in the merchant system"),
+    account_id: z.string().min(36).max(64).nullish().describe("Account ID for the recipient"),
+    merchant_recipient_id: z.string().describe("The unique identifier for the recipient in the merchant system"),
     national_entity: z.enum(["INDIVIDUAL", "ENTITY"]).describe("Beneficiary's national entity type. Could be INDIVIDUAL or ENTITY"),
     entity_type: z
       .enum(["GOVERNMENTAL", "PUBLIC", "NON_PROFIT", "PRIVATE"])
-      .optional()
+      .nullish()
       .describe("The Beneficiary's type of organization"),
-    first_name: z.string().optional().describe("First name of the recipient"),
-    last_name: z.string().optional().describe("Last name of the recipient"),
-    date_of_birth: z.string().optional().describe("Date of birth of the recipient (YYYY-MM-DD)"),
-    legal_name: z.string().optional().describe("Legal name of the recipient (required for ENTITY)"),
-    email: z.string().email().optional().describe("Email of the recipient"),
-    country: z.string().min(2).max(2).optional().describe("Country code (ISO 3166-1)"),
-    website: z.string().optional().describe("Seller website URL"),
-    industry: z.string().optional().describe("Industry category"),
-    merchant_category_code: z.string().optional().describe("MCC code"),
+    first_name: z.string().nullish().describe("First name of the recipient"),
+    last_name: z.string().nullish().describe("Last name of the recipient"),
+    date_of_birth: z.string().nullish().describe("Date of birth of the recipient (YYYY-MM-DD)"),
+    legal_name: z.string().nullish().describe("Legal name of the recipient (required for ENTITY)"),
+    email: z.string().email().nullish().describe("Email of the recipient"),
+    country: z.string().min(2).max(2).describe("Country code (ISO 3166-1)"),
+    website: z.string().nullish().describe("Seller website URL"),
+    industry: z.string().nullish().describe("Industry category"),
+    merchant_category_code: z.string().nullish().describe("MCC code"),
     document: documentSchema,
     phone: phoneSchema,
     address: addressSchema,
-    legal_representatives: z.array(legalRepresentativeSchema).optional().describe("Legal representatives (required for ENTITY)"),
+    legal_representatives: z.array(legalRepresentativeSchema).nullish().describe("Legal representatives (required for ENTITY)"),
     withdrawal_methods: z
       .object({
-        bank: withdrawalMethodsBankSchema.optional(),
+        bank: withdrawalMethodsBankSchema.nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Withdrawal methods for the recipient"),
-    documentation: z.array(documentationItemSchema).optional().describe("Supporting documentation"),
-    onboardings: z.array(onboardingSchema).optional().describe("Provider onboarding configurations"),
+    documentation: z.array(documentationItemSchema).nullish().describe("Supporting documentation"),
+    onboardings: z.array(onboardingSchema).nullish().describe("Provider onboarding configurations"),
     terms_of_service: z
       .object({
         acceptance: z.boolean(),
         date: z.string(),
-        ip: z.string().optional(),
+        ip: z.string().nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Terms of service acceptance"),
   })
   .passthrough();
@@ -111,58 +111,58 @@ const recipientCreateSchema = z
 const recipientUpdateSchema = z
   .object({
     recipientId: z.string().describe("The unique identifier of the recipient to update"),
-    merchant_recipient_id: z.string().optional().describe("The unique identifier of the recipient in the merchant system"),
-    national_entity: z.enum(["INDIVIDUAL", "ENTITY"]).optional().describe("Beneficiary's national entity type"),
-    entity_type: z.enum(["GOVERNMENTAL", "PUBLIC", "NON_PROFIT", "PRIVATE"]).optional(),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    legal_name: z.string().optional(),
-    email: z.string().optional(),
-    date_of_birth: z.string().optional(),
-    country: z.string().min(2).max(2).optional(),
-    website: z.string().optional(),
-    industry: z.string().optional(),
-    merchant_category_code: z.string().optional(),
+    merchant_recipient_id: z.string().nullish().describe("The unique identifier of the recipient in the merchant system"),
+    national_entity: z.enum(["INDIVIDUAL", "ENTITY"]).nullish().describe("Beneficiary's national entity type"),
+    entity_type: z.enum(["GOVERNMENTAL", "PUBLIC", "NON_PROFIT", "PRIVATE"]).nullish(),
+    first_name: z.string().nullish(),
+    last_name: z.string().nullish(),
+    legal_name: z.string().nullish(),
+    email: z.string().nullish(),
+    date_of_birth: z.string().nullish(),
+    country: z.string().min(2).max(2).nullish(),
+    website: z.string().nullish(),
+    industry: z.string().nullish(),
+    merchant_category_code: z.string().nullish(),
     document: documentSchema,
     phone: phoneSchema,
     address: addressSchema,
-    legal_representatives: z.array(legalRepresentativeSchema).optional(),
+    legal_representatives: z.array(legalRepresentativeSchema).nullish(),
     withdrawal_methods: z
       .object({
-        bank: withdrawalMethodsBankSchema.optional(),
+        bank: withdrawalMethodsBankSchema.nullish(),
       })
       .passthrough()
-      .optional(),
-    documentation: z.array(documentationItemSchema).optional(),
-    onboardings: z.array(onboardingSchema).optional(),
+      .nullish(),
+    documentation: z.array(documentationItemSchema).nullish(),
+    onboardings: z.array(onboardingSchema).nullish(),
     terms_of_service: z
       .object({
-        acceptance: z.boolean().optional(),
-        date: z.string().optional(),
-        ip: z.string().optional(),
+        acceptance: z.boolean().nullish(),
+        date: z.string().nullish(),
+        ip: z.string().nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 
 const yunoRecipientOutputSchema = z
   .object({
-    id: z.string().optional(),
-    account_id: z.string().optional(),
-    merchant_recipient_id: z.string().optional(),
-    national_entity: z.string().optional(),
-    entity_type: z.string().optional(),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    legal_name: z.string().optional(),
-    email: z.string().optional(),
-    date_of_birth: z.string().optional(),
-    country: z.string().optional(),
-    website: z.string().optional(),
-    industry: z.string().optional(),
-    merchant_category_code: z.string().optional(),
-    status: z.string().optional(),
+    id: z.string().nullish(),
+    account_id: z.string().nullish(),
+    merchant_recipient_id: z.string().nullish(),
+    national_entity: z.string().nullish(),
+    entity_type: z.string().nullish(),
+    first_name: z.string().nullish(),
+    last_name: z.string().nullish(),
+    legal_name: z.string().nullish(),
+    email: z.string().nullish(),
+    date_of_birth: z.string().nullish(),
+    country: z.string().nullish(),
+    website: z.string().nullish(),
+    industry: z.string().nullish(),
+    merchant_category_code: z.string().nullish(),
+    status: z.string().nullish(),
     document: documentSchema,
     phone: phoneSchema,
     address: addressSchema,
@@ -170,40 +170,40 @@ const yunoRecipientOutputSchema = z
       .object({
         bank: z
           .object({
-            code: z.string().optional(),
-            branch: z.string().optional(),
-            account: z.string().optional(),
-            account_type: z.string().optional(),
-            branch_digit: z.string().optional(),
-            account_digit: z.string().optional(),
-            routing: z.string().optional(),
-            country: z.string().optional(),
-            currency: z.string().optional(),
-            payout_schedule: z.string().optional(),
+            code: z.string().nullish(),
+            branch: z.string().nullish(),
+            account: z.string().nullish(),
+            account_type: z.string().nullish(),
+            branch_digit: z.string().nullish(),
+            account_digit: z.string().nullish(),
+            routing: z.string().nullish(),
+            country: z.string().nullish(),
+            currency: z.string().nullish(),
+            payout_schedule: z.string().nullish(),
           })
           .passthrough()
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     legal_representatives: z
       .array(
         z
           .object({
-            merchant_reference: z.string().optional(),
-            first_name: z.string().optional(),
-            last_name: z.string().optional(),
-            email: z.string().optional(),
-            date_of_birth: z.string().optional(),
-            country: z.string().optional(),
-            nationality: z.string().optional(),
-            title: z.string().optional(),
-            publicly_exposed_person: z.boolean().optional(),
-            ultimate_beneficial_owner: z.boolean().optional(),
+            merchant_reference: z.string().nullish(),
+            first_name: z.string().nullish(),
+            last_name: z.string().nullish(),
+            email: z.string().nullish(),
+            date_of_birth: z.string().nullish(),
+            country: z.string().nullish(),
+            nationality: z.string().nullish(),
+            title: z.string().nullish(),
+            publicly_exposed_person: z.boolean().nullish(),
+            ultimate_beneficial_owner: z.boolean().nullish(),
           })
           .passthrough(),
       )
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 

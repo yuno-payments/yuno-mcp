@@ -17,7 +17,7 @@ export const subscriptionCreateTool = {
         ...data,
         account_id: data.account_id || yunoClient.accountCode,
       };
-      const { body: subscription, status, headers } = await yunoClient.subscriptions.create(subscriptionWithAccount);
+      const { body: subscription, status, headers } = await yunoClient.subscriptions.create(subscriptionWithAccount as YunoSubscription);
 
       if (type === "text") {
         return {

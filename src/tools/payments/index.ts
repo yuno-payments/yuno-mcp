@@ -139,7 +139,7 @@ export const paymentRetrieveByMerchantOrderIdTool = {
         content: [
           {
             type: "object" as const,
-            object: { items: payments },
+            object: { items: payments ?? [] },
           },
           {
             type: "text" as const,

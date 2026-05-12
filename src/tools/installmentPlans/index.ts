@@ -3,6 +3,7 @@ import {
   installmentPlanCreateSchema,
   installmentPlanUpdateSchema,
   yunoInstallmentPlanOutputSchema,
+  yunoInstallmentPlanListOutputSchema,
 } from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { InstallmentPlanCreateSchema, InstallmentPlanUpdateSchema, YunoInstallmentPlan } from "./types";
@@ -20,7 +21,7 @@ export const installmentPlanCreateTool = {
         ...data,
         account_id: data.account_id || [yunoClient.accountCode],
       };
-      const { body: plan, status, headers } = await yunoClient.installmentPlans.create(planWithAccount);
+      const { body: plan, status, headers } = await yunoClient.installmentPlans.create(planWithAccount as YunoInstallmentPlan);
 
       if (type === "text") {
         return {
@@ -78,10 +79,10 @@ export const installmentPlanRetrieveAllTool = {
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
-  outputSchema: yunoInstallmentPlanOutputSchema,
+  outputSchema: yunoInstallmentPlanListOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ accountId }: { accountId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
+    async ({ accountId }: { accountId: string }): Promise<Output<TType, { items: YunoInstallmentPlan[] }>> => {
       const { body: plans, status, headers } = await yunoClient.installmentPlans.retrieveAll(accountId);
 
       if (type === "text") {
@@ -90,15 +91,15 @@ export const installmentPlanRetrieveAllTool = {
             { type: "text" as const, text: JSON.stringify(plans, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
-        } as Output<TType, YunoInstallmentPlan>;
+        } as Output<TType, { items: YunoInstallmentPlan[] }>;
       }
 
       return {
         content: [
-          { type: "object" as const, object: plans },
+          { type: "object" as const, object: { items: plans ?? [] } },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
-      } as Output<TType, YunoInstallmentPlan>;
+      } as Output<TType, { items: YunoInstallmentPlan[] }>;
     },
 } as const satisfies Tool;
 

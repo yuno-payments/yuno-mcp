@@ -192,7 +192,7 @@ export class YunoClient {
       });
     },
     retrieveEnrolled: async (customerId: string) => {
-      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods`, {
+      return this.request<{ payment_methods?: YunoPaymentMethod[] | null }>(`/customers/${customerId}/payment-methods`, {
         method: "GET",
       });
     },
@@ -428,7 +428,7 @@ export class YunoClient {
     },
 
     retrieveAll: async (accountId: string) => {
-      return this.request<YunoInstallmentPlan>(`/installments-plans?account_id=${encodeURIComponent(accountId)}`, {
+      return this.request<YunoInstallmentPlan[]>(`/installments-plans?account_id=${encodeURIComponent(accountId)}`, {
         method: "GET",
       });
     },

@@ -35,6 +35,7 @@ describe("subscriptionCreateTool", () => {
       name: "Test Sub",
       country: "US",
       amount: { currency: "USD", value: 100 },
+      payment_method: { type: "CARD", vaulted_token: "vt_123" },
     };
     expect(() => subscriptionCreateSchema.parse(minimal)).not.toThrow();
   });
