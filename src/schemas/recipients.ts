@@ -146,4 +146,65 @@ const recipientUpdateSchema = z
   })
   .passthrough();
 
-export { recipientCreateSchema, recipientUpdateSchema };
+const yunoRecipientOutputSchema = z
+  .object({
+    id: z.string().optional(),
+    account_id: z.string().optional(),
+    merchant_recipient_id: z.string().optional(),
+    national_entity: z.string().optional(),
+    entity_type: z.string().optional(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    legal_name: z.string().optional(),
+    email: z.string().optional(),
+    date_of_birth: z.string().optional(),
+    country: z.string().optional(),
+    website: z.string().optional(),
+    industry: z.string().optional(),
+    merchant_category_code: z.string().optional(),
+    status: z.string().optional(),
+    document: documentSchema,
+    phone: phoneSchema,
+    address: addressSchema,
+    withdrawal_methods: z
+      .object({
+        bank: z
+          .object({
+            code: z.string().optional(),
+            branch: z.string().optional(),
+            account: z.string().optional(),
+            account_type: z.string().optional(),
+            branch_digit: z.string().optional(),
+            account_digit: z.string().optional(),
+            routing: z.string().optional(),
+            country: z.string().optional(),
+            currency: z.string().optional(),
+            payout_schedule: z.string().optional(),
+          })
+          .passthrough()
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+    legal_representatives: z
+      .array(
+        z
+          .object({
+            merchant_reference: z.string().optional(),
+            first_name: z.string().optional(),
+            last_name: z.string().optional(),
+            email: z.string().optional(),
+            date_of_birth: z.string().optional(),
+            country: z.string().optional(),
+            nationality: z.string().optional(),
+            title: z.string().optional(),
+            publicly_exposed_person: z.boolean().optional(),
+            ultimate_beneficial_owner: z.boolean().optional(),
+          })
+          .passthrough(),
+      )
+      .optional(),
+  })
+  .passthrough();
+
+export { recipientCreateSchema, recipientUpdateSchema, yunoRecipientOutputSchema };

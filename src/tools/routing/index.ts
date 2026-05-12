@@ -1,4 +1,13 @@
-import { routingLoginSchema, routingCreateSchema, routingGetConnectionsSchema, workflowRequestSchema } from "../../schemas";
+import {
+    routingLoginSchema,
+    routingCreateSchema,
+    routingGetConnectionsSchema,
+    workflowRequestSchema,
+    yunoRoutingLoginOutputSchema,
+    yunoRoutingWorkflowOutputSchema,
+    yunoRoutingIntegrationsOutputSchema,
+    yunoRoutingLogoutOutputSchema,
+} from "../../schemas";
 import {
     YunoRoutingCreateSchema, YunoRoutingIntegrationResponse,
     YunoRoutingLogin,
@@ -9,9 +18,10 @@ import { z } from "zod";
 
 export const routingLoginTool = {
     method: "routingLogin",
-    description: "Authenticate to the Yuno dashboard. You must provide your username (email) and password. The remember_device option is automatically set to false for security.",
-    annotations: { title: "Login to Yuno Dashboard", destructiveHint: false, idempotentHint: true },
+    description: "Authenticate to the Yuno dashboard. You must provide your username (email) and your secret credential. The remember_device option is automatically set to false for security.",
+    annotations: { openWorldHint: true, title: "Login to Yuno Dashboard", destructiveHint: false, idempotentHint: true },
     schema: routingLoginSchema,
+    outputSchema: yunoRoutingLoginOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingLogin): Promise<Output<TType, YunoRoutingLoginResponse>> => {
@@ -38,8 +48,9 @@ export const routingLoginTool = {
 export const routingCreateTool = {
     method: "routingCreate",
     description: "Create a routing configuration. You must provide the name and payment method.",
-    annotations: { title: "Create Routing Configuration", destructiveHint: false, idempotentHint: false },
+    annotations: { openWorldHint: true, title: "Create Routing Configuration", destructiveHint: false, idempotentHint: false },
     schema: routingCreateSchema,
+    outputSchema: yunoRoutingWorkflowOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingCreateSchema): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
@@ -66,8 +77,9 @@ export const routingCreateTool = {
 export const routingGetProvidersTool = {
     method: "routingGetProviders",
     description: "Retrieve all routing connections for a specific payment method. The account_code is automatically taken from the client configuration.",
-    annotations: { title: "Retrieve Routing Providers", readOnlyHint: true },
+    annotations: { openWorldHint: true, title: "Retrieve Routing Providers", readOnlyHint: true },
     schema: routingGetConnectionsSchema,
+    outputSchema: yunoRoutingIntegrationsOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { paymentMethod: string }): Promise<Output<TType, YunoRoutingIntegrationResponse>> => {
@@ -93,10 +105,11 @@ export const routingGetProvidersTool = {
 export const routingRetrieveTool = {
     method: "routingRetrieve",
     description: "Retrieve a routing workflow configuration by version code.",
-    annotations: { title: "Retrieve Routing Workflow", readOnlyHint: true },
+    annotations: { openWorldHint: true, title: "Retrieve Routing Workflow", readOnlyHint: true },
     schema: z.object({
         versionCode: z.string().min(1).describe("The version code to retrieve"),
     }),
+    outputSchema: yunoRoutingWorkflowOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { versionCode: string }): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
@@ -122,8 +135,9 @@ export const routingRetrieveTool = {
 export const routingUpdateTool = {
     method: "routingUpdate",
     description: "Configure a routing provider by setting up the provider connection in an existing workflow.",
-    annotations: { title: "Update Routing Workflow", destructiveHint: false, idempotentHint: true },
+    annotations: { openWorldHint: true, title: "Update Routing Workflow", destructiveHint: false, idempotentHint: true },
     schema: workflowRequestSchema,
+    outputSchema: yunoRoutingWorkflowOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: YunoRoutingUpdateWorkflow): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
@@ -149,10 +163,11 @@ export const routingUpdateTool = {
 export const routingPostTool = {
     method: "routingPost",
     description: "Publish a routing workflow configuration to make it active in the Yuno API.",
-    annotations: { title: "Publish Routing Workflow", destructiveHint: true, idempotentHint: true },
+    annotations: { openWorldHint: true, title: "Publish Routing Workflow", destructiveHint: true, idempotentHint: true },
     schema: z.object({
         versionCode: z.string().min(1).describe("The version code to post"),
     }),
+    outputSchema: yunoRoutingWorkflowOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (data: { versionCode: string }): Promise<Output<TType, YunoRoutingWorkflowResponse>> => {
@@ -178,13 +193,14 @@ export const routingPostTool = {
 export const routingLogOutTool = {
     method: "routingLogOut",
     description: "Log out from the Yuno dashboard. This will invalidate the current session.",
-    annotations: { title: "Logout from Yuno Dashboard", destructiveHint: true, idempotentHint: true },
+    annotations: { openWorldHint: true, title: "Logout from Yuno Dashboard", destructiveHint: true, idempotentHint: true },
     schema: z.object({}),
+    outputSchema: yunoRoutingLogoutOutputSchema,
     handler:
         <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
             async (): Promise<Output<TType, YunoRoutingLogoutResponse>> => {
                 await yunoClient.routing.logout();
-                
+
                 // Create a success response since logout returns void
                 const result: YunoRoutingLogoutResponse = {
                     success: true,

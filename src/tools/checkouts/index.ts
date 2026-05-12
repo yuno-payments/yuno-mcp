@@ -1,13 +1,20 @@
 import z from "zod";
-import { checkoutSessionCreateSchema, ottCreateSchema } from "../../schemas";
+import {
+  checkoutSessionCreateSchema,
+  ottCreateSchema,
+  yunoCheckoutPaymentMethodsOutputSchema,
+  yunoCheckoutSessionOutputSchema,
+  yunoOttOutputSchema,
+} from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttCreateSchema, YunoOttRequest, YunoOttResponse } from "./types";
 
 export const checkoutSessionCreateTool = {
   method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
-  annotations: { title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
   schema: checkoutSessionCreateSchema,
+  outputSchema: yunoCheckoutSessionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoCheckoutSession): Promise<Output<TType, YunoCheckoutSession>> => {
@@ -38,10 +45,11 @@ export const checkoutSessionCreateTool = {
 export const checkoutSessionRetrievePaymentMethodsTool = {
   method: "checkoutSessionRetrievePaymentMethods",
   description: "Retrieve payment methods for a checkout session in Yuno.",
-  annotations: { title: "Retrieve Checkout Payment Methods", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Checkout Payment Methods", readOnlyHint: true },
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
+  outputSchema: yunoCheckoutPaymentMethodsOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ sessionId }: { sessionId: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
@@ -68,8 +76,9 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
 export const checkoutSessionCreateOttTool = {
   method: "checkoutSessionCreateOtt",
   description: "Generate a One Time Token (OTT) for a checkout session in Yuno.",
-  annotations: { title: "Create Checkout One-Time Token", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Create Checkout One-Time Token", destructiveHint: false, idempotentHint: false },
   schema: ottCreateSchema,
+  outputSchema: yunoOttOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoOttCreateSchema): Promise<Output<TType, YunoOttResponse>> => {

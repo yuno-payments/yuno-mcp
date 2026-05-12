@@ -160,12 +160,215 @@ const workflowRequestSchema = z.object({
 
 });
 
-export { 
-    routingLoginSchema, 
-    routingCreateSchema, 
+const yunoRoutingLoginOutputSchema = z
+    .object({
+        access_token: z.string(),
+        mfa_token: z.string().optional(),
+        next_step: z.string().optional(),
+        authenticator_type: z.string().optional(),
+        secret: z.string().optional(),
+        barcode_uri: z.string().optional(),
+    })
+    .passthrough();
+
+const yunoConditionDetailOutputSchema = z
+    .object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        criteria: z.string().optional(),
+        operators: z.array(z.string()).optional(),
+        payment_methods: z.array(z.string()).optional(),
+        value_source: z.string().optional(),
+        icon: z.string().optional(),
+    })
+    .passthrough();
+
+const yunoConditionOutputSchema = z
+    .object({
+        condition_set_id: z.number().optional(),
+        condition_type: z.string().optional(),
+        values: z.array(z.any()).optional(),
+        conditional: z.string().optional(),
+        complex_name: z.string().nullable().optional(),
+        complex_index: z.string().nullable().optional(),
+        additional_field_name: z.string().nullable().optional(),
+        detail: yunoConditionDetailOutputSchema.optional(),
+        visible: z.boolean().optional(),
+        metadata_key: z.string().nullable().optional(),
+        time_period_repeat_amount: z.number().nullable().optional(),
+        time_period_repetition_days: z.number().nullable().optional(),
+        time_period_repeat_frequency: z.string().nullable().optional(),
+        time_period_start_time: z.string().nullable().optional(),
+        time_period_end_time: z.string().nullable().optional(),
+    })
+    .passthrough();
+
+const yunoRouteNextIndexOutputSchema = z
+    .object({
+        index: z.number().optional(),
+        percentage: z.number().optional(),
+    })
+    .passthrough();
+
+const yunoRouteOutputOutputSchema = z
+    .object({
+        has_split: z.boolean().optional(),
+        output: z.string().optional(),
+        order: z.number().optional(),
+        type: z.string().optional(),
+        next_route_indexes: z.array(yunoRouteNextIndexOutputSchema).optional(),
+        next_route_index: z.number().nullable().optional(),
+        name: z.string().nullable().optional(),
+        id: z.string().nullable().optional(),
+        decline_types: z.array(z.any()).optional(),
+    })
+    .passthrough();
+
+const yunoRouteDataOutputSchema = z
+    .object({
+        action: z.string().nullable().optional(),
+        integration_code: z.string().optional(),
+        provider_id: z.string().optional(),
+        provider_type: z.enum(["PAYMENT", "PROCESSOR"]).optional(),
+        provider_icon: z.string().optional(),
+        provider_name: z.string().optional(),
+        time_out: z.number().optional(),
+        monitor_message: z.boolean().optional(),
+        network_token_on: z.boolean().optional(),
+        network_token_enable: z.boolean().optional(),
+        smart_routing: z.boolean().optional(),
+        three_d_secure_exemptions: z.array(z.any()).optional(),
+        percentage: z.string().optional(),
+    })
+    .passthrough();
+
+const yunoRouteOutputSchema = z
+    .object({
+        index: z.number().optional(),
+        outputs: z.array(yunoRouteOutputOutputSchema).optional(),
+        data: yunoRouteDataOutputSchema.optional(),
+        type: z.enum(["PROVIDER", "CONDITION"]).optional(),
+        updated_at: z.string().optional(),
+        repair: z.boolean().optional(),
+        paused: z.boolean().optional(),
+        alerted: z.boolean().optional(),
+    })
+    .passthrough();
+
+const yunoConditionSetStartOutputSchema = z
+    .object({
+        index: z.number().optional(),
+        percentage: z.number().optional(),
+    })
+    .passthrough();
+
+const yunoConditionSetOutputSchema = z
+    .object({
+        editable: z.boolean().optional(),
+        sort_number: z.number().optional(),
+        conditions: z.array(yunoConditionOutputSchema).optional(),
+        routes: z.array(yunoRouteOutputSchema).optional(),
+        start: z.array(yunoConditionSetStartOutputSchema).optional(),
+        updated_at: z.string().optional(),
+        category: z.string().optional(),
+        expired: z.boolean().optional(),
+        threshold_code: z.string().nullable().optional(),
+        monitor_active: z.boolean().nullable().optional(),
+        id: z.number().optional(),
+        name: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        smart_routing_mode: z.string().nullable().optional(),
+    })
+    .passthrough();
+
+const yunoWorkflowOutputSchema = z
+    .object({
+        id: z.number().optional(),
+        code: z.string().optional(),
+        name: z.string().optional(),
+        status: z.string().optional(),
+        account_code: z.string().optional(),
+        created_at: z.string().optional(),
+        updated_at: z.string().optional(),
+        payment_method_type: z.string().optional(),
+        is_active: z.boolean().optional(),
+    })
+    .passthrough();
+
+const yunoWorkflowVersionOutputSchema = z
+    .object({
+        id: z.number().optional(),
+        workflow_id: z.number().optional(),
+        code: z.string().optional(),
+        status: z.string().optional(),
+        number: z.number().optional(),
+        created_at: z.string().optional(),
+        updated_at: z.string().optional(),
+        published_at: z.string().nullable().optional(),
+        name: z.string().optional(),
+        publishable: z.boolean().optional(),
+        favorite: z.boolean().optional(),
+        repair: z.boolean().optional(),
+        updated_by: z.string().optional(),
+        payment_enabled: z.boolean().optional(),
+        fraud_enabled: z.boolean().optional(),
+        paused: z.boolean().optional(),
+        deleted_at: z.string().nullable().optional(),
+    })
+    .passthrough();
+
+const yunoRoutingWorkflowOutputSchema = z
+    .object({
+        workflow: yunoWorkflowOutputSchema.optional(),
+        version: yunoWorkflowVersionOutputSchema.optional(),
+        condition_sets: z.array(yunoConditionSetOutputSchema).optional(),
+    })
+    .passthrough();
+
+const yunoRoutingIntegrationOutputSchema = z
+    .object({
+        integration_code: z.string().optional(),
+        type: z.string().optional(),
+        provider_id: z.string().optional(),
+        icon: z.string().optional(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        active: z.boolean().optional(),
+        connection_name: z.string().optional(),
+        provider_icon: z.string().optional(),
+        category: z.string().optional(),
+        created_at: z.string().optional(),
+        updated_at: z.string().optional(),
+        provider_name: z.string().optional(),
+        connection_state: z.string().optional(),
+        flow_type: z.string().optional(),
+        costs: z.array(z.any()).optional(),
+    })
+    .passthrough();
+
+const yunoRoutingIntegrationsOutputSchema = z
+    .object({
+        integrations: z.array(yunoRoutingIntegrationOutputSchema).optional(),
+    })
+    .passthrough();
+
+const yunoRoutingLogoutOutputSchema = z
+    .object({
+        success: z.boolean().optional(),
+        message: z.string().optional(),
+    })
+    .passthrough();
+
+export {
+    routingLoginSchema,
+    routingCreateSchema,
     routingGetConnectionsSchema,
     workflowRequestSchema,
     workflowSchema,
     versionSchema,
-    conditionSetSchema
+    conditionSetSchema,
+    yunoRoutingLoginOutputSchema,
+    yunoRoutingWorkflowOutputSchema,
+    yunoRoutingIntegrationsOutputSchema,
+    yunoRoutingLogoutOutputSchema,
 };

@@ -213,4 +213,115 @@ const paymentCaptureAuthorizationSchema = z
   })
   .passthrough();
 
-export { paymentCreateSchema, paymentRefundSchema, paymentCancelSchema, paymentCaptureAuthorizationSchema };
+const yunoPaymentOutputSchema = z
+  .object({
+    account_id: z.string().optional(),
+    description: z.string().optional(),
+    additional_data: z.any().optional(),
+    country: z.string().optional(),
+    merchant_order_id: z.string().optional(),
+    merchant_reference: z.string().optional(),
+    amount: amountSchema.optional(),
+    customer_payer: z
+      .object({
+        id: z.string().optional(),
+        first_name: z.string().optional(),
+        last_name: z.string().optional(),
+        email: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+    workflow: z.string().optional(),
+    payment_method: z
+      .object({
+        token: z.string().optional(),
+        vaulted_token: z.string().optional(),
+        type: z.string().optional(),
+        detail: z
+          .object({
+            card: z
+              .object({
+                capture: z.boolean().optional(),
+                installments: z.number().optional(),
+                first_installment_deferral: z.number().optional(),
+                soft_descriptor: z.string().optional(),
+                card_data: z
+                  .object({
+                    number: z.string().optional(),
+                    expiration_month: z.number().optional(),
+                    expiration_year: z.number().optional(),
+                    security_code: z.string().optional(),
+                    holder_name: z.string().optional(),
+                    type: z.string().optional(),
+                  })
+                  .passthrough()
+                  .optional(),
+                verify: z.boolean().optional(),
+                stored_credentials: z
+                  .object({
+                    reason: z.string().optional(),
+                    usage: z.string().optional(),
+                    subscription_agreement_id: z.string().optional(),
+                    network_transaction_id: z.string().optional(),
+                  })
+                  .passthrough()
+                  .optional(),
+              })
+              .passthrough()
+              .optional(),
+          })
+          .passthrough()
+          .optional(),
+        vault_on_success: z.boolean().optional(),
+      })
+      .passthrough()
+      .optional(),
+    callback_url: z.string().optional(),
+    fraud_screening: z
+      .object({ stand_alone: z.boolean().optional() })
+      .passthrough()
+      .optional(),
+    split_marketplace: z
+      .array(
+        z
+          .object({
+            recipient_id: z.string().optional(),
+            provider_recipient_id: z.string().optional(),
+            type: z.string().optional(),
+            merchant_reference: z.string().optional(),
+            amount: z
+              .object({
+                value: z.number().optional(),
+                currency: z.string().optional(),
+              })
+              .passthrough()
+              .optional(),
+            liability: z
+              .object({
+                processing_fee: z.string().optional(),
+                chargebacks: z.boolean().optional(),
+              })
+              .passthrough()
+              .optional(),
+          })
+          .passthrough(),
+      )
+      .optional(),
+    metadata: metadataSchema,
+  })
+  .passthrough();
+
+const yunoPaymentListOutputSchema = z
+  .object({
+    items: z.array(yunoPaymentOutputSchema),
+  })
+  .passthrough();
+
+export {
+  paymentCreateSchema,
+  paymentRefundSchema,
+  paymentCancelSchema,
+  paymentCaptureAuthorizationSchema,
+  yunoPaymentOutputSchema,
+  yunoPaymentListOutputSchema,
+};

@@ -1,13 +1,14 @@
 import z from "zod";
-import { customerCreateSchema, customerUpdateSchema } from "../../schemas";
+import { customerCreateSchema, customerUpdateSchema, yunoCustomerOutputSchema } from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { CustomerUpdateSchema, YunoCustomer } from "./types";
 
 export const customerCreateTool = {
   method: "customerCreate",
   description: "Create a new customer in Yuno.",
-  annotations: { title: "Create Customer", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Create Customer", destructiveHint: false, idempotentHint: false },
   schema: customerCreateSchema,
+  outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoCustomer): Promise<Output<TType, YunoCustomer>> => {
@@ -34,10 +35,11 @@ export const customerCreateTool = {
 export const customerRetrieveTool = {
   method: "customerRetrieve",
   description: "Retrieve a customer by ID.",
-  annotations: { title: "Retrieve Customer", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Customer", readOnlyHint: true },
   schema: z.object({
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
   }),
+  outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customerId }: { customerId: string }): Promise<Output<TType, YunoCustomer>> => {
@@ -64,10 +66,11 @@ export const customerRetrieveTool = {
 export const customerRetrieveByExternalIdTool = {
   method: "customerRetrieveByExternalId",
   description: "Retrieve a customer by external merchant_customer_id.",
-  annotations: { title: "Retrieve Customer by External ID", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Customer by External ID", readOnlyHint: true },
   schema: z.object({
     merchant_customer_id: z.string().describe("The external merchant_customer_id to retrieve the customer"),
   }),
+  outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ merchant_customer_id }: { merchant_customer_id: string }): Promise<Output<TType, YunoCustomer>> => {
@@ -94,8 +97,9 @@ export const customerRetrieveByExternalIdTool = {
 export const customerUpdateTool = {
   method: "customerUpdate",
   description: "Update a customer by ID.",
-  annotations: { title: "Update Customer", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Update Customer", destructiveHint: false, idempotentHint: true },
   schema: customerUpdateSchema,
+  outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customerId, ...updateFields }: CustomerUpdateSchema): Promise<Output<TType, YunoCustomer>> => {

@@ -1,13 +1,18 @@
 import z from "zod";
-import { installmentPlanCreateSchema, installmentPlanUpdateSchema } from "../../schemas";
+import {
+  installmentPlanCreateSchema,
+  installmentPlanUpdateSchema,
+  yunoInstallmentPlanOutputSchema,
+} from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { InstallmentPlanCreateSchema, InstallmentPlanUpdateSchema, YunoInstallmentPlan } from "./types";
 
 export const installmentPlanCreateTool = {
   method: "installmentPlanCreate",
   description: "Create an installment plan in Yuno.",
-  annotations: { title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
   schema: installmentPlanCreateSchema,
+  outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: InstallmentPlanCreateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
@@ -38,10 +43,11 @@ export const installmentPlanCreateTool = {
 export const installmentPlanRetrieveTool = {
   method: "installmentPlanRetrieve",
   description: "Retrieve an installment plan in Yuno by its ID.",
-  annotations: { title: "Retrieve Installment Plan", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Installment Plan", readOnlyHint: true },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
   }),
+  outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
@@ -68,13 +74,14 @@ export const installmentPlanRetrieveTool = {
 export const installmentPlanRetrieveAllTool = {
   method: "installmentPlanRetrieveAll",
   description: "Retrieve all installment plans in Yuno for an account.",
-  annotations: { title: "Retrieve All Installment Plans", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve All Installment Plans", readOnlyHint: true },
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
+  outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ accountId }: { accountId: string }): Promise<Output<TType, YunoInstallmentPlan[]>> => {
+    async ({ accountId }: { accountId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
       const { body: plans, status, headers } = await yunoClient.installmentPlans.retrieveAll(accountId);
 
       if (type === "text") {
@@ -83,7 +90,7 @@ export const installmentPlanRetrieveAllTool = {
             { type: "text" as const, text: JSON.stringify(plans, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
-        } as Output<TType, YunoInstallmentPlan[]>;
+        } as Output<TType, YunoInstallmentPlan>;
       }
 
       return {
@@ -91,15 +98,16 @@ export const installmentPlanRetrieveAllTool = {
           { type: "object" as const, object: plans },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
-      } as Output<TType, YunoInstallmentPlan[]>;
+      } as Output<TType, YunoInstallmentPlan>;
     },
 } as const satisfies Tool;
 
 export const installmentPlanUpdateTool = {
   method: "installmentPlanUpdate",
   description: "Update an installment plan in Yuno by its ID.",
-  annotations: { title: "Update Installment Plan", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Update Installment Plan", destructiveHint: false, idempotentHint: true },
   schema: installmentPlanUpdateSchema,
+  outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId, ...updateFields }: InstallmentPlanUpdateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
@@ -126,10 +134,11 @@ export const installmentPlanUpdateTool = {
 export const installmentPlanDeleteTool = {
   method: "installmentPlanDelete",
   description: "Delete an installment plan in Yuno by its ID.",
-  annotations: { title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),
   }),
+  outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {

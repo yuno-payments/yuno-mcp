@@ -91,4 +91,57 @@ const installmentPlanUpdateSchema = z
   })
   .passthrough();
 
-export { installmentPlanCreateSchema, installmentPlanUpdateSchema };
+const yunoInstallmentPlanOutputSchema = z
+  .object({
+    name: z.string(),
+    account_id: z.array(z.string()).optional(),
+    merchant_reference: z.string(),
+    installments_plan: z
+      .array(
+        z
+          .object({
+            installment: z.number(),
+            rate: z.number(),
+            financial_costs: z
+              .array(
+                z
+                  .object({
+                    type: z.string(),
+                    rate: z.number(),
+                  })
+                  .passthrough(),
+              )
+              .optional(),
+            type: z.enum(["MERCHANT_INSTALLMENTS", "ISSUER_INSTALLMENTS"]).optional(),
+          })
+          .passthrough(),
+      )
+      .optional(),
+    country_code: z.string().optional(),
+    brand: z.array(z.string()).optional(),
+    issuer: z.string().optional(),
+    iin: z.array(z.string()).optional(),
+    first_installment_deferral: z.number().optional(),
+    amount: z
+      .object({
+        currency: z.string(),
+        min_value: z.number().optional(),
+        max_value: z.number().optional(),
+      })
+      .passthrough()
+      .optional(),
+    availability: z
+      .object({
+        start_at: z.string().optional(),
+        finish_at: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export {
+  installmentPlanCreateSchema,
+  installmentPlanUpdateSchema,
+  yunoInstallmentPlanOutputSchema,
+};

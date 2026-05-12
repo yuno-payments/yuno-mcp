@@ -1,5 +1,8 @@
 import z from "zod";
-import { paymentMethodEnrollSchema } from "../../schemas";
+import {
+  paymentMethodEnrollSchema,
+  yunoPaymentMethodOutputSchema,
+} from "../../schemas";
 import { randomUUID } from "node:crypto";
 import type { YunoClient } from "../../client";
 import type { HandlerContext, Output, Tool } from "../../types";
@@ -8,12 +11,13 @@ import type { PaymentMethodEnrollSchema, YunoPaymentMethod } from "./types";
 export const paymentMethodEnrollTool = {
   method: "paymentMethodEnroll",
   description: `Enroll or create payment method.`,
-  annotations: { title: "Enroll Payment Method", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Enroll Payment Method", destructiveHint: false, idempotentHint: false },
   schema: z.object({
     body: paymentMethodEnrollSchema,
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
   }),
+  outputSchema: yunoPaymentMethodOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
@@ -53,11 +57,12 @@ export const paymentMethodEnrollTool = {
 export const paymentMethodRetrieveTool = {
   method: "paymentMethodRetrieve",
   description: `Retrieve an enrolled payment method by customer and payment method ID.`,
-  annotations: { title: "Retrieve Payment Method", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Payment Method", readOnlyHint: true },
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
+  outputSchema: yunoPaymentMethodOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customer_id, payment_method_id }: { customer_id: string; payment_method_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {
@@ -84,13 +89,14 @@ export const paymentMethodRetrieveTool = {
 export const paymentMethodRetrieveEnrolledTool = {
   method: "paymentMethodRetrieveEnrolled",
   description: `Retrieve all enrolled payment methods for a customer.`,
-  annotations: { title: "Retrieve Enrolled Payment Methods", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Enrolled Payment Methods", readOnlyHint: true },
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
   }),
+  outputSchema: yunoPaymentMethodOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ customer_id }: { customer_id: string }): Promise<Output<TType, YunoPaymentMethod[]>> => {
+    async ({ customer_id }: { customer_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {
       const { body, status, headers } = await yunoClient.paymentMethods.retrieveEnrolled(customer_id);
 
       if (type === "text") {
@@ -99,7 +105,7 @@ export const paymentMethodRetrieveEnrolledTool = {
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
-        } as Output<TType, YunoPaymentMethod[]>;
+        } as Output<TType, YunoPaymentMethod>;
       }
 
       return {
@@ -107,18 +113,19 @@ export const paymentMethodRetrieveEnrolledTool = {
           { type: "object" as const, object: body },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
-      } as Output<TType, YunoPaymentMethod[]>;
+      } as Output<TType, YunoPaymentMethod>;
     },
 } as const satisfies Tool;
 
 export const paymentMethodUnenrollTool = {
   method: "paymentMethodUnenroll",
   description: `Unenroll a saved payment method for the user.`,
-  annotations: { title: "Unenroll Payment Method", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Unenroll Payment Method", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
     payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
   }),
+  outputSchema: yunoPaymentMethodOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ customer_id, payment_method_id }: { customer_id: string; payment_method_id: string }): Promise<Output<TType, YunoPaymentMethod>> => {

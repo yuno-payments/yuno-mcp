@@ -70,6 +70,7 @@ type Tool = {
   description: string;
   annotations: ToolAnnotations;
   schema: z.ZodObject<any>;
+  outputSchema?: z.ZodObject<any>;
   handler: <TType extends "object" | "text">(context: HandlerContext<TType>) => (input: any) => Promise<Output<TType>>;
 };
 

@@ -1,5 +1,5 @@
 import z from "zod";
-import { subscriptionCreateSchema, subscriptionUpdateSchema } from "../../schemas";
+import { subscriptionCreateSchema, subscriptionUpdateSchema, yunoSubscriptionOutputSchema } from "../../schemas";
 import { YunoClient } from "../../client";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { SubscriptionCreateSchema, SubscriptionUpdateSchema, YunoSubscription } from "./types";
@@ -7,8 +7,9 @@ import type { SubscriptionCreateSchema, SubscriptionUpdateSchema, YunoSubscripti
 export const subscriptionCreateTool = {
   method: "subscriptionCreate",
   description: "Create a subscription in Yuno.",
-  annotations: { title: "Create Subscription", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, title: "Create Subscription", destructiveHint: false, idempotentHint: false },
   schema: subscriptionCreateSchema,
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: SubscriptionCreateSchema): Promise<Output<TType, YunoSubscription>> => {
@@ -39,10 +40,11 @@ export const subscriptionCreateTool = {
 export const subscriptionRetrieveTool = {
   method: "subscriptionRetrieve",
   description: "Retrieve a subscription in Yuno by its ID.",
-  annotations: { title: "Retrieve Subscription", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Subscription", readOnlyHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to retrieve"),
   }),
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
@@ -69,10 +71,11 @@ export const subscriptionRetrieveTool = {
 export const subscriptionPauseTool = {
   method: "subscriptionPause",
   description: "Pause a subscription in Yuno by its ID.",
-  annotations: { title: "Pause Subscription", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Pause Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to pause"),
   }),
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
@@ -99,10 +102,11 @@ export const subscriptionPauseTool = {
 export const subscriptionResumeTool = {
   method: "subscriptionResume",
   description: "Resume a subscription in Yuno by its ID.",
-  annotations: { title: "Resume Subscription", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Resume Subscription", destructiveHint: false, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to resume"),
   }),
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
@@ -129,8 +133,9 @@ export const subscriptionResumeTool = {
 export const subscriptionUpdateTool = {
   method: "subscriptionUpdate",
   description: "Update a subscription in Yuno by its ID.",
-  annotations: { title: "Update Subscription", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Update Subscription", destructiveHint: false, idempotentHint: true },
   schema: subscriptionUpdateSchema,
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId, ...updateFields }: SubscriptionUpdateSchema): Promise<Output<TType, YunoSubscription>> => {
@@ -157,10 +162,11 @@ export const subscriptionUpdateTool = {
 export const subscriptionCancelTool = {
   method: "subscriptionCancel",
   description: "Cancel a subscription in Yuno by its ID.",
-  annotations: { title: "Cancel Subscription", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, title: "Cancel Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to cancel"),
   }),
+  outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {

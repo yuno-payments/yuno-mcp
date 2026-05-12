@@ -1,6 +1,81 @@
 import { z } from "zod";
 import { addressSchema, amountSchema, metadataSchema, browserInfoSchema, cardDataSchema, documentSchema, phoneSchema } from "./shared";
 
+const yunoCheckoutSessionOutputSchema = z
+  .object({
+    account_id: z.string().optional(),
+    amount: amountSchema,
+    customer_id: z.string().optional(),
+    merchant_order_id: z.string(),
+    payment_description: z.string(),
+    country: z.string().optional(),
+    callback_url: z.string().optional(),
+    metadata: metadataSchema,
+    installments: z
+      .object({
+        plan_id: z.string().optional(),
+        plan: z
+          .array(
+            z
+              .object({
+                installment: z.number().int(),
+                rate: z.number(),
+              })
+              .passthrough(),
+          )
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+const yunoCheckoutPaymentMethodsOutputSchema = z
+  .object({
+    payment_methods: z.array(
+      z
+        .object({
+          type: z.string(),
+          name: z.string(),
+          category: z.string().optional(),
+          provider: z.string().optional(),
+          status: z.string().optional(),
+          vaulted_token: z.string().optional(),
+        })
+        .passthrough(),
+    ),
+  })
+  .passthrough();
+
+const yunoOttOutputSchema = z
+  .object({
+    token: z.string(),
+    vaulted_token: z.string().nullable().optional(),
+    vault_on_success: z.boolean(),
+    type: z.string(),
+    card_data: cardDataSchema.optional(),
+    customer: z
+      .object({
+        first_name: z.string().nullable().optional(),
+        last_name: z.string().nullable().optional(),
+        email: z.string().nullable().optional(),
+        gender: z.string(),
+        phone: z.string().nullable().optional(),
+        date_of_birth: z.string().nullable().optional(),
+        billing_address: z.any().nullable().optional(),
+        shipping_address: z.any().nullable().optional(),
+        document: z.any().nullable().optional(),
+        browser_info: browserInfoSchema,
+        nationality: z.string().nullable().optional(),
+        device_fingerprint: z.any().nullable().optional(),
+      })
+      .passthrough(),
+    installment: z.any().nullable().optional(),
+    country: z.string(),
+    customer_session: z.any().nullable().optional(),
+  })
+  .passthrough();
+
 const checkoutSessionCreateSchema = z
   .object({
     account_id: z.string().min(36).max(64).describe("The unique identifier of the Yuno account").optional(),
@@ -83,4 +158,10 @@ const ottCreateSchema = z
   })
   .passthrough();
 
-export { checkoutSessionCreateSchema, ottCreateSchema };
+export {
+  checkoutSessionCreateSchema,
+  ottCreateSchema,
+  yunoCheckoutSessionOutputSchema,
+  yunoCheckoutPaymentMethodsOutputSchema,
+  yunoOttOutputSchema,
+};
