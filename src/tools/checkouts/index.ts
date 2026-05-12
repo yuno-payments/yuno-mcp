@@ -12,7 +12,7 @@ import type { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttCr
 export const checkoutSessionCreateTool = {
   method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
   schema: checkoutSessionCreateSchema,
   outputSchema: yunoCheckoutSessionOutputSchema,
   handler:
@@ -45,7 +45,7 @@ export const checkoutSessionCreateTool = {
 export const checkoutSessionRetrievePaymentMethodsTool = {
   method: "checkoutSessionRetrievePaymentMethods",
   description: "Retrieve payment methods for a checkout session in Yuno.",
-  annotations: { openWorldHint: true, title: "Retrieve Checkout Payment Methods", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Checkout Payment Methods", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
@@ -76,7 +76,7 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
 export const checkoutSessionCreateOttTool = {
   method: "checkoutSessionCreateOtt",
   description: "Generate a One Time Token (OTT) for a checkout session in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Checkout One-Time Token", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Checkout One-Time Token", destructiveHint: false, idempotentHint: false },
   schema: ottCreateSchema,
   outputSchema: yunoOttOutputSchema,
   handler:

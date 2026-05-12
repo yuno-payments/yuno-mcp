@@ -11,7 +11,7 @@ import type { InstallmentPlanCreateSchema, InstallmentPlanUpdateSchema, YunoInst
 export const installmentPlanCreateTool = {
   method: "installmentPlanCreate",
   description: "Create an installment plan in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
   schema: installmentPlanCreateSchema,
   outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
@@ -44,7 +44,7 @@ export const installmentPlanCreateTool = {
 export const installmentPlanRetrieveTool = {
   method: "installmentPlanRetrieve",
   description: "Retrieve an installment plan in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Retrieve Installment Plan", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Installment Plan", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
   }),
@@ -75,7 +75,7 @@ export const installmentPlanRetrieveTool = {
 export const installmentPlanRetrieveAllTool = {
   method: "installmentPlanRetrieveAll",
   description: "Retrieve all installment plans in Yuno for an account.",
-  annotations: { openWorldHint: true, title: "Retrieve All Installment Plans", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve All Installment Plans", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     accountId: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
@@ -106,7 +106,7 @@ export const installmentPlanRetrieveAllTool = {
 export const installmentPlanUpdateTool = {
   method: "installmentPlanUpdate",
   description: "Update an installment plan in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Update Installment Plan", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Update Installment Plan", destructiveHint: false, idempotentHint: true },
   schema: installmentPlanUpdateSchema,
   outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
@@ -135,7 +135,7 @@ export const installmentPlanUpdateTool = {
 export const installmentPlanDeleteTool = {
   method: "installmentPlanDelete",
   description: "Delete an installment plan in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),
   }),

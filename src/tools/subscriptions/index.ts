@@ -7,7 +7,7 @@ import type { SubscriptionCreateSchema, SubscriptionUpdateSchema, YunoSubscripti
 export const subscriptionCreateTool = {
   method: "subscriptionCreate",
   description: "Create a subscription in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Subscription", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Subscription", destructiveHint: false, idempotentHint: false },
   schema: subscriptionCreateSchema,
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
@@ -40,7 +40,7 @@ export const subscriptionCreateTool = {
 export const subscriptionRetrieveTool = {
   method: "subscriptionRetrieve",
   description: "Retrieve a subscription in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Retrieve Subscription", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Subscription", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to retrieve"),
   }),
@@ -71,7 +71,7 @@ export const subscriptionRetrieveTool = {
 export const subscriptionPauseTool = {
   method: "subscriptionPause",
   description: "Pause a subscription in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Pause Subscription", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Pause Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to pause"),
   }),
@@ -102,7 +102,7 @@ export const subscriptionPauseTool = {
 export const subscriptionResumeTool = {
   method: "subscriptionResume",
   description: "Resume a subscription in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Resume Subscription", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Resume Subscription", destructiveHint: false, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to resume"),
   }),
@@ -133,7 +133,7 @@ export const subscriptionResumeTool = {
 export const subscriptionUpdateTool = {
   method: "subscriptionUpdate",
   description: "Update a subscription in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Update Subscription", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Update Subscription", destructiveHint: false, idempotentHint: true },
   schema: subscriptionUpdateSchema,
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
@@ -162,7 +162,7 @@ export const subscriptionUpdateTool = {
 export const subscriptionCancelTool = {
   method: "subscriptionCancel",
   description: "Cancel a subscription in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Cancel Subscription", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to cancel"),
   }),

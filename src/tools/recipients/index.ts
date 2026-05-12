@@ -7,7 +7,7 @@ import type { RecipientCreateSchema, RecipientUpdateSchema, YunoRecipient } from
 export const recipientCreateTool = {
   method: "recipientCreate",
   description: "Create a recipient in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Recipient", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Recipient", destructiveHint: false, idempotentHint: false },
   schema: recipientCreateSchema,
   outputSchema: yunoRecipientOutputSchema,
   handler:
@@ -40,7 +40,7 @@ export const recipientCreateTool = {
 export const recipientRetrieveTool = {
   method: "recipientRetrieve",
   description: "Retrieve a recipient in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Retrieve Recipient", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Recipient", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
@@ -71,7 +71,7 @@ export const recipientRetrieveTool = {
 export const recipientUpdateTool = {
   method: "recipientUpdate",
   description: "Update a recipient in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Update Recipient", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Update Recipient", destructiveHint: false, idempotentHint: true },
   schema: recipientUpdateSchema,
   outputSchema: yunoRecipientOutputSchema,
   handler:
@@ -100,7 +100,7 @@ export const recipientUpdateTool = {
 export const recipientDeleteTool = {
   method: "recipientDelete",
   description: "Delete a recipient in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Delete Recipient", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Delete Recipient", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     recipientId: z.string().describe("The unique identifier of the recipient to delete"),
   }),
