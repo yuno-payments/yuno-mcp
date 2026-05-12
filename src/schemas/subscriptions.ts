@@ -3,41 +3,41 @@ import { amountSchema, cardDataSchema, metadataSchema } from "./shared";
 
 const yunoSubscriptionOutputSchema = z
   .object({
-    account_id: z.string().optional(),
-    name: z.string().optional(),
-    description: z.string().optional(),
-    merchant_reference: z.string().optional(),
+    account_id: z.string().nullish(),
+    name: z.string().nullish(),
+    description: z.string().nullish(),
+    merchant_reference: z.string().nullish(),
     amount: z
       .object({
         currency: z.string(),
         value: z.number(),
       })
       .passthrough()
-      .optional(),
-    status: z.string().optional(),
-    additional_data: z.any().optional(),
+      .nullish(),
+    status: z.string().nullish(),
+    additional_data: z.any().nullish(),
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
-        value: z.number().optional(),
+        value: z.number().nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     billing_cycles: z
       .object({
         total: z.number(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     payment_method: z
       .object({
-        type: z.enum(["CARD"]).optional(),
-        vaulted_token: z.string().optional(),
+        type: z.enum(["CARD"]).nullish(),
+        vaulted_token: z.string().nullish(),
         card: z
           .object({
-            installments: z.number().optional(),
-            network_transaction_id: z.string().optional(),
-            verify: z.boolean().optional(),
+            installments: z.number().nullish(),
+            network_transaction_id: z.string().nullish(),
+            verify: z.boolean().nullish(),
             card_data: z
               .object({
                 number: z.string(),
@@ -47,122 +47,121 @@ const yunoSubscriptionOutputSchema = z
                 holder_name: z.string(),
               })
               .passthrough()
-              .optional(),
+              .nullish(),
           })
           .passthrough()
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     trial_period: z
       .object({
-        billing_cycles: z.number().optional(),
-        amount: amountSchema.optional(),
+        billing_cycles: z.number().nullish(),
+        amount: amountSchema.nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     availability: z
       .object({
-        start_at: z.string().optional(),
-        finish_at: z.string().optional(),
+        start_at: z.string().nullish(),
+        finish_at: z.string().nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     metadata: metadataSchema,
   })
   .passthrough();
 
 const subscriptionCreateSchema = z
   .object({
-    account_id: z.string().optional().describe("Account ID for the subscription"),
+    account_id: z.string().nullish().describe("Account ID for the subscription"),
     name: z.string().min(3).max(255).describe("The name of the subscription"),
-    description: z.string().min(3).max(255).optional().describe("The description of the subscription"),
-    merchant_reference: z.string().min(3).max(255).optional().describe("Merchant reference for the subscription"),
+    description: z.string().min(3).max(255).nullish().describe("The description of the subscription"),
+    merchant_reference: z.string().min(3).max(255).nullish().describe("Merchant reference for the subscription"),
     country: z.string().min(2).max(2).describe("Country (ISO 3166-1)"),
     amount: amountSchema,
-    additional_data: z.any().optional().describe("Additional data for the subscription"),
+    additional_data: z.any().nullish().describe("Additional data for the subscription"),
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
-        value: z.number().optional(),
+        value: z.number().nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Frequency of the subscription"),
     billing_cycles: z
       .object({
         total: z.number(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Total billing cycles"),
     customer_payer: z
       .object({
         id: z.string().describe("The unique identifier of the customer"),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     payment_method: z
       .object({
         type: z.enum(["CARD"]).describe("Payment method type"),
-        vaulted_token: z.string().optional().describe("Vaulted token for enrolled card"),
+        vaulted_token: z.string().describe("Vaulted token for enrolled card"),
         card: z
           .object({
-            installments: z.number().int().min(1).max(50).optional().describe("Number of installments"),
-            network_transaction_id: z.string().optional().describe("Visa/Mastercard ID from initial payment"),
+            installments: z.number().int().min(1).max(50).nullish().describe("Number of installments"),
+            network_transaction_id: z.string().nullish().describe("Visa/Mastercard ID from initial payment"),
           })
           .passthrough()
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional()
       .describe("Payment method for the subscription"),
     trial_period: z
       .object({
-        billing_cycles: z.number().int().min(1).optional().describe("Trial duration in billing cycles"),
-        amount: amountSchema.optional().describe("Discounted amount during trial"),
+        billing_cycles: z.number().int().min(1).nullish().describe("Trial duration in billing cycles"),
+        amount: amountSchema.nullish().describe("Discounted amount during trial"),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Trial period for the subscription"),
     availability: z
       .object({
-        start_at: z.string().optional().describe("Start date (ISO 8601)"),
-        finish_at: z.string().optional().describe("End date (ISO 8601)"),
+        start_at: z.string().nullish().describe("Start date (ISO 8601)"),
+        finish_at: z.string().nullish().describe("End date (ISO 8601)"),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Availability for the subscription"),
     metadata: metadataSchema,
     retries: z
       .object({
-        retry_on_decline: z.boolean().optional().describe("Enable retry logic"),
-        amount: z.number().int().max(6).optional().describe("Retry count (max 6)"),
-        strategy: z.string().optional().describe("Schedule strategy"),
+        retry_on_decline: z.boolean().nullish().describe("Enable retry logic"),
+        amount: z.number().int().max(6).nullish().describe("Retry count (max 6)"),
+        strategy: z.string().nullish().describe("Schedule strategy"),
         schedule: z
           .array(
             z
               .object({
-                attempt: z.number().optional(),
-                delay_seconds: z.number().optional(),
+                attempt: z.number().nullish(),
+                delay_seconds: z.number().nullish(),
               })
               .passthrough(),
           )
-          .optional()
+          .nullish()
           .describe("Per-attempt schedule"),
-        stop_on_hard_decline: z.boolean().optional().describe("Halt retries after hard decline"),
+        stop_on_hard_decline: z.boolean().nullish().describe("Halt retries after hard decline"),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Retries for the subscription"),
-    initial_payment_validation: z.boolean().optional().describe("Initial payment validation flag"),
+    initial_payment_validation: z.boolean().nullish().describe("Initial payment validation flag"),
     billing_date: z
       .object({
-        type: z.enum(["PREPAID", "POSTDATE", "DAY"]).optional().describe("Billing date type"),
-        day: z.number().int().min(1).max(31).optional().describe("Day of month for DAY type"),
+        type: z.enum(["PREPAID", "POSTDATE", "DAY"]).nullish().describe("Billing date type"),
+        day: z.number().int().min(1).max(31).nullish().describe("Day of month for DAY type"),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Billing date for the subscription"),
   })
   .passthrough();
@@ -170,66 +169,66 @@ const subscriptionCreateSchema = z
 const subscriptionUpdateSchema = z
   .object({
     subscriptionId: z.string().describe("The unique identifier of the subscription to update"),
-    account_id: z.string().optional().describe("Account ID"),
-    name: z.string().optional(),
-    description: z.string().optional(),
-    merchant_reference: z.string().optional(),
-    country: z.string().optional(),
+    account_id: z.string().nullish().describe("Account ID"),
+    name: z.string().nullish(),
+    description: z.string().nullish(),
+    merchant_reference: z.string().nullish(),
+    country: z.string().nullish(),
     amount: z
       .object({
         currency: z.string(),
         value: z.number(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
-        value: z.number().optional(),
-        monthly_billing_day: z.number().int().min(1).max(31).optional().describe("Monthly billing day"),
+        value: z.number().nullish(),
+        monthly_billing_day: z.number().int().min(1).max(31).nullish().describe("Monthly billing day"),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     billing_cycles: z
       .object({
         total: z.number(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     customer_payer: z
       .object({
         id: z.string(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     payment_method: z
       .object({
-        type: z.enum(["CARD"]).optional(),
-        vaulted_token: z.string().optional(),
+        type: z.enum(["CARD"]).nullish(),
+        vaulted_token: z.string().nullish(),
         card: z
           .object({
-            verify: z.boolean().optional(),
-            card_data: cardDataSchema.optional(),
+            verify: z.boolean().nullish(),
+            card_data: cardDataSchema.nullish(),
           })
           .passthrough()
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     availability: z
       .object({
-        start_at: z.string().optional(),
-        finish_at: z.string().optional(),
+        start_at: z.string().nullish(),
+        finish_at: z.string().nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     retries: z
       .object({
-        retry_on_decline: z.boolean().optional(),
-        amount: z.number().optional(),
+        retry_on_decline: z.boolean().nullish(),
+        amount: z.number().nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
     metadata: metadataSchema,
   })
   .passthrough();

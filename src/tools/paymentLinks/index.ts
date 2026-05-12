@@ -16,7 +16,7 @@ export const paymentLinkCreateTool = {
         ...data,
         account_id: data.account_id || yunoClient.accountCode,
       };
-      const { body: paymentLink, status, headers } = await yunoClient.paymentLinks.create(paymentLinkWithAccount);
+      const { body: paymentLink, status, headers } = await yunoClient.paymentLinks.create(paymentLinkWithAccount as YunoPaymentLink);
 
       if (type === "text") {
         return {

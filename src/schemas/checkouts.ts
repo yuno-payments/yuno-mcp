@@ -3,17 +3,17 @@ import { addressSchema, amountSchema, metadataSchema, browserInfoSchema, cardDat
 
 const yunoCheckoutSessionOutputSchema = z
   .object({
-    account_id: z.string().optional(),
+    account_id: z.string().nullish(),
     amount: amountSchema,
-    customer_id: z.string().optional(),
+    customer_id: z.string().nullish(),
     merchant_order_id: z.string(),
     payment_description: z.string(),
-    country: z.string().optional(),
-    callback_url: z.string().optional(),
+    country: z.string().nullish(),
+    callback_url: z.string().nullish(),
     metadata: metadataSchema,
     installments: z
       .object({
-        plan_id: z.string().optional(),
+        plan_id: z.string().nullish(),
         plan: z
           .array(
             z
@@ -23,10 +23,10 @@ const yunoCheckoutSessionOutputSchema = z
               })
               .passthrough(),
           )
-          .optional(),
+          .nullish(),
       })
       .passthrough()
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 
@@ -37,10 +37,10 @@ const yunoCheckoutPaymentMethodsOutputSchema = z
         .object({
           type: z.string(),
           name: z.string(),
-          category: z.string().optional(),
-          provider: z.string().optional(),
-          status: z.string().optional(),
-          vaulted_token: z.string().optional(),
+          category: z.string().nullish(),
+          provider: z.string().nullish(),
+          status: z.string().nullish(),
+          vaulted_token: z.string().nullish(),
         })
         .passthrough(),
     ),
@@ -50,54 +50,54 @@ const yunoCheckoutPaymentMethodsOutputSchema = z
 const yunoOttOutputSchema = z
   .object({
     token: z.string(),
-    vaulted_token: z.string().nullable().optional(),
+    vaulted_token: z.string().nullish(),
     vault_on_success: z.boolean(),
     type: z.string(),
-    card_data: cardDataSchema.optional(),
+    card_data: cardDataSchema.nullish(),
     customer: z
       .object({
-        first_name: z.string().nullable().optional(),
-        last_name: z.string().nullable().optional(),
-        email: z.string().nullable().optional(),
+        first_name: z.string().nullish(),
+        last_name: z.string().nullish(),
+        email: z.string().nullish(),
         gender: z.string(),
-        phone: z.string().nullable().optional(),
-        date_of_birth: z.string().nullable().optional(),
-        billing_address: z.any().nullable().optional(),
-        shipping_address: z.any().nullable().optional(),
-        document: z.any().nullable().optional(),
+        phone: z.string().nullish(),
+        date_of_birth: z.string().nullish(),
+        billing_address: z.any().nullish(),
+        shipping_address: z.any().nullish(),
+        document: z.any().nullish(),
         browser_info: browserInfoSchema,
-        nationality: z.string().nullable().optional(),
-        device_fingerprint: z.any().nullable().optional(),
+        nationality: z.string().nullish(),
+        device_fingerprint: z.any().nullish(),
       })
       .passthrough(),
-    installment: z.any().nullable().optional(),
+    installment: z.any().nullish(),
     country: z.string(),
-    customer_session: z.any().nullable().optional(),
+    customer_session: z.any().nullish(),
   })
   .passthrough();
 
 const checkoutSessionCreateSchema = z
   .object({
-    account_id: z.string().min(36).max(64).describe("The unique identifier of the Yuno account").optional(),
-    customer_id: z.string().min(36).max(64).optional().describe("The unique identifier of the customer"),
+    account_id: z.string().min(36).max(64).describe("The unique identifier of the Yuno account").nullish(),
+    customer_id: z.string().min(36).max(64).nullish().describe("The unique identifier of the customer"),
     merchant_order_id: z.string().min(3).max(255).describe("The unique identifier of the customer's order"),
     payment_description: z.string().min(1).max(255).describe("The description of the payment"),
-    callback_url: z.string().min(3).max(526).optional().describe("The URL where we will redirect your customer after making the purchase"),
+    callback_url: z.string().min(3).max(526).nullish().describe("The URL where we will redirect your customer after making the purchase"),
     country: z.string().min(2).max(2).describe("The customer's country (ISO 3166-1)"),
-    amount: amountSchema.optional().describe("Specifies the payment amount object"),
+    amount: amountSchema.nullish().describe("Specifies the payment amount object"),
     alternative_amount: z
       .object({
-        currency: z.string().min(3).max(3).optional().nullable(),
-        value: z.number().optional(),
+        currency: z.string().min(3).max(3).nullish(),
+        value: z.number().nullish(),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("Alternative currency representation"),
-    workflow: z.enum(["SDK_CHECKOUT", "CHECKOUT", "SDK_SEAMLESS"]).optional().describe("Checkout workflow type"),
+    workflow: z.enum(["SDK_CHECKOUT", "CHECKOUT", "SDK_SEAMLESS"]).nullish().describe("Checkout workflow type"),
     metadata: metadataSchema,
     installments: z
       .object({
-        plan_id: z.string().optional().describe("Plan Id of the installment plan created in Yuno"),
+        plan_id: z.string().nullish().describe("Plan Id of the installment plan created in Yuno"),
         plan: z
           .array(
             z
@@ -107,11 +107,11 @@ const checkoutSessionCreateSchema = z
               })
               .passthrough(),
           )
-          .optional()
+          .nullish()
           .describe("Installments to show the customer"),
       })
       .passthrough()
-      .optional()
+      .nullish()
       .describe("The installment plan configuration"),
   })
   .passthrough();
@@ -129,32 +129,32 @@ const ottCreateSchema = z
             security_code: z.string().describe("Card security code (CVV)"),
             holder_name: z.string().describe("Cardholder name"),
           })
-          .optional(),
+          .nullish(),
         customer: z
           .object({
             browser_info: browserInfoSchema,
-            first_name: z.string().optional(),
-            last_name: z.string().optional(),
-            email: z.string().email().optional(),
-            gender: z.string().optional(),
-            date_of_birth: z.string().optional(),
-            document: documentSchema.optional(),
-            phone: phoneSchema.optional(),
-            billing_address: addressSchema.optional(),
-            shipping_address: addressSchema.optional(),
+            first_name: z.string().nullish(),
+            last_name: z.string().nullish(),
+            email: z.string().email().nullish(),
+            gender: z.string().nullish(),
+            date_of_birth: z.string().nullish(),
+            document: documentSchema.nullish(),
+            phone: phoneSchema.nullish(),
+            billing_address: addressSchema.nullish(),
+            shipping_address: addressSchema.nullish(),
           })
           .passthrough(),
-        vaulted_token: z.string().optional().nullable(),
+        vaulted_token: z.string().nullish(),
       })
       .passthrough(),
     three_d_secure: z
       .object({
-        three_d_secure_setup_id: z.string().optional().nullable().describe("3DS setup ID"),
+        three_d_secure_setup_id: z.string().nullish().describe("3DS setup ID"),
       })
       .passthrough(),
-    installment: z.any().optional().nullable().describe("Installment configuration"),
-    third_party_data: z.any().optional().nullable().describe("Third party data"),
-    device_fingerprints: z.any().optional().nullable().describe("Device fingerprints"),
+    installment: z.any().nullish().describe("Installment configuration"),
+    third_party_data: z.any().nullish().describe("Third party data"),
+    device_fingerprints: z.any().nullish().describe("Device fingerprints"),
   })
   .passthrough();
 

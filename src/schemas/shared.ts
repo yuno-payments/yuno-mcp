@@ -3,19 +3,19 @@ import z from "zod";
 const addressSchema = z
   .object({
     address_line_1: z.string(),
-    address_line_2: z.string().optional(),
-    building_number_1: z.string().optional(),
-    building_number_2: z.string().optional(),
-    country: z.string().min(2).max(2).optional().describe("Country (ISO 3166-1)"),
-    state: z.string().optional(),
+    address_line_2: z.string().nullish(),
+    building_number_1: z.string().nullish(),
+    building_number_2: z.string().nullish(),
+    country: z.string().min(2).max(2).nullish().describe("Country (ISO 3166-1)"),
+    state: z.string().nullish(),
     city: z.string(),
-    zip_code: z.string().optional(),
-    neighborhood: z.string().optional(),
+    zip_code: z.string().nullish(),
+    neighborhood: z.string().nullish(),
   })
   .passthrough()
-  .optional();
+  .nullish();
 
-const metadataSchema = z.array(z.object({ key: z.string(), value: z.string() })).optional();
+const metadataSchema = z.array(z.object({ key: z.string(), value: z.string() })).nullish();
 
 const phoneSchema = z
   .object({
@@ -23,7 +23,7 @@ const phoneSchema = z
     country_code: z.string(),
   })
   .passthrough()
-  .optional();
+  .nullish();
 
 const documentSchema = z
   .object({
@@ -31,17 +31,17 @@ const documentSchema = z
     document_number: z.string(),
   })
   .passthrough()
-  .optional();
+  .nullish();
 
 const cardDataSchema = z
   .object({
     number: z.string().min(8).max(19),
     expiration_month: z.number().min(1).max(12),
     expiration_year: z.number().min(1).max(9999),
-    security_code: z.string().min(3).max(4).optional(),
-    holder_name: z.string().min(3).max(26).optional(),
-    type: z.string().optional().nullable(),
-    brand: z.string().optional(),
+    security_code: z.string().min(3).max(4).nullish(),
+    holder_name: z.string().min(3).max(26).nullish(),
+    type: z.string().nullish(),
+    brand: z.string().nullish(),
   })
   .passthrough();
 
