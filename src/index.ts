@@ -13,7 +13,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     {
       name: "yuno-mcp",
       title: "Yuno",
-      version: "0.4.1",
+      version: "0.4.2",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",

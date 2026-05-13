@@ -6,7 +6,7 @@ import type { CustomerUpdateSchema, YunoCustomer } from "./types";
 export const customerCreateTool = {
   method: "customerCreate",
   description: "Create a new customer in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Customer", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Customer", destructiveHint: false, idempotentHint: false },
   schema: customerCreateSchema,
   outputSchema: yunoCustomerOutputSchema,
   handler:
@@ -35,7 +35,7 @@ export const customerCreateTool = {
 export const customerRetrieveTool = {
   method: "customerRetrieve",
   description: "Retrieve a customer by ID.",
-  annotations: { openWorldHint: true, title: "Retrieve Customer", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Customer", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
   }),
@@ -66,7 +66,7 @@ export const customerRetrieveTool = {
 export const customerRetrieveByExternalIdTool = {
   method: "customerRetrieveByExternalId",
   description: "Retrieve a customer by external merchant_customer_id.",
-  annotations: { openWorldHint: true, title: "Retrieve Customer by External ID", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Customer by External ID", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     merchant_customer_id: z.string().describe("The external merchant_customer_id to retrieve the customer"),
   }),
@@ -97,7 +97,7 @@ export const customerRetrieveByExternalIdTool = {
 export const customerUpdateTool = {
   method: "customerUpdate",
   description: "Update a customer by ID.",
-  annotations: { openWorldHint: true, title: "Update Customer", destructiveHint: false, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Update Customer", destructiveHint: false, idempotentHint: true },
   schema: customerUpdateSchema,
   outputSchema: yunoCustomerOutputSchema,
   handler:

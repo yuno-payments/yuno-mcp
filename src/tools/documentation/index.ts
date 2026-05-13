@@ -25,7 +25,7 @@ const documentationIndexTool = {
   method: "documentationIndex",
   description:
     "Retrieve the Yuno documentation index (llms.txt) listing all available API references, SDK guides, and integration tutorials with their URLs.",
-  annotations: { openWorldHint: true, title: "Yuno Documentation Index", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Yuno Documentation Index", readOnlyHint: true, destructiveHint: false },
   schema: documentationIndexSchema,
   outputSchema: documentationIndexOutputSchema,
   handler:
@@ -63,7 +63,7 @@ const documentationReadTool = {
   method: "documentationRead",
   description:
     "Read a specific Yuno documentation page by URL. Use the documentation index tool first to discover available pages and their URLs.",
-  annotations: { openWorldHint: true, title: "Read Yuno Documentation", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Read Yuno Documentation", readOnlyHint: true, destructiveHint: false },
   schema: documentationReadSchema,
   outputSchema: documentationReadOutputSchema,
   handler:

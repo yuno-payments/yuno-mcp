@@ -6,7 +6,7 @@ import type { PaymentLinkCancelSchema, PaymentLinkCreateSchema, YunoPaymentLink 
 export const paymentLinkCreateTool = {
   method: "paymentLinkCreate",
   description: "Create a payment link in Yuno.",
-  annotations: { openWorldHint: true, title: "Create Payment Link", destructiveHint: false, idempotentHint: false },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Payment Link", destructiveHint: false, idempotentHint: false },
   schema: paymentLinkCreateSchema,
   outputSchema: yunoPaymentLinkOutputSchema,
   handler:
@@ -39,7 +39,7 @@ export const paymentLinkCreateTool = {
 export const paymentLinkRetrieveTool = {
   method: "paymentLinkRetrieve",
   description: "Retrieve a payment link in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Retrieve Payment Link", readOnlyHint: true },
+  annotations: { openWorldHint: true, title: "Retrieve Payment Link", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
   }),
@@ -70,7 +70,7 @@ export const paymentLinkRetrieveTool = {
 export const paymentLinkCancelTool = {
   method: "paymentLinkCancel",
   description: "Cancel a payment link in Yuno by its ID.",
-  annotations: { openWorldHint: true, title: "Cancel Payment Link", destructiveHint: true, idempotentHint: true },
+  annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel Payment Link", destructiveHint: true, idempotentHint: true },
   schema: paymentLinkCancelSchema,
   outputSchema: yunoPaymentLinkOutputSchema,
   handler:
