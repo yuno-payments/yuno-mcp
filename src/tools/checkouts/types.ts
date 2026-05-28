@@ -63,12 +63,34 @@ export interface YunoThreeDSecure {
   three_d_secure_setup_id?: string | null;
 }
 
+export interface YunoDeviceFingerprint {
+  provider_id?: string | null;
+  id?: string | null;
+}
+
+export interface YunoOttInstallment {
+  plan_id?: string | null;
+  plan?: YunoInstallmentsPlan[] | null;
+}
+
+export interface YunoOttThirdPartyData {
+  payer_authentication?: {
+    cavv?: string | null;
+    eci?: string | null;
+    xid?: string | null;
+    version?: string | null;
+    directory_server_transaction_id?: string | null;
+    acs_transaction_id?: string | null;
+  } | null;
+  [key: string]: any;
+}
+
 export interface YunoOttRequest {
   payment_method: YunoOttPaymentMethod;
   three_d_secure: YunoThreeDSecure;
-  installment?: any | null;
-  third_party_data?: any | null;
-  device_fingerprints?: any | null;
+  installment?: YunoOttInstallment | null;
+  third_party_data?: YunoOttThirdPartyData | null;
+  device_fingerprints?: YunoDeviceFingerprint[] | null;
 }
 
 export interface YunoOttResponseCustomer {

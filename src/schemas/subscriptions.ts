@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { amountSchema, cardDataSchema, metadataSchema } from "./shared";
+import { amountSchema, cardDataSchema, metadataSchema, subscriptionAdditionalDataSchema } from "./shared";
 
 const yunoSubscriptionOutputSchema = z
   .object({
@@ -15,7 +15,7 @@ const yunoSubscriptionOutputSchema = z
       .passthrough()
       .nullish(),
     status: z.string().nullish(),
-    additional_data: z.any().nullish(),
+    additional_data: subscriptionAdditionalDataSchema.nullish(),
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),
@@ -80,7 +80,7 @@ const subscriptionCreateSchema = z
     merchant_reference: z.string().min(3).max(255).nullish().describe("Merchant reference for the subscription"),
     country: z.string().min(2).max(2).describe("Country (ISO 3166-1)"),
     amount: amountSchema,
-    additional_data: z.any().nullish().describe("Additional data for the subscription"),
+    additional_data: subscriptionAdditionalDataSchema.nullish().describe("Additional data for the subscription (order items)"),
     frequency: z
       .object({
         type: z.enum(["DAY", "WEEK", "MONTH"]),

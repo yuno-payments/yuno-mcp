@@ -1,5 +1,48 @@
 import { z } from "zod";
-import { addressSchema, amountSchema, metadataSchema, browserInfoSchema, cardDataSchema, documentSchema, phoneSchema } from "./shared";
+import {
+  addressSchema,
+  amountSchema,
+  browserInfoSchema,
+  cardDataSchema,
+  deviceFingerprintsSchema,
+  documentSchema,
+  metadataSchema,
+  phoneSchema,
+} from "./shared";
+
+const installmentConfigSchema = z
+  .object({
+    plan_id: z.string().nullish().describe("Installment plan id"),
+    plan: z
+      .array(
+        z
+          .object({
+            installment: z.number().int(),
+            rate: z.number(),
+          })
+          .passthrough(),
+      )
+      .nullish(),
+  })
+  .passthrough();
+
+const thirdPartyDataSchema = z
+  .object({
+    payer_authentication: z
+      .object({
+        cavv: z.string().nullish(),
+        eci: z.string().nullish(),
+        xid: z.string().nullish(),
+        version: z.string().nullish(),
+        directory_server_transaction_id: z.string().nullish(),
+        acs_transaction_id: z.string().nullish(),
+      })
+      .passthrough()
+      .nullish()
+      .describe("3DS payer authentication data"),
+  })
+  .passthrough()
+  .describe("Third-party data (e.g., external 3DS results). Shape is not formally documented; passthrough allows provider-specific fields.");
 
 const yunoCheckoutSessionOutputSchema = z
   .object({
@@ -152,9 +195,9 @@ const ottCreateSchema = z
         three_d_secure_setup_id: z.string().nullish().describe("3DS setup ID"),
       })
       .passthrough(),
-    installment: z.any().nullish().describe("Installment configuration"),
-    third_party_data: z.any().nullish().describe("Third party data"),
-    device_fingerprints: z.any().nullish().describe("Device fingerprints"),
+    installment: installmentConfigSchema.nullish().describe("Installment configuration (plan_id or explicit plan)"),
+    third_party_data: thirdPartyDataSchema.nullish(),
+    device_fingerprints: deviceFingerprintsSchema.nullish().describe("Device fingerprints from fraud screening providers"),
   })
   .passthrough();
 
