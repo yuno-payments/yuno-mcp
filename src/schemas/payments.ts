@@ -1,5 +1,15 @@
 import { z } from "zod";
-import { addressSchema, amountSchema, cardDataSchema, documentSchema, metadataSchema, phoneSchema } from "./shared";
+import {
+  addressSchema,
+  amountSchema,
+  cardDataSchema,
+  documentSchema,
+  fraudScreeningRequestSchema,
+  metadataSchema,
+  paymentAdditionalDataSchema,
+  phoneSchema,
+  splitMarketplaceRequestSchema,
+} from "./shared";
 
 const customerPayerSchema = z
   .object({
@@ -66,7 +76,7 @@ const paymentCreateSchema = z
       .object({
         account_id: z.string().nullish().describe("Account ID for the payment"),
         description: z.string().describe("Payment description"),
-        additional_data: z.any().nullish(),
+        additional_data: paymentAdditionalDataSchema.nullish().describe("Order, airline, transportation, and seller details"),
         country: z.string().describe("Customer's country (ISO 3166-1)"),
         merchant_order_id: z.string().describe("Unique identifier for the order"),
         merchant_reference: z.string().nullish(),
@@ -115,8 +125,8 @@ const paymentCreateSchema = z
           .passthrough()
           .describe("Payment method details"),
         callback_url: z.string().nullish(),
-        fraud_screening: z.any().nullish(),
-        split_marketplace: z.any().nullish(),
+        fraud_screening: fraudScreeningRequestSchema.nullish().describe("Fraud screening configuration"),
+        split_marketplace: splitMarketplaceRequestSchema.nullish().describe("Marketplace split configuration"),
         metadata: metadataSchema,
       })
       .passthrough()
@@ -223,7 +233,7 @@ const yunoPaymentOutputSchema = z
   .object({
     account_id: z.string().nullish(),
     description: z.string().nullish(),
-    additional_data: z.any().nullish(),
+    additional_data: paymentAdditionalDataSchema.nullish(),
     country: z.string().nullish(),
     merchant_order_id: z.string().nullish(),
     merchant_reference: z.string().nullish(),

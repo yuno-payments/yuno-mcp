@@ -1,5 +1,46 @@
 import { z } from "zod";
-import { addressSchema, amountSchema, documentSchema, metadataSchema, phoneSchema } from "./shared";
+import { addressSchema, amountSchema, documentSchema, metadataSchema, paymentAdditionalDataSchema, phoneSchema } from "./shared";
+
+const paymentLinkPaymentMethodSchema = z
+  .object({
+    type: z.string().nullish().describe("Payment method type (e.g., CARD, PIX, BOLETO)"),
+    vaulted_token: z.string().nullish().describe("Token of an enrolled payment method"),
+    token: z.string().nullish().describe("One-time-use token"),
+    detail: z
+      .object({
+        card: z
+          .object({
+            capture: z.boolean().nullish(),
+            installments: z.number().nullish(),
+            first_installment_deferral: z.number().nullish(),
+            soft_descriptor: z.string().nullish(),
+            verify: z.boolean().nullish(),
+          })
+          .passthrough()
+          .nullish(),
+      })
+      .passthrough()
+      .nullish(),
+    vault_on_success: z.boolean().nullish(),
+  })
+  .passthrough();
+
+const installmentsPlanSchema = z
+  .object({
+    plan_id: z.string().nullish().describe("Installment plan id created in Yuno"),
+    plan: z
+      .array(
+        z
+          .object({
+            installment: z.number().int().describe("Number of monthly installments"),
+            rate: z.number().describe("Rate applied to the final amount (percentage)"),
+          })
+          .passthrough(),
+      )
+      .nullish()
+      .describe("Installment options to show the customer"),
+  })
+  .passthrough();
 
 const yunoPaymentLinkOutputSchema = z
   .object({
@@ -7,7 +48,7 @@ const yunoPaymentLinkOutputSchema = z
     description: z.string().nullish(),
     country: z.string(),
     merchant_order_id: z.string().nullish(),
-    additional_data: z.any().nullish(),
+    additional_data: paymentAdditionalDataSchema.nullish(),
     url: z.string().nullish(),
     status: z.string().nullish(),
     amount: z
@@ -49,8 +90,8 @@ const paymentLinkCreateSchema = z
     amount: amountSchema.describe("Specifies the payment amount object"),
     capture: z.boolean().nullish().describe("Whether to capture the payment immediately, true by default"),
     type: z.string().nullish().describe("Payment link classification"),
-    payment_method: z.any().nullish().describe("Payment method configuration"),
-    installments_plan: z.any().nullish().describe("Installment arrangement details"),
+    payment_method: paymentLinkPaymentMethodSchema.nullish().describe("Payment method configuration"),
+    installments_plan: installmentsPlanSchema.nullish().describe("Installment arrangement details"),
     timezone: z.string().nullish().describe("Availability timezone (e.g., UTC +03:00)"),
     payments_number: z.number().int().nullish().describe("Count of linked payments"),
     split_payment_methods: z.boolean().nullish().describe("Enable divided payment options"),
@@ -67,7 +108,7 @@ const paymentLinkCreateSchema = z
       )
       .nullish(),
     customer_payer: customerPayerSchema.nullish(),
-    additional_data: z.any().nullish(),
+    additional_data: paymentAdditionalDataSchema.nullish(),
     callback_url: z.string().nullish(),
     one_time_use: z.boolean().nullish(),
     availability: z
