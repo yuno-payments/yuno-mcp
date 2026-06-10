@@ -27,13 +27,26 @@ export interface YunoCheckoutSession {
 export interface YunoCheckoutPaymentMethod {
   type: string;
   name: string;
-  category?: string;
-  provider?: string;
-  status?: string;
-  vaulted_token?: string;
+  description?: string | null;
+  category?: string | null;
+  icon?: string | null;
+  vaulted_token?: string | null;
+  preferred?: boolean | null;
+  last_successfully_used?: string | null;
+  last_successfully_used_at?: string | null;
+  checkout?: {
+    session?: string | null;
+    sdk_required_action?: boolean | null;
+    conditions?: {
+      enabled?: boolean | null;
+      rules?: Record<string, unknown>[] | null;
+    } | null;
+  } | null;
   [key: string]: any;
 }
 
+// Structured tool output: the API returns a bare array, but MCP structuredContent
+// must have an object root, so the tool wraps it under `payment_methods`.
 export interface YunoCheckoutPaymentMethodsResponse {
   payment_methods: YunoCheckoutPaymentMethod[];
 }

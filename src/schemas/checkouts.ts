@@ -73,6 +73,8 @@ const yunoCheckoutSessionOutputSchema = z
   })
   .passthrough();
 
+// The API returns a bare array; the tool wraps it under `payment_methods`
+// because MCP structuredContent must have an object root.
 const yunoCheckoutPaymentMethodsOutputSchema = z
   .object({
     payment_methods: z.array(
@@ -80,10 +82,27 @@ const yunoCheckoutPaymentMethodsOutputSchema = z
         .object({
           type: z.string(),
           name: z.string(),
+          description: z.string().nullish(),
           category: z.string().nullish(),
-          provider: z.string().nullish(),
-          status: z.string().nullish(),
+          icon: z.string().nullish(),
           vaulted_token: z.string().nullish(),
+          preferred: z.boolean().nullish(),
+          last_successfully_used: z.string().nullish(),
+          last_successfully_used_at: z.string().nullish(),
+          checkout: z
+            .object({
+              session: z.string().nullish(),
+              sdk_required_action: z.boolean().nullish(),
+              conditions: z
+                .object({
+                  enabled: z.boolean().nullish(),
+                  rules: z.array(z.object({}).passthrough()).nullish(),
+                })
+                .passthrough()
+                .nullish(),
+            })
+            .passthrough()
+            .nullish(),
         })
         .passthrough(),
     ),

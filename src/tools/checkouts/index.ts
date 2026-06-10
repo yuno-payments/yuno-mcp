@@ -53,12 +53,12 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ sessionId }: { sessionId: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
-      const { body: paymentMethodsResponse, status, headers } = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
+      const { body: paymentMethods, status, headers } = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
 
       if (type === "text") {
         return {
           content: [
-            { type: "text" as const, text: JSON.stringify(paymentMethodsResponse, null, 4) },
+            { type: "text" as const, text: JSON.stringify(paymentMethods, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType>;
@@ -66,7 +66,7 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
 
       return {
         content: [
-          { type: "object" as const, object: paymentMethodsResponse },
+          { type: "object" as const, object: { payment_methods: paymentMethods ?? [] } },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCheckoutPaymentMethodsResponse>;
