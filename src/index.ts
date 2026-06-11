@@ -23,7 +23,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     },
   );
 
-  const enabledTools = options.includeRoutingTools
+  const enabledTools: readonly Tool[] = options.includeRoutingTools
     ? [...tools, ...routingTools]
     : tools;
 

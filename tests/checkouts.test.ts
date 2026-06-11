@@ -1,6 +1,6 @@
 import { expect, it, describe, rstest } from "@rstest/core";
 import z from "zod";
-import { checkoutSessionCreateSchema, ottCreateSchema } from "../src/schemas";
+import { checkoutSessionCreateSchema, ottCreateSchema, yunoCheckoutPaymentMethodsOutputSchema } from "../src/schemas";
 import { checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool, checkoutSessionCreateOttTool } from "../src/tools/checkouts";
 
 describe("checkoutSessionCreateTool", () => {
@@ -119,7 +119,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
     expect(result.content[0].text).toContain("Visa");
   });
 
-  it("should wrap the bare-array response under payment_methods and satisfy the output schema", async () => {
+  it("should pass the raw bare-array response through untouched and match the documented schema", async () => {
     const apiResponse = [
       {
         type: "PSE",
@@ -146,8 +146,8 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
     const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "object" })({ sessionId: "sess_123" });
     const primary = result.content[0] as { type: "object"; object: unknown };
     expect(primary.type).toBe("object");
-    expect(primary.object).toEqual({ payment_methods: apiResponse });
-    expect(() => checkoutSessionRetrievePaymentMethodsTool.outputSchema.parse(primary.object)).not.toThrow();
+    expect(primary.object).toEqual(apiResponse);
+    expect(() => yunoCheckoutPaymentMethodsOutputSchema.parse(primary.object)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {

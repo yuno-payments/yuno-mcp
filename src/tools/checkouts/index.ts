@@ -2,7 +2,6 @@ import z from "zod";
 import {
   checkoutSessionCreateSchema,
   ottCreateSchema,
-  yunoCheckoutPaymentMethodsOutputSchema,
   yunoCheckoutSessionOutputSchema,
   yunoOttOutputSchema,
 } from "../../schemas";
@@ -49,7 +48,9 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
   schema: z.object({
     sessionId: z.string().describe("The unique identifier of the checkout session"),
   }),
-  outputSchema: yunoCheckoutPaymentMethodsOutputSchema,
+  // No MCP outputSchema: the API returns a bare array and MCP requires an
+  // object root for structuredContent. The raw response is passed through
+  // untouched; yunoCheckoutPaymentMethodsOutputSchema documents its shape.
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ sessionId }: { sessionId: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
@@ -66,7 +67,7 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
 
       return {
         content: [
-          { type: "object" as const, object: { payment_methods: paymentMethods ?? [] } },
+          { type: "object" as const, object: paymentMethods },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCheckoutPaymentMethodsResponse>;

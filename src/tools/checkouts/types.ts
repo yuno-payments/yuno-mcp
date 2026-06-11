@@ -45,11 +45,8 @@ export interface YunoCheckoutPaymentMethod {
   [key: string]: any;
 }
 
-// Structured tool output: the API returns a bare array, but MCP structuredContent
-// must have an object root, so the tool wraps it under `payment_methods`.
-export interface YunoCheckoutPaymentMethodsResponse {
-  payment_methods: YunoCheckoutPaymentMethod[];
-}
+// Raw API response: the endpoint returns a bare array of payment methods.
+export type YunoCheckoutPaymentMethodsResponse = YunoCheckoutPaymentMethod[];
 
 export interface YunoOttCustomer {
   browser_info: YunoBrowserInfo;
