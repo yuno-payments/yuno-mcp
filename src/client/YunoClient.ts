@@ -485,7 +485,11 @@ export class YunoClient {
         }
         const select = data.providers.integrations?.find((provider => provider.integration_code === data.provider_connection_code))
 
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/update-workflow/${encodeURIComponent(this.accountCode)}`, {
+        // The BFF's legacy single-segment route (version code read from the body) was removed
+        // in DAS-17644; the JSON-proxy route requires the version code in the path.
+        const versionCode = data.updateRoute.version.code;
+
+      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/update-workflow/${encodeURIComponent(this.accountCode)}/${encodeURIComponent(versionCode)}`, {
         method: "PUT",
         body: JSON.stringify(data.updateRoute),
       })
