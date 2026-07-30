@@ -38,6 +38,26 @@ const apiKeyPrefixToDashboardEnvironment = {
   prod: "dashboard-bff",
 } as const;
 
+/**
+ * Read a response body as JSON, tolerating an empty one.
+ *
+ * Not every Yuno endpoint answers with a document. `DELETE /v1/installments-plans/{id}`
+ * returns `201` with `content-length: 0` (verified against api-staging), and calling
+ * `response.json()` on that throws "Unexpected end of JSON input" — which surfaced as a
+ * tool error even though the delete had succeeded. Callers receive `undefined` for a
+ * no-content response and must decide what that means for their endpoint.
+ *
+ * A non-empty body that fails to parse still throws, deliberately: that is a real
+ * protocol violation and should not be silently swallowed.
+ */
+async function parseJsonBody<T>(response: Response): Promise<T> {
+  const raw = await response.text();
+  if (raw.length === 0) {
+    return undefined as T;
+  }
+  return JSON.parse(raw) as T;
+}
+
 function generateBaseUrlApi(publicApiKey: string) {
   const [apiKeyPrefix] = publicApiKey.split("_");
   const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix as ApiKeyPrefix] as EnvironmentSuffix;
@@ -93,7 +113,7 @@ export class YunoClient {
         },
       });
 
-      const body: T = await response.json();
+      const body = await parseJsonBody<T>(response);
       return {
         body,
         status: response.status,
@@ -134,7 +154,7 @@ export class YunoClient {
           ...(options.headers || {}),
         },
       });
-      const body: T = await response.json();
+      const body = await parseJsonBody<T>(response);
       return {
         body,
         status: response.status,

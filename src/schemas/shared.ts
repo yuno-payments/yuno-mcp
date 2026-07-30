@@ -45,6 +45,21 @@ const cardDataSchema = z
   })
   .passthrough();
 
+// Responses carry masked card data — no PAN, no expiry. Requests still require both.
+const cardDataResponseSchema = cardDataSchema.extend({
+  number: z.string().nullish(),
+  expiration_month: z.number().nullish(),
+  expiration_year: z.number().nullish(),
+});
+
+// Responses return currency "" when the amount does not apply (e.g. no trial period).
+const amountResponseSchema = z
+  .object({
+    currency: z.string().describe("Currency (ISO 4217), or empty when not applicable"),
+    value: z.number().nullish().describe("The amount"),
+  })
+  .passthrough();
+
 const browserInfoSchema = z
   .object({
     browser_time_difference: z.string().describe("Browser time difference"),
@@ -342,8 +357,10 @@ export {
   phoneSchema,
   documentSchema,
   cardDataSchema,
+  cardDataResponseSchema,
   browserInfoSchema,
   amountSchema,
+  amountResponseSchema,
   paymentAdditionalDataSchema,
   subscriptionAdditionalDataSchema,
   fraudScreeningRequestSchema,

@@ -13,7 +13,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     {
       name: "yuno-mcp",
       title: "Yuno",
-      version: "0.4.2",
+      // Must match package.json — this is the version MCP clients see during initialize.
+      // tests/version.test.ts fails the build if the two drift apart.
+      version: "0.4.4-test.2",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
@@ -122,7 +124,12 @@ async function initializeYunoMCP({
       yunoMCP,
     };
   } catch (error) {
-    console.error("\n🚨  Error initializing Yuno MCP server:\n");
+    // The cause has to reach the log. Callers only observe `undefined` (remote-yuno-mcp
+    // turns that into a generic 500), so dropping the error here left initialization
+    // failures — bad credentials, unreachable API — with no diagnosable trace anywhere.
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`\n🚨  Error initializing Yuno MCP server: ${message}\n`);
+    return undefined;
   }
 }
 

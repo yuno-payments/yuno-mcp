@@ -4,6 +4,7 @@ import {
   amountSchema,
   browserInfoSchema,
   cardDataSchema,
+  cardDataResponseSchema,
   deviceFingerprintsSchema,
   documentSchema,
   metadataSchema,
@@ -112,7 +113,7 @@ const yunoOttOutputSchema = z
     vaulted_token: z.string().nullish(),
     vault_on_success: z.boolean(),
     type: z.string(),
-    card_data: cardDataSchema.nullish(),
+    card_data: cardDataResponseSchema.nullish(),
     customer: z
       .object({
         first_name: z.string().nullish(),

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { amountSchema, cardDataSchema, metadataSchema, subscriptionAdditionalDataSchema } from "./shared";
+import { amountSchema, amountResponseSchema, cardDataSchema, metadataSchema, subscriptionAdditionalDataSchema } from "./shared";
 
 const yunoSubscriptionOutputSchema = z
   .object({
@@ -7,25 +7,19 @@ const yunoSubscriptionOutputSchema = z
     name: z.string().nullish(),
     description: z.string().nullish(),
     merchant_reference: z.string().nullish(),
-    amount: z
-      .object({
-        currency: z.string(),
-        value: z.number(),
-      })
-      .passthrough()
-      .nullish(),
+    amount: amountResponseSchema.nullish(),
     status: z.string().nullish(),
     additional_data: subscriptionAdditionalDataSchema.nullish(),
     frequency: z
       .object({
-        type: z.enum(["DAY", "WEEK", "MONTH"]),
+        type: z.enum(["DAY", "WEEK", "MONTH"]).nullish(),
         value: z.number().nullish(),
       })
       .passthrough()
       .nullish(),
     billing_cycles: z
       .object({
-        total: z.number(),
+        total: z.number().nullish(),
       })
       .passthrough()
       .nullish(),
@@ -38,13 +32,14 @@ const yunoSubscriptionOutputSchema = z
             installments: z.number().nullish(),
             network_transaction_id: z.string().nullish(),
             verify: z.boolean().nullish(),
+            // Masked in responses.
             card_data: z
               .object({
-                number: z.string(),
-                expiration_month: z.number(),
-                expiration_year: z.number(),
-                security_code: z.union([z.string(), z.number()]),
-                holder_name: z.string(),
+                number: z.string().nullish(),
+                expiration_month: z.number().nullish(),
+                expiration_year: z.number().nullish(),
+                security_code: z.union([z.string(), z.number()]).nullish(),
+                holder_name: z.string().nullish(),
               })
               .passthrough()
               .nullish(),
@@ -57,7 +52,7 @@ const yunoSubscriptionOutputSchema = z
     trial_period: z
       .object({
         billing_cycles: z.number().nullish(),
-        amount: amountSchema.nullish(),
+        amount: amountResponseSchema.nullish(),
       })
       .passthrough()
       .nullish(),
