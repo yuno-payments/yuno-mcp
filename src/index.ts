@@ -15,7 +15,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "0.5.0",
+      version: "0.5.1",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
@@ -67,10 +67,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             return { type: "text" as const, text: (entry as unknown as { type: "text"; text: string }).text };
           });
 
-          if (!tool.outputSchema) {
-            return { content };
-          }
-
+          // Flag upstream failures before anything else. Tools without an outputSchema
+          // used to return here first, so their 4xx/5xx responses reached the caller with
+          // no isError and read as successful calls.
           const mixedContent = handlerResult.content as Array<
             { type: "text"; text: string } | { type: "object"; object: unknown }
           >;
@@ -83,6 +82,10 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           if (upstreamStatus >= 400) {
             return { content, isError: true };
+          }
+
+          if (!tool.outputSchema) {
+            return { content };
           }
 
           const primary = handlerResult.content.find((entry) => entry.type === "object");
