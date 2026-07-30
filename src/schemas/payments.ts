@@ -137,7 +137,7 @@ const paymentCreateSchema = z
           path: ["checkout", "session"],
         },
       ),
-    idempotencyKey: z.string().uuid().nullish().describe("Unique key to prevent duplicate payments"),
+    idempotencyKey: z.string().uuid().nullish().describe("Unique key to prevent duplicate payments. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   })
   .passthrough();
 
