@@ -4,7 +4,6 @@ import type { YunoClient } from "../client";
 
 type CheckoutToolMethod = "checkoutSessionCreate" | "checkoutSessionRetrievePaymentMethods" | "checkoutSessionCreateOtt";
 type CustomerToolMethod = "customerCreate" | "customerRetrieve" | "customerRetrieveByExternalId" | "customerUpdate";
-type DocumentationToolMethod = "documentationIndex" | "documentationRead";
 type InstallmentPlanToolMethod =
   | "installmentPlanCreate"
   | "installmentPlanRetrieve"
@@ -43,7 +42,6 @@ type RoutingToolMethod =
 type ToolMethod =
   | CheckoutToolMethod
   | CustomerToolMethod
-  | DocumentationToolMethod
   | InstallmentPlanToolMethod
   | PaymentLinkToolMethod
   | PaymentMethodToolMethod

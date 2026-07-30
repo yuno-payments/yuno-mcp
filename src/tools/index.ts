@@ -1,7 +1,6 @@
 import type { Tool } from "../types";
 import { checkoutTools } from "./checkouts";
 import { customerTools } from "./customers";
-import { documentationTools } from "./documentation";
 import { installmentPlanTools } from "./installmentPlans";
 import { paymentLinkTools } from "./paymentLinks";
 import { paymentMethodTools } from "./paymentMethods";
@@ -19,7 +18,6 @@ export const tools = [
   ...paymentLinkTools,
   ...recipientTools,
   ...installmentPlanTools,
-  ...documentationTools,
 ] as const satisfies Tool[];
 
 export { routingTools };
