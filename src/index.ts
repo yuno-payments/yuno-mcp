@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
+import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { Tool } from "./types";
 
 type CreateOptions = Record<never, never>;
@@ -26,16 +27,20 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
   const enabledTools: readonly Tool[] = tools;
 
   for (const tool of enabledTools) {
-    const permissiveSchema = tool.schema.passthrough();
-    const permissiveOutputSchema = tool.outputSchema?.passthrough();
+    // Registration advertises compacted schemas (see src/schemas/compact.ts);
+    // the strict tool.schema still validates inside the handler below.
+    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS });
+    const registeredOutputSchema = tool.outputSchema
+      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
+      : undefined;
 
     server.registerTool(
       tool.method,
       {
         title: tool.annotations.title,
         description: tool.description,
-        inputSchema: permissiveSchema.shape,
-        outputSchema: permissiveOutputSchema,
+        inputSchema: registeredInputSchema.shape,
+        outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
       async (params: any) => {
