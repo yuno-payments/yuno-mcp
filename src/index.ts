@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
+import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { Tool } from "./types";
 
@@ -24,7 +25,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     },
   );
 
-  const enabledTools: readonly Tool[] = tools;
+  // describeTool is composed here (not in src/tools/index.ts) because it reads the
+  // tools array itself — exporting it from there would be an import cycle.
+  const enabledTools: readonly Tool[] = [...tools, describeTool];
 
   for (const tool of enabledTools) {
     // Registration advertises compacted schemas (see src/schemas/compact.ts);

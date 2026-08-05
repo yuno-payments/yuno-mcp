@@ -30,7 +30,10 @@ type SubscriptionToolMethod =
   | "subscriptionResume"
   | "subscriptionUpdate"
   | "subscriptionCancel";
+type MetaToolMethod = "describeTool";
+
 type ToolMethod =
+  | MetaToolMethod
   | CheckoutToolMethod
   | CustomerToolMethod
   | InstallmentPlanToolMethod
