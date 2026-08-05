@@ -23,10 +23,12 @@ describe("describeTool", () => {
     expect(details.example).toBeDefined();
   });
 
-  it("returns output schema when the tool has one", async () => {
-    const output = await describeTool.handler(context)({ method: "customerRetrieve" });
-    const details = firstObject(output);
-    expect(details.outputSchema).toBeDefined();
+  it("omits the output schema unless requested", async () => {
+    const withoutOutput = await describeTool.handler(context)({ method: "customerRetrieve" });
+    expect(firstObject(withoutOutput).outputSchema).toBeUndefined();
+
+    const withOutput = await describeTool.handler(context)({ method: "customerRetrieve", include_output_schema: true });
+    expect(firstObject(withOutput).outputSchema).toBeDefined();
   });
 
   it("lists available tools for an unknown method", async () => {

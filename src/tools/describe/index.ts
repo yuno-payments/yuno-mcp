@@ -5,6 +5,10 @@ import { EXAMPLES } from "./examples";
 
 const describeToolSchema = z.object({
   method: z.string().describe("Name of the tool to describe, e.g. paymentCreate"),
+  include_output_schema: z
+    .boolean()
+    .nullish()
+    .describe("Also return the full response schema. Off by default — output schemas are large and rarely needed to build a request."),
 });
 
 type DescribeToolSchema = z.infer<typeof describeToolSchema>;
@@ -23,7 +27,7 @@ export const describeTool = {
   schema: describeToolSchema,
   handler:
     <TType extends "object" | "text">({ type }: HandlerContext<TType>) =>
-    ({ method }: DescribeToolSchema): Promise<Output<TType>> => {
+    ({ method, include_output_schema }: DescribeToolSchema): Promise<Output<TType>> => {
       const target: Tool | undefined = tools.find((tool) => tool.method === method);
 
       if (!target) {
@@ -37,7 +41,8 @@ export const describeTool = {
         method: target.method,
         description: target.description,
         inputSchema: z.toJSONSchema(target.schema, { unrepresentable: "any" }),
-        outputSchema: target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
+        outputSchema:
+          include_output_schema && target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
         example: EXAMPLES[target.method],
       };
 
