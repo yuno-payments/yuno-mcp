@@ -5,6 +5,7 @@ import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
+import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
 type ServerMode = "read-only" | "full";
@@ -147,18 +148,26 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const statusMatch = headersText?.text.match(/^Response Headers \(HTTP (\d+)\)/);
           const upstreamStatus = statusMatch ? parseInt(statusMatch[1], 10) : 200;
 
+          const primary = handlerResult.content.find((entry) => entry.type === "object");
+          const primaryBody = primary?.type === "object" ? primary.object : undefined;
+
+          // Known decline/error codes get an appended guidance entry (declines arrive
+          // as HTTP 2xx with status DECLINED, so this runs on both branches). The raw
+          // response entry is never modified.
+          const guidance = findGuidance(primaryBody);
+          const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
+
           if (upstreamStatus >= 400) {
-            return { content, isError: true };
+            return { content: enrichedContent, isError: true };
           }
 
           if (!tool.outputSchema) {
-            return { content };
+            return { content: enrichedContent };
           }
 
-          const primary = handlerResult.content.find((entry) => entry.type === "object");
           const structuredContent = primary?.type === "object" ? (primary.object as Record<string, unknown>) : {};
 
-          return { content, structuredContent };
+          return { content: enrichedContent, structuredContent };
         } catch (error) {
           const text = error instanceof Error ? error.message : "An unknown error occurred";
           return { content: [{ type: "text" as const, text }], isError: true };
