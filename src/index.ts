@@ -4,9 +4,15 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { Tool } from "./types";
 
-type CreateOptions = Record<never, never>;
+type ServerMode = "read-only" | "full";
+
+type CreateOptions = {
+  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  mode?: ServerMode;
+};
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
@@ -27,27 +33,50 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
   // describeTool is composed here (not in src/tools/index.ts) because it reads the
   // tools array itself — exporting it from there would be an import cycle.
-  const enabledTools: readonly Tool[] = [...tools, describeTool];
+  const enabledTools: readonly Tool[] =
+    options.mode === "read-only"
+      ? [...tools.filter((tool) => tool.annotations.readOnlyHint === true), describeTool]
+      : [...tools, describeTool];
 
   for (const tool of enabledTools) {
+    // Destructive operations against production require a two-phase confirm
+    // (src/confirm.ts): first call previews and issues a token, echoing it executes.
+    const requiresConfirmation = tool.annotations.destructiveHint === true && yunoClient.environment === "prod";
+
     // Registration advertises compacted schemas (see src/schemas/compact.ts);
     // the strict tool.schema still validates inside the handler below.
     const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS });
     const registeredOutputSchema = tool.outputSchema
       ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
       : undefined;
+    const inputSchemaShape = requiresConfirmation
+      ? {
+          ...registeredInputSchema.shape,
+          confirm_token: z
+            .string()
+            .optional()
+            .describe(
+              "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
+            ),
+        }
+      : registeredInputSchema.shape;
 
     server.registerTool(
       tool.method,
       {
         title: tool.annotations.title,
         description: tool.description,
-        inputSchema: registeredInputSchema.shape,
+        inputSchema: inputSchemaShape,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
-      async (params: any) => {
+      async (rawParams: any) => {
         try {
+          // confirm_token is a transport-level field — strip it before validation so
+          // it can never leak into a Yuno API request body.
+          const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
+          const params = requiresConfirmation ? strippedParams : rawParams;
+
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
             const errors = validation.error.issues.map((issue: z.ZodIssue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
@@ -60,6 +89,40 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               ],
               isError: true,
             };
+          }
+
+          if (requiresConfirmation) {
+            if (typeof confirmToken !== "string" || confirmToken.length === 0) {
+              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
+              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed. Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
+              const preview = {
+                confirmation_required: true,
+                summary,
+                confirm_token: token,
+                arguments: validation.data,
+              };
+              return {
+                content: [
+                  { type: "text" as const, text: summary },
+                  { type: "text" as const, text: JSON.stringify(preview, null, 4) },
+                ],
+                // Output validation runs on non-error results; the compacted output
+                // schema's partial top level (src/schemas/compact.ts) is what lets
+                // this preview shape pass it.
+                ...(tool.outputSchema ? { structuredContent: preview as Record<string, unknown> } : {}),
+              };
+            }
+            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken)) {
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: "confirm_token is invalid or expired (tokens expire after 5 minutes, and change when arguments change). Call the tool again without confirm_token to get a fresh preview.",
+                  },
+                ],
+                isError: true,
+              };
+            }
           }
 
           const handlerResult = await tool.handler({ yunoClient, type: "object" })(validation.data as any);
@@ -111,10 +174,13 @@ async function initializeYunoMCP({
   accountCode,
   publicApiKey,
   privateSecretKey,
+  mode,
 }: {
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
+  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  mode?: ServerMode;
 }) {
   try {
     const yunoClient = await YunoClient.initialize({
@@ -123,7 +189,7 @@ async function initializeYunoMCP({
       privateSecretKey,
     });
 
-    const yunoMCP = createYunoMCPServer(yunoClient);
+    const yunoMCP = createYunoMCPServer(yunoClient, { mode });
 
     return {
       yunoMCP,

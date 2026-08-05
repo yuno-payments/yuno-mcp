@@ -69,6 +69,17 @@ export class YunoClient {
     return client;
   }
 
+  /** Environment inferred from the public API key prefix (dev/staging/sandbox/prod). */
+  get environment(): ApiKeyPrefix {
+    const [apiKeyPrefix] = this.publicApiKey.split("_");
+    return apiKeyPrefix as ApiKeyPrefix;
+  }
+
+  /** HMAC key for destructive-operation confirm tokens (src/confirm.ts). */
+  get confirmSecret(): string {
+    return `yuno-mcp-confirm-v1:${this.privateSecretKey}`;
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
     try {
       const url = `${this.baseUrl}${endpoint}`;
