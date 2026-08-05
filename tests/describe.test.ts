@@ -5,9 +5,9 @@ import type { YunoClient } from "../src/client";
 const context = { yunoClient: {} as YunoClient, type: "object" as const };
 
 function firstObject(output: { content: { type: string; object?: unknown; text?: string }[] }): Record<string, unknown> {
-  const entry = output.content.find((item) => item.type === "object");
+  const entry = output.content.find((item) => item.type === "text" && item.text?.startsWith("{"));
   expect(entry).toBeDefined();
-  return entry?.object as Record<string, unknown>;
+  return JSON.parse(entry?.text ?? "{}") as Record<string, unknown>;
 }
 
 describe("describeTool", () => {

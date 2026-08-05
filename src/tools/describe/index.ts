@@ -46,14 +46,12 @@ export const describeTool = {
         example: EXAMPLES[target.method],
       };
 
-      if (type === "text") {
-        return Promise.resolve({
-          content: [{ type: "text" as const, text: JSON.stringify(details, null, 4) }],
-        } as Output<TType>);
-      }
-
+      // Always a compact-JSON text entry, never an object entry: the server wrapper
+      // pretty-prints objects at 4-space indent, which triples an already large
+      // schema payload (~100KB → ~300KB for paymentCreate).
+      void type;
       return Promise.resolve({
-        content: [{ type: "object" as const, object: details }],
+        content: [{ type: "text" as const, text: JSON.stringify(details) }],
       } as Output<TType>);
     },
 } as const satisfies Tool;
