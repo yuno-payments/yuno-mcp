@@ -7,4 +7,3 @@ export * from "./paymentLinks";
 export * from "./recipients";
 export * from "./installmentPlans";
 export * from "./shared";
-export * from "./routing";

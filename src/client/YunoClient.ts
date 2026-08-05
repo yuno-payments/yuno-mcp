@@ -15,14 +15,6 @@ import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../to
 import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
 import type { PublicApiKey } from "../types/shared";
 import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoApiResponse, YunoClientConfig } from "./types";
-import {
-  YunoRoutingLogin,
-  YunoRoutingCreateSchema,
-  YunoRoutingIntegrationResponse,
-  YunoRoutingWorkflowResponse, YunoWorkflow, YunoWorkflowVersion, YunoRoutingUpdateWorkflow
-} from "../tools/routing/types";
-import { YunoRoutingLoginResponse } from "../tools/routing/types";
-import { z } from "zod";
 
 const apiKeyPrefixToEnvironmentSuffix = {
   dev: "-dev",
@@ -30,13 +22,6 @@ const apiKeyPrefixToEnvironmentSuffix = {
   sandbox: "-sandbox",
   prod: "",
 } as const satisfies ApiKeyPrefixToEnvironmentSuffix;
-
-const apiKeyPrefixToDashboardEnvironment = {
-  dev: "dev",
-  staging: "staging", 
-  sandbox: "sandbox",
-  prod: "dashboard-bff",
-} as const;
 
 /**
  * Read a response body as JSON, tolerating an empty one.
@@ -66,28 +51,17 @@ function generateBaseUrlApi(publicApiKey: string) {
   return baseURL;
 }
 
-function generateBaseUrlDashboard(publicApiKey: string) {
-  const [apiKeyPrefix] = publicApiKey.split("_");
-  const dashboardEnvironment = apiKeyPrefixToDashboardEnvironment[apiKeyPrefix as ApiKeyPrefix];
-  const baseURL = `https://${dashboardEnvironment}.y.uno/dashboard-bff/` as const;
-
-  return baseURL;
-}
-
 export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
   private baseUrl: ReturnType<typeof generateBaseUrlApi>;
-  private baseUrlDashboard: ReturnType<typeof generateBaseUrlDashboard>;
-  private accessToken?: string;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
     this.baseUrl = generateBaseUrlApi(this.publicApiKey);
-    this.baseUrlDashboard = generateBaseUrlDashboard(this.publicApiKey);
   }
 
   static initialize(config: YunoClientConfig): YunoClient {
@@ -113,47 +87,6 @@ export class YunoClient {
         },
       });
 
-      const body = await parseJsonBody<T>(response);
-      return {
-        body,
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
-      throw new Error("An error occurred while making the request");
-    }
-  }
-
-  private async requestDashboard<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
-    try {
-      const url = `${this.baseUrlDashboard}${endpoint}`;
-
-      let headers: HeadersInit;
-
-      if (endpoint.includes("login")) {
-        headers = {
-          "Content-Type": "application/json",
-          "pragma": "no-cache",
-        };
-      } else {
-        headers = {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.accessToken}`,
-          "x-account-code": this.accountCode,
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        };
-      }
-
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          ...headers,
-          ...(options.headers || {}),
-        },
-      });
       const body = await parseJsonBody<T>(response);
       return {
         body,
@@ -467,70 +400,4 @@ export class YunoClient {
     },
   };
 
-  routing = {
-    login: async (body: YunoRoutingLogin) => {
-      const response = await this.requestDashboard<YunoRoutingLoginResponse>("/api-public/auth0/login", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (response.body.access_token) {
-        this.accessToken = response.body.access_token;
-      }
-      return response;
-    },
-
-    create: async (body: YunoRoutingCreateSchema) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/create-workflow/${encodeURIComponent(this.accountCode)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-    },
-
-    getConnections: async (paymentMethod: string) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingIntegrationResponse>(`/api/organizations/connections/${encodeURIComponent(this.accountCode)}/${paymentMethod}`, {
-        method: "GET",
-      });
-    },
-
-    update: async (data: YunoRoutingUpdateWorkflow)=> {
-        if (!this.accessToken) {
-            throw new Error("Access token required. Please login first using routing.login()");
-        }
-        const select = data.providers.integrations?.find((provider => provider.integration_code === data.provider_connection_code))
-
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/update-workflow/${encodeURIComponent(this.accountCode)}`, {
-        method: "PUT",
-        body: JSON.stringify(data.updateRoute),
-      })
-    },
-
-    post: async (versionCode: string) =>{
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/publish-version/${encodeURIComponent(this.accountCode)}/${encodeURIComponent(versionCode)}`, {
-        method: "POST",
-      })
-    },
-
-    retrieve: async (versionCode: string) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/workflow-version/${encodeURIComponent(this.accountCode)}/${encodeURIComponent(versionCode)}`, {
-        method: "GET",
-      });
-    },
-
-    logout: async () => {
-      this.accessToken = undefined;
-    },
-  }
 }

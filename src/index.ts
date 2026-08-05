@@ -1,12 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
-import { tools, routingTools } from "./tools";
+import { tools } from "./tools";
 import { Tool } from "./types";
 
-type CreateOptions = {
-  includeRoutingTools?: boolean;
-};
+type CreateOptions = Record<never, never>;
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
@@ -17,7 +15,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       // tests/version.test.ts fails the build if the two drift apart.
       version: "0.5.1",
       description:
-        "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
+        "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
     },
     {
@@ -25,9 +23,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     },
   );
 
-  const enabledTools: readonly Tool[] = options.includeRoutingTools
-    ? [...tools, ...routingTools]
-    : tools;
+  const enabledTools: readonly Tool[] = tools;
 
   for (const tool of enabledTools) {
     const permissiveSchema = tool.schema.passthrough();
@@ -107,12 +103,10 @@ async function initializeYunoMCP({
   accountCode,
   publicApiKey,
   privateSecretKey,
-  includeRoutingTools,
 }: {
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
-  includeRoutingTools?: boolean;
 }) {
   try {
     const yunoClient = await YunoClient.initialize({
@@ -121,7 +115,7 @@ async function initializeYunoMCP({
       privateSecretKey,
     });
 
-    const yunoMCP = createYunoMCPServer(yunoClient, { includeRoutingTools });
+    const yunoMCP = createYunoMCPServer(yunoClient);
 
     return {
       yunoMCP,
