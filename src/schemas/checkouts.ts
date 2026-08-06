@@ -4,6 +4,7 @@ import {
   amountSchema,
   browserInfoSchema,
   cardDataSchema,
+  cardDataResponseSchema,
   deviceFingerprintsSchema,
   documentSchema,
   metadataSchema,
@@ -73,22 +74,38 @@ const yunoCheckoutSessionOutputSchema = z
   })
   .passthrough();
 
-const yunoCheckoutPaymentMethodsOutputSchema = z
-  .object({
-    payment_methods: z.array(
-      z
+// Raw API response: a bare array of payment methods. The array root means it
+// cannot be used as an MCP outputSchema (structuredContent requires an object
+// root), so the tool declares no outputSchema and passes the response through.
+const yunoCheckoutPaymentMethodsOutputSchema = z.array(
+  z
+    .object({
+      type: z.string(),
+      name: z.string(),
+      description: z.string().nullish(),
+      category: z.string().nullish(),
+      icon: z.string().nullish(),
+      vaulted_token: z.string().nullish(),
+      preferred: z.boolean().nullish(),
+      last_successfully_used: z.string().nullish(),
+      last_successfully_used_at: z.string().nullish(),
+      checkout: z
         .object({
-          type: z.string(),
-          name: z.string(),
-          category: z.string().nullish(),
-          provider: z.string().nullish(),
-          status: z.string().nullish(),
-          vaulted_token: z.string().nullish(),
+          session: z.string().nullish(),
+          sdk_required_action: z.boolean().nullish(),
+          conditions: z
+            .object({
+              enabled: z.boolean().nullish(),
+              rules: z.array(z.object({}).passthrough()).nullish(),
+            })
+            .passthrough()
+            .nullish(),
         })
-        .passthrough(),
-    ),
-  })
-  .passthrough();
+        .passthrough()
+        .nullish(),
+    })
+    .passthrough(),
+);
 
 const yunoOttOutputSchema = z
   .object({
@@ -96,7 +113,7 @@ const yunoOttOutputSchema = z
     vaulted_token: z.string().nullish(),
     vault_on_success: z.boolean(),
     type: z.string(),
-    card_data: cardDataSchema.nullish(),
+    card_data: cardDataResponseSchema.nullish(),
     customer: z
       .object({
         first_name: z.string().nullish(),

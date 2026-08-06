@@ -158,7 +158,7 @@ export const paymentRefundTool = {
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -214,7 +214,7 @@ export const paymentCancelOrRefundTool = {
   schema: z.object({
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -269,7 +269,7 @@ export const paymentCancelOrRefundWithTransactionTool = {
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -326,7 +326,7 @@ export const paymentCancelTool = {
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCancelSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -435,7 +435,7 @@ export const paymentCaptureAuthorizationTool = {
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCaptureAuthorizationSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate captures"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate captures. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:

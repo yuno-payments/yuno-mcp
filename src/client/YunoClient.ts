@@ -1,4 +1,4 @@
-import { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../tools/checkouts/types";
+import { YunoCheckoutPaymentMethod, YunoCheckoutSession, YunoOttRequest, YunoOttResponse } from "../tools/checkouts/types";
 import { YunoCustomer } from "../tools/customers/types";
 import { InstallmentPlanUpdateBody, YunoInstallmentPlan } from "../tools/installmentPlans/types";
 import { YunoPaymentLink } from "../tools/paymentLinks/types";
@@ -15,14 +15,6 @@ import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../to
 import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
 import type { PublicApiKey } from "../types/shared";
 import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoApiResponse, YunoClientConfig } from "./types";
-import {
-  YunoRoutingLogin,
-  YunoRoutingCreateSchema,
-  YunoRoutingIntegrationResponse,
-  YunoRoutingWorkflowResponse, YunoWorkflow, YunoWorkflowVersion, YunoRoutingUpdateWorkflow
-} from "../tools/routing/types";
-import { YunoRoutingLoginResponse } from "../tools/routing/types";
-import { z } from "zod";
 
 const apiKeyPrefixToEnvironmentSuffix = {
   dev: "-dev",
@@ -31,12 +23,25 @@ const apiKeyPrefixToEnvironmentSuffix = {
   prod: "",
 } as const satisfies ApiKeyPrefixToEnvironmentSuffix;
 
-const apiKeyPrefixToDashboardEnvironment = {
-  dev: "dev",
-  staging: "staging", 
-  sandbox: "sandbox",
-  prod: "dashboard-bff",
-} as const;
+/**
+ * Read a response body as JSON, tolerating an empty one.
+ *
+ * Not every Yuno endpoint answers with a document. `DELETE /v1/installments-plans/{id}`
+ * returns `201` with `content-length: 0` (verified against api-staging), and calling
+ * `response.json()` on that throws "Unexpected end of JSON input" — which surfaced as a
+ * tool error even though the delete had succeeded. Callers receive `undefined` for a
+ * no-content response and must decide what that means for their endpoint.
+ *
+ * A non-empty body that fails to parse still throws, deliberately: that is a real
+ * protocol violation and should not be silently swallowed.
+ */
+async function parseJsonBody<T>(response: Response): Promise<T> {
+  const raw = await response.text();
+  if (raw.length === 0) {
+    return undefined as T;
+  }
+  return JSON.parse(raw) as T;
+}
 
 function generateBaseUrlApi(publicApiKey: string) {
   const [apiKeyPrefix] = publicApiKey.split("_");
@@ -46,33 +51,33 @@ function generateBaseUrlApi(publicApiKey: string) {
   return baseURL;
 }
 
-function generateBaseUrlDashboard(publicApiKey: string) {
-  const [apiKeyPrefix] = publicApiKey.split("_");
-  const dashboardEnvironment = apiKeyPrefixToDashboardEnvironment[apiKeyPrefix as ApiKeyPrefix];
-  const baseURL = `https://${dashboardEnvironment}.y.uno/dashboard-bff/` as const;
-
-  return baseURL;
-}
-
 export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
   private baseUrl: ReturnType<typeof generateBaseUrlApi>;
-  private baseUrlDashboard: ReturnType<typeof generateBaseUrlDashboard>;
-  private accessToken?: string;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
     this.baseUrl = generateBaseUrlApi(this.publicApiKey);
-    this.baseUrlDashboard = generateBaseUrlDashboard(this.publicApiKey);
   }
 
   static initialize(config: YunoClientConfig): YunoClient {
     const client = new YunoClient(config);
     return client;
+  }
+
+  /** Environment inferred from the public API key prefix (dev/staging/sandbox/prod). */
+  get environment(): ApiKeyPrefix {
+    const [apiKeyPrefix] = this.publicApiKey.split("_");
+    return apiKeyPrefix as ApiKeyPrefix;
+  }
+
+  /** HMAC key for destructive-operation confirm tokens (src/confirm.ts). */
+  get confirmSecret(): string {
+    return `yuno-mcp-confirm-v1:${this.privateSecretKey}`;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
@@ -93,48 +98,7 @@ export class YunoClient {
         },
       });
 
-      const body: T = await response.json();
-      return {
-        body,
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
-      throw new Error("An error occurred while making the request");
-    }
-  }
-
-  private async requestDashboard<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
-    try {
-      const url = `${this.baseUrlDashboard}${endpoint}`;
-
-      let headers: HeadersInit;
-
-      if (endpoint.includes("login")) {
-        headers = {
-          "Content-Type": "application/json",
-          "pragma": "no-cache",
-        };
-      } else {
-        headers = {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.accessToken}`,
-          "x-account-code": this.accountCode,
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        };
-      }
-
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          ...headers,
-          ...(options.headers || {}),
-        },
-      });
-      const body: T = await response.json();
+      const body = await parseJsonBody<T>(response);
       return {
         body,
         status: response.status,
@@ -212,7 +176,7 @@ export class YunoClient {
     },
 
     retrievePaymentMethods: async (sessionId: string) => {
-      return this.request<YunoCheckoutPaymentMethodsResponse>(`/checkout/sessions/${sessionId}/payment-methods`, {
+      return this.request<YunoCheckoutPaymentMethod[]>(`/checkout/sessions/${sessionId}/payment-methods`, {
         method: "GET",
       });
     },
@@ -447,70 +411,4 @@ export class YunoClient {
     },
   };
 
-  routing = {
-    login: async (body: YunoRoutingLogin) => {
-      const response = await this.requestDashboard<YunoRoutingLoginResponse>("/api-public/auth0/login", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (response.body.access_token) {
-        this.accessToken = response.body.access_token;
-      }
-      return response;
-    },
-
-    create: async (body: YunoRoutingCreateSchema) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/create-workflow/${encodeURIComponent(this.accountCode)}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-    },
-
-    getConnections: async (paymentMethod: string) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingIntegrationResponse>(`/api/organizations/connections/${encodeURIComponent(this.accountCode)}/${paymentMethod}`, {
-        method: "GET",
-      });
-    },
-
-    update: async (data: YunoRoutingUpdateWorkflow)=> {
-        if (!this.accessToken) {
-            throw new Error("Access token required. Please login first using routing.login()");
-        }
-        const select = data.providers.integrations?.find((provider => provider.integration_code === data.provider_connection_code))
-
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/update-workflow/${encodeURIComponent(this.accountCode)}`, {
-        method: "PUT",
-        body: JSON.stringify(data.updateRoute),
-      })
-    },
-
-    post: async (versionCode: string) =>{
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/publish-version/${encodeURIComponent(this.accountCode)}/${encodeURIComponent(versionCode)}`, {
-        method: "POST",
-      })
-    },
-
-    retrieve: async (versionCode: string) => {
-      if (!this.accessToken) {
-        throw new Error("Access token required. Please login first using routing.login()");
-      }
-      return this.requestDashboard<YunoRoutingWorkflowResponse>(`/api/smart-routing/workflow-version/${encodeURIComponent(this.accountCode)}/${encodeURIComponent(versionCode)}`, {
-        method: "GET",
-      });
-    },
-
-    logout: async () => {
-      this.accessToken = undefined;
-    },
-  }
 }

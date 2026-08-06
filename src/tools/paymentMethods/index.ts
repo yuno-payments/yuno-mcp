@@ -16,7 +16,7 @@ export const paymentMethodEnrollTool = {
   schema: z.object({
     body: paymentMethodEnrollSchema,
     customerId: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods"),
+    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentMethodOutputSchema,
   handler:

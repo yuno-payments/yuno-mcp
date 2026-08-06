@@ -139,26 +139,37 @@ export const installmentPlanDeleteTool = {
   schema: z.object({
     planId: z.string().describe("The unique identifier of the installment plan to delete"),
   }),
-  outputSchema: yunoInstallmentPlanOutputSchema,
+  // No MCP outputSchema: the API answers this delete with 201 and an empty body, so there
+  // is no document to describe. Declaring one made every *successful* delete report an
+  // error — the plan was gone, but the caller was told the call failed.
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
       const { body, status, headers } = await yunoClient.installmentPlans.delete(planId);
+      const headerBlock = {
+        type: "text" as const,
+        text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+      };
 
-      if (type === "text") {
+      // A no-content response is the expected success path here. Report it as-is rather
+      // than fabricating a plan object the backend never returned.
+      if (body === undefined) {
         return {
           content: [
-            { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Installment plan ${planId} deleted (HTTP ${status}, empty response body).` },
+            headerBlock,
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
 
+      if (type === "text") {
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify(body, null, 4) }, headerBlock],
+        } as Output<TType, YunoInstallmentPlan>;
+      }
+
       return {
-        content: [
-          { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
-        ],
+        content: [{ type: "object" as const, object: body }, headerBlock],
       } as Output<TType, YunoInstallmentPlan>;
     },
 } as const satisfies Tool;

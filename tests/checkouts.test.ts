@@ -1,6 +1,6 @@
 import { expect, it, describe, rstest } from "@rstest/core";
 import z from "zod";
-import { checkoutSessionCreateSchema, ottCreateSchema } from "../src/schemas";
+import { checkoutSessionCreateSchema, ottCreateSchema, yunoCheckoutPaymentMethodsOutputSchema } from "../src/schemas";
 import { checkoutSessionCreateTool, checkoutSessionRetrievePaymentMethodsTool, checkoutSessionCreateOttTool } from "../src/tools/checkouts";
 
 describe("checkoutSessionCreateTool", () => {
@@ -108,7 +108,8 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       checkoutSessions: {
-        retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: { payment_methods: [{ type: "card", name: "Visa" }] }, status: 200, headers: {} }),
+        // the API returns a bare array of payment methods
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: [{ type: "card", name: "Visa" }], status: 200, headers: {} }),
       },
     };
     const input = { sessionId: "sess_123" };
@@ -116,6 +117,37 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
     expect(mockYunoClient.checkoutSessions.retrievePaymentMethods).toHaveBeenCalledWith("sess_123");
     expect(result.content[0].text).toContain("card");
     expect(result.content[0].text).toContain("Visa");
+  });
+
+  it("should pass the raw bare-array response through untouched and match the documented schema", async () => {
+    const apiResponse = [
+      {
+        type: "PSE",
+        name: "PSE",
+        description: "PSE",
+        category: "BANK_TRANSFER",
+        icon: "https://icons.prod.y.uno/pse_logosimbolo.png",
+        vaulted_token: null,
+        preferred: false,
+        last_successfully_used: null,
+        last_successfully_used_at: null,
+        checkout: {
+          session: "sess_123",
+          sdk_required_action: true,
+          conditions: { enabled: true, rules: null },
+        },
+      },
+    ];
+    const mockYunoClient = {
+      checkoutSessions: {
+        retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: apiResponse, status: 200, headers: {} }),
+      },
+    };
+    const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "object" })({ sessionId: "sess_123" });
+    const primary = result.content[0] as { type: "object"; object: unknown };
+    expect(primary.type).toBe("object");
+    expect(primary.object).toEqual(apiResponse);
+    expect(() => yunoCheckoutPaymentMethodsOutputSchema.parse(primary.object)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {

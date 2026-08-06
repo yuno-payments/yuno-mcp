@@ -1,11 +1,18 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
-import { tools, routingTools } from "./tools";
+import { tools } from "./tools";
+import { describeTool } from "./tools/describe";
+import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { issueConfirmToken, verifyConfirmToken } from "./confirm";
+import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
+type ServerMode = "read-only" | "full";
+
 type CreateOptions = {
-  includeRoutingTools?: boolean;
+  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  mode?: ServerMode;
 };
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
@@ -13,9 +20,11 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     {
       name: "yuno-mcp",
       title: "Yuno",
-      version: "0.4.2",
+      // Must match package.json — this is the version MCP clients see during initialize.
+      // tests/version.test.ts fails the build if the two drift apart.
+      version: "0.6.0",
       description:
-        "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
+        "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
     },
     {
@@ -23,25 +32,52 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     },
   );
 
-  const enabledTools = options.includeRoutingTools
-    ? [...tools, ...routingTools]
-    : tools;
+  // describeTool is composed here (not in src/tools/index.ts) because it reads the
+  // tools array itself — exporting it from there would be an import cycle.
+  const enabledTools: readonly Tool[] =
+    options.mode === "read-only"
+      ? [...tools.filter((tool) => tool.annotations.readOnlyHint === true), describeTool]
+      : [...tools, describeTool];
 
   for (const tool of enabledTools) {
-    const permissiveSchema = tool.schema.passthrough();
-    const permissiveOutputSchema = tool.outputSchema?.passthrough();
+    // Destructive operations against production require a two-phase confirm
+    // (src/confirm.ts): first call previews and issues a token, echoing it executes.
+    const requiresConfirmation = tool.annotations.destructiveHint === true && yunoClient.environment === "prod";
+
+    // Registration advertises compacted schemas (see src/schemas/compact.ts);
+    // the strict tool.schema still validates inside the handler below.
+    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS });
+    const registeredOutputSchema = tool.outputSchema
+      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
+      : undefined;
+    const inputSchemaShape = requiresConfirmation
+      ? {
+          ...registeredInputSchema.shape,
+          confirm_token: z
+            .string()
+            .optional()
+            .describe(
+              "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
+            ),
+        }
+      : registeredInputSchema.shape;
 
     server.registerTool(
       tool.method,
       {
         title: tool.annotations.title,
         description: tool.description,
-        inputSchema: permissiveSchema.shape,
-        outputSchema: permissiveOutputSchema,
+        inputSchema: inputSchemaShape,
+        outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
-      async (params: any) => {
+      async (rawParams: any) => {
         try {
+          // confirm_token is a transport-level field — strip it before validation so
+          // it can never leak into a Yuno API request body.
+          const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
+          const params = requiresConfirmation ? strippedParams : rawParams;
+
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
             const errors = validation.error.issues.map((issue: z.ZodIssue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
@@ -56,6 +92,40 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             };
           }
 
+          if (requiresConfirmation) {
+            if (typeof confirmToken !== "string" || confirmToken.length === 0) {
+              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
+              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed. Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
+              const preview = {
+                confirmation_required: true,
+                summary,
+                confirm_token: token,
+                arguments: validation.data,
+              };
+              return {
+                content: [
+                  { type: "text" as const, text: summary },
+                  { type: "text" as const, text: JSON.stringify(preview, null, 4) },
+                ],
+                // Output validation runs on non-error results; the compacted output
+                // schema's partial top level (src/schemas/compact.ts) is what lets
+                // this preview shape pass it.
+                ...(tool.outputSchema ? { structuredContent: preview as Record<string, unknown> } : {}),
+              };
+            }
+            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken)) {
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: "confirm_token is invalid or expired (tokens expire after 5 minutes, and change when arguments change). Call the tool again without confirm_token to get a fresh preview.",
+                  },
+                ],
+                isError: true,
+              };
+            }
+          }
+
           const handlerResult = await tool.handler({ yunoClient, type: "object" })(validation.data as any);
 
           const content: { type: "text"; text: string }[] = handlerResult.content.map((entry) => {
@@ -65,10 +135,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             return { type: "text" as const, text: (entry as unknown as { type: "text"; text: string }).text };
           });
 
-          if (!tool.outputSchema) {
-            return { content };
-          }
-
+          // Flag upstream failures before anything else. Tools without an outputSchema
+          // used to return here first, so their 4xx/5xx responses reached the caller with
+          // no isError and read as successful calls.
           const mixedContent = handlerResult.content as Array<
             { type: "text"; text: string } | { type: "object"; object: unknown }
           >;
@@ -79,14 +148,26 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const statusMatch = headersText?.text.match(/^Response Headers \(HTTP (\d+)\)/);
           const upstreamStatus = statusMatch ? parseInt(statusMatch[1], 10) : 200;
 
+          const primary = handlerResult.content.find((entry) => entry.type === "object");
+          const primaryBody = primary?.type === "object" ? primary.object : undefined;
+
+          // Known decline/error codes get an appended guidance entry (declines arrive
+          // as HTTP 2xx with status DECLINED, so this runs on both branches). The raw
+          // response entry is never modified.
+          const guidance = findGuidance(primaryBody);
+          const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
+
           if (upstreamStatus >= 400) {
-            return { content, isError: true };
+            return { content: enrichedContent, isError: true };
           }
 
-          const primary = handlerResult.content.find((entry) => entry.type === "object");
+          if (!tool.outputSchema) {
+            return { content: enrichedContent };
+          }
+
           const structuredContent = primary?.type === "object" ? (primary.object as Record<string, unknown>) : {};
 
-          return { content, structuredContent };
+          return { content: enrichedContent, structuredContent };
         } catch (error) {
           const text = error instanceof Error ? error.message : "An unknown error occurred";
           return { content: [{ type: "text" as const, text }], isError: true };
@@ -102,12 +183,13 @@ async function initializeYunoMCP({
   accountCode,
   publicApiKey,
   privateSecretKey,
-  includeRoutingTools,
+  mode,
 }: {
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
-  includeRoutingTools?: boolean;
+  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  mode?: ServerMode;
 }) {
   try {
     const yunoClient = await YunoClient.initialize({
@@ -116,13 +198,18 @@ async function initializeYunoMCP({
       privateSecretKey,
     });
 
-    const yunoMCP = createYunoMCPServer(yunoClient, { includeRoutingTools });
+    const yunoMCP = createYunoMCPServer(yunoClient, { mode });
 
     return {
       yunoMCP,
     };
   } catch (error) {
-    console.error("\n🚨  Error initializing Yuno MCP server:\n");
+    // The cause has to reach the log. Callers only observe `undefined` (remote-yuno-mcp
+    // turns that into a generic 500), so dropping the error here left initialization
+    // failures — bad credentials, unreachable API — with no diagnosable trace anywhere.
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`\n🚨  Error initializing Yuno MCP server: ${message}\n`);
+    return undefined;
   }
 }
 

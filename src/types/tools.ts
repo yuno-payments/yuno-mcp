@@ -4,7 +4,6 @@ import type { YunoClient } from "../client";
 
 type CheckoutToolMethod = "checkoutSessionCreate" | "checkoutSessionRetrievePaymentMethods" | "checkoutSessionCreateOtt";
 type CustomerToolMethod = "customerCreate" | "customerRetrieve" | "customerRetrieveByExternalId" | "customerUpdate";
-type DocumentationToolMethod = "documentationIndex" | "documentationRead";
 type InstallmentPlanToolMethod =
   | "installmentPlanCreate"
   | "installmentPlanRetrieve"
@@ -31,26 +30,18 @@ type SubscriptionToolMethod =
   | "subscriptionResume"
   | "subscriptionUpdate"
   | "subscriptionCancel";
-type RoutingToolMethod =
-    | "routingLogin"
-    | "routingCreate"
-    | "routingGetProviders"
-    | "routingRetrieve"
-    | "routingUpdate"
-    | "routingPost"
-    | "routingLogOut";
+type MetaToolMethod = "describeTool";
 
 type ToolMethod =
+  | MetaToolMethod
   | CheckoutToolMethod
   | CustomerToolMethod
-  | DocumentationToolMethod
   | InstallmentPlanToolMethod
   | PaymentLinkToolMethod
   | PaymentMethodToolMethod
   | PaymentToolMethod
   | RecipientToolMethod
-  | SubscriptionToolMethod
-    | RoutingToolMethod;
+  | SubscriptionToolMethod;
 
 type Content<TType extends "text" | "object" = "object" | "text", TResult extends any = any> = TType extends "text"
   ? { type: "text"; text: string }
