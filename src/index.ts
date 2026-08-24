@@ -10,9 +10,47 @@ import { Tool } from "./types";
 
 type ServerMode = "read-only" | "full";
 
+/**
+ * Technical outcome of one tool call. Deliberately narrow: these are the only outcomes
+ * this library can actually observe. A host adds its own (auth failures, protocol errors,
+ * dependency outages) at its own layer.
+ *
+ * `upstream_error` is the important one — MCP returns tool failures in-band as
+ * `isError: true` inside an HTTP 200, so a Yuno API 4xx/5xx is invisible to anything
+ * watching HTTP status codes. It is reported here so a host can put it on a dashboard;
+ * it is not this library's business whether that pages anyone.
+ */
+type ToolCallOutcome =
+  | "ok"
+  | "validation_error"
+  | "confirm_required"
+  | "confirm_invalid"
+  | "upstream_error"
+  | "exception";
+
+type ToolCallEvent = {
+  /** The registered tool name, always one of ours. Safe as a metric tag. */
+  tool: string;
+  durationMs: number;
+  outcome: ToolCallOutcome;
+  /** Yuno API status when the call reached it; undefined when it never got that far. */
+  upstreamStatus?: number;
+  mode: ServerMode;
+  /** YunoClient environment, e.g. "prod" or "sandbox". */
+  environment: string;
+};
+
 type CreateOptions = {
   /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
   mode?: ServerMode;
+  /**
+   * Called once per tool call, after the result is decided and before it is returned.
+   * Kept vendor-neutral on purpose: this package ships to npm with two dependencies and
+   * must not acquire a telemetry SDK. Hosts translate the event into their own metrics.
+   *
+   * Never throws — the callback is wrapped, because telemetry must not break a tool call.
+   */
+  onToolCall?: (event: ToolCallEvent) => void;
 };
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
@@ -22,7 +60,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "0.6.0",
+      version: "0.7.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
@@ -72,6 +110,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
         annotations: tool.annotations,
       },
       async (rawParams: any) => {
+        const startedAt = Date.now();
+        let outcome: ToolCallOutcome = "ok";
+        let upstreamStatus: number | undefined;
         try {
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
@@ -81,6 +122,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
             const errors = validation.error.issues.map((issue: z.ZodIssue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+            outcome = "validation_error";
             return {
               content: [
                 {
@@ -96,6 +138,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             if (typeof confirmToken !== "string" || confirmToken.length === 0) {
               const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
               const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed. Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
+              outcome = "confirm_required";
               const preview = {
                 confirmation_required: true,
                 summary,
@@ -114,6 +157,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               };
             }
             if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken)) {
+              outcome = "confirm_invalid";
               return {
                 content: [
                   {
@@ -146,7 +190,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               entry.type === "text" && /^Response Headers \(HTTP \d+\)/.test(entry.text),
           );
           const statusMatch = headersText?.text.match(/^Response Headers \(HTTP (\d+)\)/);
-          const upstreamStatus = statusMatch ? parseInt(statusMatch[1], 10) : 200;
+          upstreamStatus = statusMatch ? parseInt(statusMatch[1], 10) : 200;
 
           const primary = handlerResult.content.find((entry) => entry.type === "object");
           const primaryBody = primary?.type === "object" ? primary.object : undefined;
@@ -158,6 +202,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
 
           if (upstreamStatus >= 400) {
+            outcome = "upstream_error";
             return { content: enrichedContent, isError: true };
           }
 
@@ -169,8 +214,22 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           return { content: enrichedContent, structuredContent };
         } catch (error) {
+          outcome = "exception";
           const text = error instanceof Error ? error.message : "An unknown error occurred";
           return { content: [{ type: "text" as const, text }], isError: true };
+        } finally {
+          try {
+            options.onToolCall?.({
+              tool: tool.method,
+              durationMs: Date.now() - startedAt,
+              outcome,
+              upstreamStatus,
+              mode: options.mode ?? "full",
+              environment: yunoClient.environment,
+            });
+          } catch {
+            // Telemetry must never break a tool call.
+          }
         }
       },
     );
@@ -184,12 +243,15 @@ async function initializeYunoMCP({
   publicApiKey,
   privateSecretKey,
   mode,
+  onToolCall,
 }: {
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
   /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
   mode?: ServerMode;
+  /** Optional per-tool-call telemetry hook. See CreateOptions.onToolCall. */
+  onToolCall?: (event: ToolCallEvent) => void;
 }) {
   try {
     const yunoClient = await YunoClient.initialize({
@@ -198,7 +260,7 @@ async function initializeYunoMCP({
       privateSecretKey,
     });
 
-    const yunoMCP = createYunoMCPServer(yunoClient, { mode });
+    const yunoMCP = createYunoMCPServer(yunoClient, { mode, onToolCall });
 
     return {
       yunoMCP,
@@ -214,3 +276,4 @@ async function initializeYunoMCP({
 }
 
 export { initializeYunoMCP };
+export type { ToolCallEvent, ToolCallOutcome, ServerMode };
