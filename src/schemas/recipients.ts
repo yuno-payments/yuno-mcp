@@ -110,7 +110,7 @@ const recipientCreateSchema = z
 
 const recipientUpdateSchema = z
   .object({
-    recipientId: z.string().describe("The unique identifier of the recipient to update"),
+    recipient_id: z.string().describe("The unique identifier of the recipient to update"),
     merchant_recipient_id: z.string().nullish().describe("The unique identifier of the recipient in the merchant system"),
     national_entity: z.enum(["INDIVIDUAL", "ENTITY"]).nullish().describe("Beneficiary's national entity type"),
     entity_type: z.enum(["GOVERNMENTAL", "PUBLIC", "NON_PROFIT", "PRIVATE"]).nullish(),

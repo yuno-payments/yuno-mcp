@@ -46,14 +46,14 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
   description: "Retrieve payment methods for a checkout session in Yuno.",
   annotations: { openWorldHint: true, title: "Retrieve Checkout Payment Methods", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    sessionId: z.string().describe("The unique identifier of the checkout session"),
+    session_id: z.string().describe("The unique identifier of the checkout session"),
   }),
   // No MCP outputSchema: the API returns a bare array and MCP requires an
   // object root for structuredContent. The raw response is passed through
   // untouched; yunoCheckoutPaymentMethodsOutputSchema documents its shape.
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ sessionId }: { sessionId: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
+    async ({ session_id: sessionId }: { session_id: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
       const { body: paymentMethods, status, headers } = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
 
       if (type === "text") {
@@ -83,7 +83,7 @@ export const checkoutSessionCreateOttTool = {
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoOttCreateSchema): Promise<Output<TType, YunoOttResponse>> => {
-      const { sessionId, ...ottRequest } = data;
+      const { session_id: sessionId, ...ottRequest } = data;
       const { body: ottResponse, status, headers } = await yunoClient.checkoutSessions.createOtt(sessionId, ottRequest as YunoOttRequest);
 
       if (type === "text") {

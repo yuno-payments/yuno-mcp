@@ -27,7 +27,7 @@ export const paymentCreateTool = {
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ payment, idempotencyKey }: PaymentCreateSchema): Promise<Output<TType, YunoPayment>> => {
+    async ({ payment, idempotency_key: idempotencyKey }: PaymentCreateSchema): Promise<Output<TType, YunoPayment>> => {
       const paymentWithAccount = {
         ...payment,
         account_id: payment.account_id || yunoClient.accountCode,
@@ -156,24 +156,24 @@ export const paymentRefundTool = {
   description: "Refund a payment in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Refund Payment", destructiveHint: true, idempotentHint: false },
   schema: z.object({
-    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
-    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
-      paymentId,
-      transactionId,
+      payment_id: paymentId,
+      transaction_id: transactionId,
       body,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
-      paymentId: string;
-      transactionId: string;
+      payment_id: string;
+      transaction_id: string;
       body: PaymentRefundSchema;
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
       const { body: refundResponse, status, headers } = await yunoClient.payments.refund(paymentId, transactionId, body, finalIdempotencyKey);
@@ -213,21 +213,21 @@ export const paymentCancelOrRefundTool = {
   description: "Cancel or refund a payment in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel or Refund Payment", destructiveHint: true, idempotentHint: false },
   schema: z.object({
-    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     body: paymentCancelOrRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
-      paymentId,
+      payment_id: paymentId,
       body,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
-      paymentId: string;
+      payment_id: string;
       body: PaymentRefundSchema;
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
       const { body: cancelOrRefundBody, status, headers } = await yunoClient.payments.cancelOrRefund(paymentId, body, finalIdempotencyKey);
@@ -267,24 +267,24 @@ export const paymentCancelOrRefundWithTransactionTool = {
   description: "Cancel or refund a payment with transaction in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel or Refund Payment with Transaction", destructiveHint: true, idempotentHint: false },
   schema: z.object({
-    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
-    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
-      paymentId,
-      transactionId,
+      payment_id: paymentId,
+      transaction_id: transactionId,
       body,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
-      paymentId: string;
-      transactionId: string;
+      payment_id: string;
+      transaction_id: string;
       body: PaymentRefundSchema;
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
       const { body: cancelOrRefundWithTxBody, status, headers } = await yunoClient.payments.cancelOrRefundWithTransaction(paymentId, transactionId, body, finalIdempotencyKey);
@@ -324,24 +324,24 @@ export const paymentCancelTool = {
   description: "Cancel a payment in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel Payment", destructiveHint: true, idempotentHint: false },
   schema: z.object({
-    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
-    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCancelSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
-      paymentId,
-      transactionId,
+      payment_id: paymentId,
+      transaction_id: transactionId,
       body,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
-      paymentId: string;
-      transactionId: string;
+      payment_id: string;
+      transaction_id: string;
       body: PaymentCancelSchema;
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
       const { body: cancelResponse, status, headers } = await yunoClient.payments.cancel(paymentId, transactionId, body, finalIdempotencyKey);
@@ -386,10 +386,10 @@ export const paymentAuthorizeTool = {
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
       payment,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
       payment: PaymentCreateSchema["payment"];
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const paymentWithAccount = {
         ...payment,
@@ -433,24 +433,24 @@ export const paymentCaptureAuthorizationTool = {
   description: "Capture an authorized payment in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Capture Payment Authorization", destructiveHint: true, idempotentHint: false },
   schema: z.object({
-    paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
-    transactionId: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
+    payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
+    transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCaptureAuthorizationSchema,
-    idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate captures. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate captures. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({
-      paymentId,
-      transactionId,
+      payment_id: paymentId,
+      transaction_id: transactionId,
       body,
-      idempotencyKey,
+      idempotency_key: idempotencyKey,
     }: {
-      paymentId: string;
-      transactionId: string;
+      payment_id: string;
+      transaction_id: string;
       body: PaymentCaptureAuthorizationSchema;
-      idempotencyKey: string;
+      idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
       const { body: captureBody, status, headers } = await yunoClient.payments.captureAuthorization(paymentId, transactionId, body, finalIdempotencyKey);

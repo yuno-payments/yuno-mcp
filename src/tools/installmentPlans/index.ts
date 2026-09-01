@@ -46,12 +46,12 @@ export const installmentPlanRetrieveTool = {
   description: "Retrieve an installment plan in Yuno by its ID.",
   annotations: { openWorldHint: true, title: "Retrieve Installment Plan", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    planId: z.string().describe("The unique identifier of the installment plan to retrieve"),
+    plan_id: z.string().describe("The unique identifier of the installment plan to retrieve"),
   }),
   outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
+    async ({ plan_id: planId }: { plan_id: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
       const { body: plan, status, headers } = await yunoClient.installmentPlans.retrieve(planId);
 
       if (type === "text") {
@@ -77,12 +77,12 @@ export const installmentPlanRetrieveAllTool = {
   description: "Retrieve all installment plans in Yuno for an account.",
   annotations: { openWorldHint: true, title: "Retrieve All Installment Plans", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    accountId: z.string().describe("The account_id to retrieve all installment plans for"),
+    account_id: z.string().describe("The account_id to retrieve all installment plans for"),
   }),
   outputSchema: yunoInstallmentPlanListOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ accountId }: { accountId: string }): Promise<Output<TType, { items: YunoInstallmentPlan[] }>> => {
+    async ({ account_id: accountId }: { account_id: string }): Promise<Output<TType, { items: YunoInstallmentPlan[] }>> => {
       const { body: plans, status, headers } = await yunoClient.installmentPlans.retrieveAll(accountId);
 
       if (type === "text") {
@@ -111,7 +111,7 @@ export const installmentPlanUpdateTool = {
   outputSchema: yunoInstallmentPlanOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ planId, ...updateFields }: InstallmentPlanUpdateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
+    async ({ plan_id: planId, ...updateFields }: InstallmentPlanUpdateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
       const { body: plan, status, headers } = await yunoClient.installmentPlans.update(planId, updateFields);
 
       if (type === "text") {
@@ -137,14 +137,14 @@ export const installmentPlanDeleteTool = {
   description: "Delete an installment plan in Yuno by its ID.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Delete Installment Plan", destructiveHint: true, idempotentHint: true },
   schema: z.object({
-    planId: z.string().describe("The unique identifier of the installment plan to delete"),
+    plan_id: z.string().describe("The unique identifier of the installment plan to delete"),
   }),
   // No MCP outputSchema: the API answers this delete with 201 and an empty body, so there
   // is no document to describe. Declaring one made every *successful* delete report an
   // error — the plan was gone, but the caller was told the call failed.
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ planId }: { planId: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
+    async ({ plan_id: planId }: { plan_id: string }): Promise<Output<TType, YunoInstallmentPlan>> => {
       const { body, status, headers } = await yunoClient.installmentPlans.delete(planId);
       const headerBlock = {
         type: "text" as const,

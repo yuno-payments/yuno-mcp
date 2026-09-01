@@ -32,10 +32,10 @@ describe("paymentCreateTool", () => {
         workflow: "DIRECT",
         payment_method: { type: "CARD" },
       },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
+    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("Test payment");
   });
@@ -100,10 +100,10 @@ describe("paymentCreateTool", () => {
         split_marketplace: [],
         metadata: [],
       },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentCreateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
+    expect(mockYunoClient.payments.create).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_456");
     expect(result.content[0].text).toContain("Full payment");
   });
@@ -188,10 +188,10 @@ describe("paymentRetrieveByMerchantOrderIdTool", () => {
 
 describe("paymentRefundTool", () => {
   const refundSchema = z.object({
-    paymentId: z.string().min(36).max(64),
-    transactionId: z.string().min(36).max(64),
+    payment_id: z.string().min(36).max(64),
+    transaction_id: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional(),
+    idempotency_key: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -201,20 +201,20 @@ describe("paymentRefundTool", () => {
       },
     };
     const input = {
-      paymentId: "pay_123456789012345678901234567890123456",
-      transactionId: "txn_123456789012345678901234567890123456",
+      payment_id: "pay_123456789012345678901234567890123456",
+      transaction_id: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.refund).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotencyKey);
+    expect(mockYunoClient.payments.refund).toHaveBeenCalledWith(input.payment_id, input.transaction_id, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingId = { transactionId: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", customer_payer: {} } };
-    const invalidId = { paymentId: null, transactionId: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
+    const missingId = { transaction_id: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", customer_payer: {} } };
+    const invalidId = { payment_id: null, transaction_id: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
     expect(() => refundSchema.parse(missingId)).toThrow();
     expect(() => refundSchema.parse(invalidId)).toThrow();
   });
@@ -222,9 +222,9 @@ describe("paymentRefundTool", () => {
 
 describe("paymentCancelOrRefundTool", () => {
   const cancelOrRefundSchema = z.object({
-    paymentId: z.string().min(36).max(64),
+    payment_id: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional(),
+    idempotency_key: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -234,19 +234,19 @@ describe("paymentCancelOrRefundTool", () => {
       },
     };
     const input = {
-      paymentId: "pay_123456789012345678901234567890123456",
+      payment_id: "pay_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentCancelOrRefundTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.cancelOrRefund).toHaveBeenCalledWith(input.paymentId, input.body, input.idempotencyKey);
+    expect(mockYunoClient.payments.cancelOrRefund).toHaveBeenCalledWith(input.payment_id, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = { body: { merchant_reference: "ref_1", customer_payer: {} } };
-    const invalidId = { paymentId: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
+    const invalidId = { payment_id: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
     expect(() => cancelOrRefundSchema.parse(missingId)).toThrow();
     expect(() => cancelOrRefundSchema.parse(invalidId)).toThrow();
   });
@@ -254,10 +254,10 @@ describe("paymentCancelOrRefundTool", () => {
 
 describe("paymentCancelOrRefundWithTransactionTool", () => {
   const cancelOrRefundWithTransactionSchema = z.object({
-    paymentId: z.string().min(36).max(64),
-    transactionId: z.string().min(36).max(64),
+    payment_id: z.string().min(36).max(64),
+    transaction_id: z.string().min(36).max(64),
     body: paymentRefundSchema,
-    idempotencyKey: z.string().uuid().optional(),
+    idempotency_key: z.string().uuid().optional(),
   });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
@@ -267,25 +267,25 @@ describe("paymentCancelOrRefundWithTransactionTool", () => {
       },
     };
     const input = {
-      paymentId: "pay_123456789012345678901234567890123456",
-      transactionId: "txn_123456789012345678901234567890123456",
+      payment_id: "pay_123456789012345678901234567890123456",
+      transaction_id: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", customer_payer: {} },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     };
     const result = await paymentCancelOrRefundWithTransactionTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.cancelOrRefundWithTransaction).toHaveBeenCalledWith(
-      input.paymentId,
-      input.transactionId,
+      input.payment_id,
+      input.transaction_id,
       input.body,
-      input.idempotencyKey,
+      input.idempotency_key,
     );
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingId = { transactionId: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", customer_payer: {} } };
-    const invalidId = { paymentId: null, transactionId: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
+    const missingId = { transaction_id: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", customer_payer: {} } };
+    const invalidId = { payment_id: null, transaction_id: null, body: { merchant_reference: "ref_1", customer_payer: {} } };
     expect(() => cancelOrRefundWithTransactionSchema.parse(missingId)).toThrow();
     expect(() => cancelOrRefundWithTransactionSchema.parse(invalidId)).toThrow();
   });
@@ -299,20 +299,20 @@ describe("paymentCancelTool", () => {
       },
     };
     const input = {
-      paymentId: "pay_123456789012345678901234567890123456",
-      transactionId: "txn_123456789012345678901234567890123456",
+      payment_id: "pay_123456789012345678901234567890123456",
+      transaction_id: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", description: "Test payment", reason: "REQUESTED_BY_CUSTOMER" },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCancelSchema; idempotencyKey: string };
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+    } as const satisfies { payment_id: string; transaction_id: string; body: PaymentCancelSchema; idempotency_key: string };
     const result = await paymentCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.cancel).toHaveBeenCalledWith(input.paymentId, input.transactionId, input.body, input.idempotencyKey);
+    expect(mockYunoClient.payments.cancel).toHaveBeenCalledWith(input.payment_id, input.transaction_id, input.body, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingId = { transactionId: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1" } };
-    const invalidId = { paymentId: null, transactionId: null, body: { merchant_reference: "ref_1" } };
+    const missingId = { transaction_id: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1" } };
+    const invalidId = { payment_id: null, transaction_id: null, body: { merchant_reference: "ref_1" } };
     expect(() => paymentCancelSchema.parse(missingId)).toThrow();
     expect(() => paymentCancelSchema.parse(invalidId)).toThrow();
   });
@@ -336,10 +336,10 @@ describe("paymentAuthorizeTool", () => {
         workflow: "DIRECT",
         payment_method: { type: "CARD" },
       },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
     } as const satisfies PaymentCreateSchema;
     const result = await paymentAuthorizeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.payments.authorize).toHaveBeenCalledWith(input.payment, input.idempotencyKey);
+    expect(mockYunoClient.payments.authorize).toHaveBeenCalledWith(input.payment, input.idempotency_key);
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
@@ -377,25 +377,25 @@ describe("paymentCaptureAuthorizationTool", () => {
       },
     };
     const input = {
-      paymentId: "pay_123456789012345678901234567890123456",
-      transactionId: "txn_123456789012345678901234567890123456",
+      payment_id: "pay_123456789012345678901234567890123456",
+      transaction_id: "txn_123456789012345678901234567890123456",
       body: { merchant_reference: "ref_1", reason: "capture" },
-      idempotencyKey: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
-    } as const satisfies { paymentId: string; transactionId: string; body: PaymentCaptureAuthorizationSchema; idempotencyKey: string };
+      idempotency_key: "b6b6b6b6-b6b6-4b6b-b6b6-b6b6b6b6b6b6",
+    } as const satisfies { payment_id: string; transaction_id: string; body: PaymentCaptureAuthorizationSchema; idempotency_key: string };
     const result = await paymentCaptureAuthorizationTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.payments.captureAuthorization).toHaveBeenCalledWith(
-      input.paymentId,
-      input.transactionId,
+      input.payment_id,
+      input.transaction_id,
       input.body,
-      input.idempotencyKey,
+      input.idempotency_key,
     );
     expect(result.content[0].text).toContain("pay_123");
     expect(result.content[0].text).toContain("true");
   });
 
   it("should fail validation for missing or invalid fields", () => {
-    const missingId = { transactionId: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", reason: "capture" } };
-    const invalidId = { paymentId: null, transactionId: null, body: { merchant_reference: "ref_1", reason: "capture" } };
+    const missingId = { transaction_id: "txn_123456789012345678901234567890123456", body: { merchant_reference: "ref_1", reason: "capture" } };
+    const invalidId = { payment_id: null, transaction_id: null, body: { merchant_reference: "ref_1", reason: "capture" } };
     expect(() => paymentCaptureAuthorizationSchema.parse(missingId)).toThrow();
     expect(() => paymentCaptureAuthorizationSchema.parse(invalidId)).toThrow();
   });
@@ -409,8 +409,8 @@ describe("refund reasons", () => {
   });
 
   it("requires a reason on cancel-or-refund, and only there", () => {
-    expect(paymentCancelOrRefundTool.schema.safeParse({ paymentId: "p".repeat(36), body: base }).success).toBe(false);
-    expect(paymentCancelOrRefundTool.schema.safeParse({ paymentId: "p".repeat(36), body: { ...base, reason: "DUPLICATE" } }).success).toBe(true);
-    expect(paymentRefundTool.schema.safeParse({ paymentId: "p".repeat(36), transactionId: "t".repeat(36), body: base }).success).toBe(true);
+    expect(paymentCancelOrRefundTool.schema.safeParse({ payment_id: "p".repeat(36), body: base }).success).toBe(false);
+    expect(paymentCancelOrRefundTool.schema.safeParse({ payment_id: "p".repeat(36), body: { ...base, reason: "DUPLICATE" } }).success).toBe(true);
+    expect(paymentRefundTool.schema.safeParse({ payment_id: "p".repeat(36), transaction_id: "t".repeat(36), body: base }).success).toBe(true);
   });
 });

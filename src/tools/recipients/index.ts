@@ -42,12 +42,12 @@ export const recipientRetrieveTool = {
   description: "Retrieve a recipient in Yuno by its ID.",
   annotations: { openWorldHint: true, title: "Retrieve Recipient", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    recipientId: z.string().describe("The unique identifier of the recipient to retrieve"),
+    recipient_id: z.string().describe("The unique identifier of the recipient to retrieve"),
   }),
   outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {
+    async ({ recipient_id: recipientId }: { recipient_id: string }): Promise<Output<TType, YunoRecipient>> => {
       const { body: recipient, status, headers } = await yunoClient.recipients.retrieve(recipientId);
 
       if (type === "text") {
@@ -76,7 +76,7 @@ export const recipientUpdateTool = {
   outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipientId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
+    async ({ recipient_id: recipientId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
       const { body: recipient, status, headers } = await yunoClient.recipients.update(recipientId, updateFields);
 
       if (type === "text") {
@@ -102,12 +102,12 @@ export const recipientDeleteTool = {
   description: "Delete a recipient in Yuno by its ID.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Delete Recipient", destructiveHint: true, idempotentHint: true },
   schema: z.object({
-    recipientId: z.string().describe("The unique identifier of the recipient to delete"),
+    recipient_id: z.string().describe("The unique identifier of the recipient to delete"),
   }),
   outputSchema: yunoRecipientOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipientId }: { recipientId: string }): Promise<Output<TType, YunoRecipient>> => {
+    async ({ recipient_id: recipientId }: { recipient_id: string }): Promise<Output<TType, YunoRecipient>> => {
       const { body, status, headers } = await yunoClient.recipients.delete(recipientId);
 
       if (type === "text") {

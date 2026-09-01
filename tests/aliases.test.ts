@@ -10,7 +10,7 @@ import { initializeYunoMCP } from "../src/index";
 describe("normalizeParamKeys", () => {
   it("fills a snake_case key from its camelCase twin, and the reverse", () => {
     expect(normalizeParamKeys(paymentRetrieveTool.schema, { paymentId: "x" })).toEqual({ payment_id: "x" });
-    expect(normalizeParamKeys(customerRetrieveTool.schema, { customer_id: "x" })).toEqual({ customerId: "x" });
+    expect(normalizeParamKeys(customerRetrieveTool.schema, { customerId: "x" })).toEqual({ customer_id: "x" });
   });
 
   it("never overrides a key the caller spelled as declared, and drops the twin", () => {

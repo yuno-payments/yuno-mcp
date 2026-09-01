@@ -102,14 +102,14 @@ describe("subscriptionCreateTool", () => {
 });
 
 describe("subscriptionRetrieveTool", () => {
-  const schema = z.object({ subscriptionId: z.string() });
+  const schema = z.object({ subscription_id: z.string() });
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
         retrieve: rstest.fn().mockResolvedValue({ body: { id: "sub_123", name: "Test Sub" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_123" };
+    const input = { subscription_id: "sub_123" };
     const result = await subscriptionRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.retrieve).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("sub_123");
@@ -118,21 +118,21 @@ describe("subscriptionRetrieveTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { subscriptionId: null };
+    const invalidId = { subscription_id: null };
     expect(() => schema.parse(missingId)).toThrow();
     expect(() => schema.parse(invalidId)).toThrow();
   });
 });
 
 describe("subscriptionPauseTool", () => {
-  const schema = z.object({ subscriptionId: z.string() });
+  const schema = z.object({ subscription_id: z.string() });
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
         pause: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "paused" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_123" };
+    const input = { subscription_id: "sub_123" };
     const result = await subscriptionPauseTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.pause).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("paused");
@@ -140,21 +140,21 @@ describe("subscriptionPauseTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { subscriptionId: null };
+    const invalidId = { subscription_id: null };
     expect(() => schema.parse(missingId)).toThrow();
     expect(() => schema.parse(invalidId)).toThrow();
   });
 });
 
 describe("subscriptionResumeTool", () => {
-  const schema = z.object({ subscriptionId: z.string() });
+  const schema = z.object({ subscription_id: z.string() });
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
         resume: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "active" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_123" };
+    const input = { subscription_id: "sub_123" };
     const result = await subscriptionResumeTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.resume).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("active");
@@ -162,7 +162,7 @@ describe("subscriptionResumeTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { subscriptionId: null };
+    const invalidId = { subscription_id: null };
     expect(() => schema.parse(missingId)).toThrow();
     expect(() => schema.parse(invalidId)).toThrow();
   });
@@ -175,7 +175,7 @@ describe("subscriptionUpdateTool", () => {
         update: rstest.fn().mockResolvedValue({ body: { id: "sub_123", name: "Updated Sub" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_123", name: "Updated Sub" };
+    const input = { subscription_id: "sub_123", name: "Updated Sub" };
     const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_123", { name: "Updated Sub" });
     expect(result.content[0].text).toContain("sub_123");
@@ -183,13 +183,13 @@ describe("subscriptionUpdateTool", () => {
   });
 
   it("should validate a correct minimal payload (only required fields)", () => {
-    const minimal = { subscriptionId: "sub_123" };
+    const minimal = { subscription_id: "sub_123" };
     expect(() => subscriptionUpdateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = { name: "fail" };
-    const invalidId = { subscriptionId: null, name: "fail" };
+    const invalidId = { subscription_id: null, name: "fail" };
     expect(() => subscriptionUpdateSchema.parse(missingId)).toThrow();
     expect(() => subscriptionUpdateSchema.parse(invalidId)).toThrow();
   });
@@ -201,7 +201,7 @@ describe("subscriptionUpdateTool", () => {
       },
     };
     const input = {
-      subscriptionId: "sub_456",
+      subscription_id: "sub_456",
       name: "Full Sub",
       description: "A full subscription",
       merchant_reference: "ref-456",
@@ -223,7 +223,7 @@ describe("subscriptionUpdateTool", () => {
       metadata: [],
     } as const satisfies SubscriptionUpdateSchema;
     const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    const { subscriptionId, ...updateFields } = input;
+    const { subscription_id: subscriptionId, ...updateFields } = input;
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith(subscriptionId, updateFields);
     expect(result.content[0].text).toContain("sub_456");
     expect(result.content[0].text).toContain("Full Sub");
@@ -235,7 +235,7 @@ describe("subscriptionUpdateTool", () => {
         update: rstest.fn().mockResolvedValue({ body: { id: "sub_789", name: "Minimal Sub" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_789" };
+    const input = { subscription_id: "sub_789" };
     const result = await subscriptionUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.update).toHaveBeenCalledWith("sub_789", {});
     expect(result.content[0].text).toContain("sub_789");
@@ -244,14 +244,14 @@ describe("subscriptionUpdateTool", () => {
 });
 
 describe("subscriptionCancelTool", () => {
-  const schema = z.object({ subscriptionId: z.string() });
+  const schema = z.object({ subscription_id: z.string() });
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
       subscriptions: {
         cancel: rstest.fn().mockResolvedValue({ body: { id: "sub_123", status: "cancelled" }, status: 200, headers: {} }),
       },
     };
-    const input = { subscriptionId: "sub_123" };
+    const input = { subscription_id: "sub_123" };
     const result = await subscriptionCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.subscriptions.cancel).toHaveBeenCalledWith("sub_123");
     expect(result.content[0].text).toContain("cancelled");
@@ -259,7 +259,7 @@ describe("subscriptionCancelTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { subscriptionId: null };
+    const invalidId = { subscription_id: null };
     expect(() => schema.parse(missingId)).toThrow();
     expect(() => schema.parse(invalidId)).toThrow();
   });

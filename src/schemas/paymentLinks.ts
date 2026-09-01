@@ -126,7 +126,7 @@ const paymentLinkCreateSchema = z
 
 const paymentLinkCancelSchema = z
   .object({
-    paymentLinkId: z.string().describe("The code of the payment link to cancel"),
+    payment_link_id: z.string().describe("The code of the payment link to cancel"),
   })
   .passthrough()
   .describe("Parameters for payment link cancellation");

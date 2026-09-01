@@ -108,7 +108,7 @@ describe("paymentLinkCreateTool", () => {
 });
 
 describe("paymentLinkRetrieveTool", () => {
-  const retrieveSchema = z.object({ paymentLinkId: z.string() });
+  const retrieveSchema = z.object({ payment_link_id: z.string() });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
@@ -116,7 +116,7 @@ describe("paymentLinkRetrieveTool", () => {
         retrieve: rstest.fn().mockResolvedValue({ body: { id: "plink_123", description: "Test link" }, status: 200, headers: {} }),
       },
     };
-    const input = { paymentLinkId: "plink_123" };
+    const input = { payment_link_id: "plink_123" };
     const result = await paymentLinkRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.paymentLinks.retrieve).toHaveBeenCalledWith("plink_123");
     expect(result.content[0].text).toContain("plink_123");
@@ -125,7 +125,7 @@ describe("paymentLinkRetrieveTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { paymentLinkId: null };
+    const invalidId = { payment_link_id: null };
     expect(() => retrieveSchema.parse(missingId)).toThrow();
     expect(() => retrieveSchema.parse(invalidId)).toThrow();
   });
@@ -140,7 +140,7 @@ describe("paymentLinkCancelTool", () => {
     };
 
     const result = await paymentLinkCancelTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({
-      paymentLinkId: "plink_123",
+      payment_link_id: "plink_123",
     });
     expect(mockYunoClient.paymentLinks.cancel).toHaveBeenCalledWith("plink_123");
     expect(result.content[0].text).toContain("plink_123");
@@ -149,7 +149,7 @@ describe("paymentLinkCancelTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { paymentLinkId: null };
+    const invalidId = { payment_link_id: null };
     expect(() => paymentLinkCancelSchema.parse(missingId)).toThrow();
     expect(() => paymentLinkCancelSchema.parse(invalidId)).toThrow();
   });
