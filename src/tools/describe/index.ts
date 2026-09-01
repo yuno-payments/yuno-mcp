@@ -4,7 +4,9 @@ import type { HandlerContext, Output, Tool } from "../../types";
 import { EXAMPLES } from "./examples";
 
 const describeToolSchema = z.object({
-  method: z.string().describe("Name of the tool to describe, e.g. paymentCreate"),
+  method: z
+    .string()
+    .describe("Name of the tool to describe, e.g. paymentCreate. A gateway prefix such as pay__paymentCreate is accepted too."),
   include_output_schema: z
     .boolean()
     .nullish()
@@ -12,6 +14,16 @@ const describeToolSchema = z.object({
 });
 
 type DescribeToolSchema = z.infer<typeof describeToolSchema>;
+
+/**
+ * Aggregating gateways expose this server's tools under a namespace
+ * ("pay__paymentCreate") and their own description tells the model to call
+ * describeTool with that name, so the prefix has to be tolerated here.
+ */
+export const bareToolName = (name: string): string => {
+  const at = name.lastIndexOf("__");
+  return at < 0 ? name : name.slice(at + 2);
+};
 
 /**
  * Registered tool schemas are compacted (src/schemas/compact.ts); this tool serves
@@ -28,7 +40,7 @@ export const describeTool = {
   handler:
     <TType extends "object" | "text">({ type }: HandlerContext<TType>) =>
     ({ method, include_output_schema }: DescribeToolSchema): Promise<Output<TType>> => {
-      const target: Tool | undefined = tools.find((tool) => tool.method === method);
+      const target: Tool | undefined = tools.find((tool) => tool.method === bareToolName(method));
 
       if (!target) {
         const available = [...tools.map((tool) => tool.method), "describeTool"].join(", ");

@@ -20,22 +20,22 @@ describe("canonicalJson", () => {
 
 describe("confirm tokens", () => {
   it("round-trips for identical method and params", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" }, token)).toBe(true);
+    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
+    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(true);
   });
 
   it("rejects expired tokens", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" }, -1);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" }, token)).toBe(false);
+    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, -1);
+    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
   });
 
   it("rejects tampered params, other methods, other secrets, and garbage", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { paymentId: "p2" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentCancel", { paymentId: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken("other-secret", "paymentRefund", { paymentId: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" }, "junk")).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { paymentId: "p1" }, "123.abc")).toBe(false);
+    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
+    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p2" }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, "paymentCancel", { payment_id: "p1" }, token)).toBe(false);
+    expect(verifyConfirmToken("other-secret", "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "junk")).toBe(false);
+    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "123.abc")).toBe(false);
   });
 });
 
@@ -93,7 +93,7 @@ describe("destructive-op confirmation on prod", () => {
     const fetchState = stubFetch();
     const client = await connectedClient("prod_key");
 
-    const preview = await client.callTool({ name: "subscriptionCancel", arguments: { subscriptionId: SUBSCRIPTION_ID } });
+    const preview = await client.callTool({ name: "subscriptionCancel", arguments: { subscription_id: SUBSCRIPTION_ID } });
     expect(preview.isError).toBeFalsy();
     expect(fetchState.calls).toBe(0);
     const structured = preview.structuredContent as { confirmation_required: boolean; confirm_token: string };
@@ -102,7 +102,7 @@ describe("destructive-op confirmation on prod", () => {
 
     const confirmed = await client.callTool({
       name: "subscriptionCancel",
-      arguments: { subscriptionId: SUBSCRIPTION_ID, confirm_token: structured.confirm_token },
+      arguments: { subscription_id: SUBSCRIPTION_ID, confirm_token: structured.confirm_token },
     });
     expect(confirmed.isError).toBeFalsy();
     expect(fetchState.calls).toBe(1);
@@ -114,7 +114,7 @@ describe("destructive-op confirmation on prod", () => {
 
     const result = await client.callTool({
       name: "subscriptionCancel",
-      arguments: { subscriptionId: SUBSCRIPTION_ID, confirm_token: "123.deadbeef" },
+      arguments: { subscription_id: SUBSCRIPTION_ID, confirm_token: "123.deadbeef" },
     });
     expect(result.isError).toBe(true);
     expect(fetchState.calls).toBe(0);
@@ -124,12 +124,12 @@ describe("destructive-op confirmation on prod", () => {
     const fetchState = stubFetch();
     const client = await connectedClient("prod_key");
 
-    const preview = await client.callTool({ name: "subscriptionCancel", arguments: { subscriptionId: SUBSCRIPTION_ID } });
+    const preview = await client.callTool({ name: "subscriptionCancel", arguments: { subscription_id: SUBSCRIPTION_ID } });
     const structured = preview.structuredContent as { confirm_token: string };
     const otherId = "999e4567-e89b-12d3-a456-426614174999";
     const result = await client.callTool({
       name: "subscriptionCancel",
-      arguments: { subscriptionId: otherId, confirm_token: structured.confirm_token },
+      arguments: { subscription_id: otherId, confirm_token: structured.confirm_token },
     });
     expect(result.isError).toBe(true);
     expect(fetchState.calls).toBe(0);
@@ -139,7 +139,7 @@ describe("destructive-op confirmation on prod", () => {
     const fetchState = stubFetch();
     const client = await connectedClient("staging_key");
 
-    const result = await client.callTool({ name: "subscriptionCancel", arguments: { subscriptionId: SUBSCRIPTION_ID } });
+    const result = await client.callTool({ name: "subscriptionCancel", arguments: { subscription_id: SUBSCRIPTION_ID } });
     expect(result.isError).toBeFalsy();
     expect(fetchState.calls).toBe(1);
   });

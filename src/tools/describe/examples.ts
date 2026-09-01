@@ -65,7 +65,7 @@ export const EXAMPLES: Partial<Record<string, unknown>> = {
     country: "BR",
   },
   checkoutSessionCreateOtt: {
-    sessionId: "checkout-session-uuid",
+    session_id: "checkout-session-uuid",
     body: {
       payment_method: {
         type: "CARD",

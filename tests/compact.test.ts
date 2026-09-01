@@ -66,7 +66,7 @@ describe("compactSchema", () => {
         additional_data: { order: { shipping_amount: 0 }, airline: null },
         metadata: [{ key: "source", value: "test" }],
       },
-      idempotencyKey: "550e8400-e29b-41d4-a716-446655440000",
+      idempotency_key: "550e8400-e29b-41d4-a716-446655440000",
     };
 
     expect(paymentCreateSchema.safeParse(input).success).toBe(true);

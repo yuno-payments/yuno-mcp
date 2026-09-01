@@ -178,7 +178,7 @@ const checkoutSessionCreateSchema = z
 
 const ottCreateSchema = z
   .object({
-    sessionId: z.string().describe("The unique identifier of the checkout session"),
+    session_id: z.string().describe("The unique identifier of the checkout session"),
     payment_method: z
       .object({
         type: z.string().describe("Payment method type (e.g., 'CARD', 'NEQUI', etc.)"),

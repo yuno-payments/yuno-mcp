@@ -37,12 +37,12 @@ export const customerRetrieveTool = {
   description: "Retrieve a customer by ID.",
   annotations: { openWorldHint: true, title: "Retrieve Customer", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
+    customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer to retrieve (MIN 36, MAX 64 characters)"),
   }),
   outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ customerId }: { customerId: string }): Promise<Output<TType, YunoCustomer>> => {
+    async ({ customer_id: customerId }: { customer_id: string }): Promise<Output<TType, YunoCustomer>> => {
       const { body: customer, status, headers } = await yunoClient.customers.retrieve(customerId);
 
       if (type === "text") {
@@ -102,7 +102,7 @@ export const customerUpdateTool = {
   outputSchema: yunoCustomerOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ customerId, ...updateFields }: CustomerUpdateSchema): Promise<Output<TType, YunoCustomer>> => {
+    async ({ customer_id: customerId, ...updateFields }: CustomerUpdateSchema): Promise<Output<TType, YunoCustomer>> => {
       const { body: customer, status, headers } = await yunoClient.customers.update(customerId, updateFields as Partial<YunoCustomer>);
 
       if (type === "text") {

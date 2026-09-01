@@ -1,5 +1,5 @@
 import z from "zod";
-import { paymentCancelSchema, paymentCaptureAuthorizationSchema, paymentCreateSchema, paymentRefundSchema } from "../../schemas";
+import { paymentCancelSchema, paymentCancelOrRefundSchema, paymentCaptureAuthorizationSchema, paymentCreateSchema, paymentRefundSchema } from "../../schemas";
 import type { YunoAmount, YunoMetadata, YunoAdditionalData } from "../../types";
 
 export interface YunoPaymentMethodStoredCredentials {
@@ -87,6 +87,8 @@ export type PaymentCreateSchema = z.infer<typeof paymentCreateSchema>;
 export type PaymentCreateBody = Omit<PaymentCreateSchema, "idempotencyKey">["payment"];
 
 export type PaymentRefundSchema = z.infer<typeof paymentRefundSchema>;
+
+export type PaymentCancelOrRefundSchema = z.infer<typeof paymentCancelOrRefundSchema>;
 
 export type PaymentCancelSchema = z.infer<typeof paymentCancelSchema>;
 

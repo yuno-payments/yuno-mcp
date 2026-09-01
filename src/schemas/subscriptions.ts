@@ -163,7 +163,7 @@ const subscriptionCreateSchema = z
 
 const subscriptionUpdateSchema = z
   .object({
-    subscriptionId: z.string().describe("The unique identifier of the subscription to update"),
+    subscription_id: z.string().describe("The unique identifier of the subscription to update"),
     account_id: z.string().nullish().describe("Account ID"),
     name: z.string().nullish(),
     description: z.string().nullish(),

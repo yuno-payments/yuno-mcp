@@ -39,7 +39,7 @@ const customerCreateSchema = z
 
 const customerUpdateSchema = z
   .object({
-    customerId: z.string().min(36).max(64).describe("The unique identifier of the customer to update (MIN 36, MAX 64 characters)"),
+    customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer to update (MIN 36, MAX 64 characters)"),
     merchant_customer_id: z.string().min(3).max(255).nullish(),
     first_name: z.string().nullish(),
     last_name: z.string().nullish(),

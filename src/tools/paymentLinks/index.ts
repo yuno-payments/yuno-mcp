@@ -41,12 +41,12 @@ export const paymentLinkRetrieveTool = {
   description: "Retrieve a payment link in Yuno by its ID.",
   annotations: { openWorldHint: true, title: "Retrieve Payment Link", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    paymentLinkId: z.string().describe("The unique identifier of the payment link to retrieve"),
+    payment_link_id: z.string().describe("The unique identifier of the payment link to retrieve"),
   }),
   outputSchema: yunoPaymentLinkOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ paymentLinkId }: { paymentLinkId: string }): Promise<Output<TType, YunoPaymentLink>> => {
+    async ({ payment_link_id: paymentLinkId }: { payment_link_id: string }): Promise<Output<TType, YunoPaymentLink>> => {
       const { body: paymentLink, status, headers } = await yunoClient.paymentLinks.retrieve(paymentLinkId);
 
       if (type === "text") {
@@ -75,7 +75,7 @@ export const paymentLinkCancelTool = {
   outputSchema: yunoPaymentLinkOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ paymentLinkId }: PaymentLinkCancelSchema): Promise<Output<TType, YunoPaymentLink>> => {
+    async ({ payment_link_id: paymentLinkId }: PaymentLinkCancelSchema): Promise<Output<TType, YunoPaymentLink>> => {
       const { body: cancelResponse, status, headers } = await yunoClient.paymentLinks.cancel(paymentLinkId);
 
       if (type === "text") {

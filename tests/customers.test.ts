@@ -5,7 +5,7 @@ import { customerCreateTool, customerRetrieveTool, customerRetrieveByExternalIdT
 import { CustomerUpdateSchema, YunoCustomer } from "../src/tools/customers/types";
 
 const customerRetrieveSchema = z.object({
-  customerId: z.string().min(36).max(64),
+  customer_id: z.string().min(36).max(64),
 });
 
 const customerRetrieveByExternalIdSchema = z.object({
@@ -96,16 +96,16 @@ describe("customerRetrieveTool", () => {
         retrieve: rstest.fn().mockResolvedValue({ body: { id: "cus_123", email: "test@example.com" }, status: 200, headers: {} }),
       },
     };
-    const input = { customerId: "cus_123" };
+    const input = { customer_id: "cus_123" };
     const result = await customerRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.customers.retrieve).toHaveBeenCalledWith(input.customerId);
+    expect(mockYunoClient.customers.retrieve).toHaveBeenCalledWith(input.customer_id);
     expect(result.content[0].text).toContain("cus_123");
     expect(result.content[0].text).toContain("test@example.com");
   });
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { customerId: null };
+    const invalidId = { customer_id: null };
     expect(() => customerRetrieveSchema.parse(missingId)).toThrow();
     expect(() => customerRetrieveSchema.parse(invalidId)).toThrow();
   });
@@ -140,21 +140,21 @@ describe("customerUpdateTool", () => {
         update: rstest.fn().mockResolvedValue({ body: { id: "cus_123", email: "updated@example.com" }, status: 200, headers: {} }),
       },
     };
-    const input = { customerId: "cus_123456789012345678901234567890123456", email: "updated@example.com" };
+    const input = { customer_id: "cus_123456789012345678901234567890123456", email: "updated@example.com" };
     const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customerId, { email: "updated@example.com" });
+    expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customer_id, { email: "updated@example.com" });
     expect(result.content[0].text).toContain("cus_123");
     expect(result.content[0].text).toContain("updated@example.com");
   });
 
   it("should validate a correct minimal payload (only required fields)", () => {
-    const minimal = { customerId: "cus_123456789012345678901234567890123456" };
+    const minimal = { customer_id: "cus_123456789012345678901234567890123456" };
     expect(() => customerUpdateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = { email: "fail@example.com" };
-    const invalidId = { customerId: "short", email: "fail@example.com" };
+    const invalidId = { customer_id: "short", email: "fail@example.com" };
     expect(() => customerUpdateSchema.parse(missingId)).toThrow();
     expect(() => customerUpdateSchema.parse(invalidId)).toThrow();
   });
@@ -166,7 +166,7 @@ describe("customerUpdateTool", () => {
       },
     };
     const input = {
-      customerId: "cus_123456789012345678901234567890123456",
+      customer_id: "cus_123456789012345678901234567890123456",
       first_name: "Full",
       last_name: "Test",
       gender: "M",
@@ -192,7 +192,7 @@ describe("customerUpdateTool", () => {
       merchant_customer_created_at: "2024-01-01",
     } as const satisfies CustomerUpdateSchema;
     const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    const { customerId, ...updateFields } = input;
+    const { customer_id: customerId, ...updateFields } = input;
     expect(mockYunoClient.customers.update).toHaveBeenCalledWith(customerId, updateFields);
     expect(result.content[0].text).toContain("cus_456");
     expect(result.content[0].text).toContain("full@example.com");
@@ -205,9 +205,9 @@ describe("customerUpdateTool", () => {
         update: rstest.fn().mockResolvedValue({ body: { id: "cus_789", email: "minimal@example.com" }, status: 200, headers: {} }),
       },
     };
-    const input = { customerId: "cus_123456789012345678901234567890123456" };
+    const input = { customer_id: "cus_123456789012345678901234567890123456" };
     const result = await customerUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customerId, {});
+    expect(mockYunoClient.customers.update).toHaveBeenCalledWith(input.customer_id, {});
     expect(result.content[0].text).toContain("cus_789");
   });
 });

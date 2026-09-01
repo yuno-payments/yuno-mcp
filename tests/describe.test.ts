@@ -31,6 +31,11 @@ describe("describeTool", () => {
     expect(firstObject(withOutput).outputSchema).toBeDefined();
   });
 
+  it("accepts the name a gateway prefixes onto the tool", async () => {
+    const output = await describeTool.handler(context)({ method: "pay__paymentRetrieve" });
+    expect(firstObject(output).method).toBe("paymentRetrieve");
+  });
+
   it("lists available tools for an unknown method", async () => {
     const output = await describeTool.handler(context)({ method: "nope" });
     const text = output.content.find((item) => item.type === "text")?.text ?? "";

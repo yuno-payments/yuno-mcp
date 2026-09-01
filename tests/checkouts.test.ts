@@ -103,7 +103,7 @@ describe("checkoutSessionCreateTool", () => {
 });
 
 describe("checkoutSessionRetrievePaymentMethodsTool", () => {
-  const retrieveSchema = z.object({ sessionId: z.string() });
+  const retrieveSchema = z.object({ session_id: z.string() });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
@@ -112,7 +112,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
         retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: [{ type: "card", name: "Visa" }], status: 200, headers: {} }),
       },
     };
-    const input = { sessionId: "sess_123" };
+    const input = { session_id: "sess_123" };
     const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.checkoutSessions.retrievePaymentMethods).toHaveBeenCalledWith("sess_123");
     expect(result.content[0].text).toContain("card");
@@ -143,7 +143,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
         retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: apiResponse, status: 200, headers: {} }),
       },
     };
-    const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "object" })({ sessionId: "sess_123" });
+    const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "object" })({ session_id: "sess_123" });
     const primary = result.content[0] as { type: "object"; object: unknown };
     expect(primary.type).toBe("object");
     expect(primary.object).toEqual(apiResponse);
@@ -152,7 +152,7 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { sessionId: null };
+    const invalidId = { session_id: null };
     expect(() => retrieveSchema.parse(missingId)).toThrow();
     expect(() => retrieveSchema.parse(invalidId)).toThrow();
   });
@@ -184,7 +184,7 @@ describe("checkoutSessionCreateOttTool", () => {
       },
     };
     const input = {
-      sessionId: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
+      session_id: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
       payment_method: {
         type: "CARD",
         vault_on_success: false,
@@ -234,7 +234,7 @@ describe("checkoutSessionCreateOttTool", () => {
 
   it("should validate a correct OTT payload", () => {
     const validOttData = {
-      sessionId: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
+      session_id: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
       payment_method: {
         type: "CARD",
         vault_on_success: false,
@@ -310,7 +310,7 @@ describe("checkoutSessionCreateOttTool", () => {
 
   it("should validate OTT payload for APM (Nequi) without card field", () => {
     const validNequiOttData = {
-      sessionId: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
+      session_id: "2d2ae7c0-6bc8-4aaa-86d1-d6e6be0bfd2a",
       payment_method: {
         type: "NEQUI",
         vault_on_success: false,

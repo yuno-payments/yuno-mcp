@@ -4,6 +4,7 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { normalizeParamKeys, withTwinKeys } from "./tools/aliases";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -22,7 +23,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "0.6.0",
+      version: "0.7.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
@@ -52,7 +53,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       : undefined;
     const inputSchemaShape = requiresConfirmation
       ? {
-          ...registeredInputSchema.shape,
+          ...withTwinKeys(registeredInputSchema.shape),
           confirm_token: z
             .string()
             .optional()
@@ -60,7 +61,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
             ),
         }
-      : registeredInputSchema.shape;
+      : withTwinKeys(registeredInputSchema.shape);
 
     server.registerTool(
       tool.method,
@@ -76,7 +77,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
           const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
-          const params = requiresConfirmation ? strippedParams : rawParams;
+          const params = normalizeParamKeys(tool.schema, requiresConfirmation ? strippedParams : rawParams);
 
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {

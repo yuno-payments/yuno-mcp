@@ -42,12 +42,12 @@ export const subscriptionRetrieveTool = {
   description: "Retrieve a subscription in Yuno by its ID.",
   annotations: { openWorldHint: true, title: "Retrieve Subscription", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
-    subscriptionId: z.string().describe("The unique identifier of the subscription to retrieve"),
+    subscription_id: z.string().describe("The unique identifier of the subscription to retrieve"),
   }),
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
+    async ({ subscription_id: subscriptionId }: { subscription_id: string }): Promise<Output<TType, YunoSubscription>> => {
       const { body: subscription, status, headers } = await yunoClient.subscriptions.retrieve(subscriptionId);
 
       if (type === "text") {
@@ -73,12 +73,12 @@ export const subscriptionPauseTool = {
   description: "Pause a subscription in Yuno by its ID.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Pause Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
-    subscriptionId: z.string().describe("The unique identifier of the subscription to pause"),
+    subscription_id: z.string().describe("The unique identifier of the subscription to pause"),
   }),
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
+    async ({ subscription_id: subscriptionId }: { subscription_id: string }): Promise<Output<TType, YunoSubscription>> => {
       const { body, status, headers } = await yunoClient.subscriptions.pause(subscriptionId);
 
       if (type === "text") {
@@ -104,12 +104,12 @@ export const subscriptionResumeTool = {
   description: "Resume a subscription in Yuno by its ID.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Resume Subscription", destructiveHint: false, idempotentHint: true },
   schema: z.object({
-    subscriptionId: z.string().describe("The unique identifier of the subscription to resume"),
+    subscription_id: z.string().describe("The unique identifier of the subscription to resume"),
   }),
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
+    async ({ subscription_id: subscriptionId }: { subscription_id: string }): Promise<Output<TType, YunoSubscription>> => {
       const { body, status, headers } = await yunoClient.subscriptions.resume(subscriptionId);
 
       if (type === "text") {
@@ -138,7 +138,7 @@ export const subscriptionUpdateTool = {
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ subscriptionId, ...updateFields }: SubscriptionUpdateSchema): Promise<Output<TType, YunoSubscription>> => {
+    async ({ subscription_id: subscriptionId, ...updateFields }: SubscriptionUpdateSchema): Promise<Output<TType, YunoSubscription>> => {
       const { body: subscription, status, headers } = await yunoClient.subscriptions.update(subscriptionId, updateFields);
 
       if (type === "text") {
@@ -164,12 +164,12 @@ export const subscriptionCancelTool = {
   description: "Cancel a subscription in Yuno by its ID.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel Subscription", destructiveHint: true, idempotentHint: true },
   schema: z.object({
-    subscriptionId: z.string().describe("The unique identifier of the subscription to cancel"),
+    subscription_id: z.string().describe("The unique identifier of the subscription to cancel"),
   }),
   outputSchema: yunoSubscriptionOutputSchema,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ subscriptionId }: { subscriptionId: string }): Promise<Output<TType, YunoSubscription>> => {
+    async ({ subscription_id: subscriptionId }: { subscription_id: string }): Promise<Output<TType, YunoSubscription>> => {
       const { body, status, headers } = await yunoClient.subscriptions.cancel(subscriptionId);
 
       if (type === "text") {

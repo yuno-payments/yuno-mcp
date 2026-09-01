@@ -118,7 +118,7 @@ describe("installmentPlanUpdateTool", () => {
       },
     };
     const input = {
-      planId: "plan_123",
+      plan_id: "plan_123",
       name: "Updated Plan",
     };
     const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
@@ -128,13 +128,13 @@ describe("installmentPlanUpdateTool", () => {
   });
 
   it("should validate a correct minimal payload (only required fields)", () => {
-    const minimal = { planId: "plan_123" };
+    const minimal = { plan_id: "plan_123" };
     expect(() => installmentPlanUpdateSchema.parse(minimal)).not.toThrow();
   });
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = { name: "fail" };
-    const invalidId = { planId: null, name: "fail" };
+    const invalidId = { plan_id: null, name: "fail" };
     expect(() => installmentPlanUpdateSchema.parse(missingId)).toThrow();
     expect(() => installmentPlanUpdateSchema.parse(invalidId)).toThrow();
   });
@@ -146,7 +146,7 @@ describe("installmentPlanUpdateTool", () => {
       },
     };
     const input = {
-      planId: "plan_456",
+      plan_id: "plan_456",
       name: "Full Update",
       installments_plan: [{ installment: 12, rate: 3.0, type: "ISSUER_INSTALLMENTS" }],
       brand: [],
@@ -157,7 +157,7 @@ describe("installmentPlanUpdateTool", () => {
       availability: { start_at: "2024-06-01", finish_at: "2024-12-31" },
     } as const satisfies InstallmentPlanUpdateSchema;
     const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
-    const { planId, ...updateFields } = input;
+    const { plan_id: planId, ...updateFields } = input;
     expect(mockYunoClient.installmentPlans.update).toHaveBeenCalledWith(planId, updateFields);
     expect(result.content[0].text).toContain("plan_456");
     expect(result.content[0].text).toContain("Full Update");
@@ -169,7 +169,7 @@ describe("installmentPlanUpdateTool", () => {
         update: rstest.fn().mockResolvedValue({ body: { id: "plan_789", name: "Minimal Update" }, status: 200, headers: {} }),
       },
     };
-    const input = { planId: "plan_789" };
+    const input = { plan_id: "plan_789" };
     const result = await installmentPlanUpdateTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.update).toHaveBeenCalledWith("plan_789", {});
     expect(result.content[0].text).toContain("plan_789");
@@ -178,7 +178,7 @@ describe("installmentPlanUpdateTool", () => {
 });
 
 describe("installmentPlanRetrieveTool", () => {
-  const retrieveSchema = z.object({ planId: z.string() });
+  const retrieveSchema = z.object({ plan_id: z.string() });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
@@ -186,7 +186,7 @@ describe("installmentPlanRetrieveTool", () => {
         retrieve: rstest.fn().mockResolvedValue({ body: { id: "plan_123", name: "Plan 1" }, status: 200, headers: {} }),
       },
     };
-    const input = { planId: "plan_123" };
+    const input = { plan_id: "plan_123" };
     const result = await installmentPlanRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.retrieve).toHaveBeenCalledWith("plan_123");
     expect(result.content[0].text).toContain("plan_123");
@@ -195,14 +195,14 @@ describe("installmentPlanRetrieveTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { planId: null };
+    const invalidId = { plan_id: null };
     expect(() => retrieveSchema.parse(missingId)).toThrow();
     expect(() => retrieveSchema.parse(invalidId)).toThrow();
   });
 });
 
 describe("installmentPlanDeleteTool", () => {
-  const deleteSchema = z.object({ planId: z.string() });
+  const deleteSchema = z.object({ plan_id: z.string() });
 
   it("should execute the main action, call the client, and return the expected result", async () => {
     const mockYunoClient = {
@@ -210,7 +210,7 @@ describe("installmentPlanDeleteTool", () => {
         delete: rstest.fn().mockResolvedValue({ body: { id: "plan_123", deleted: true }, status: 200, headers: {} }),
       },
     };
-    const input = { planId: "plan_123" };
+    const input = { plan_id: "plan_123" };
     const result = await installmentPlanDeleteTool.handler({ yunoClient: mockYunoClient as any, type: "text" })(input);
     expect(mockYunoClient.installmentPlans.delete).toHaveBeenCalledWith("plan_123");
     expect(result.content[0].text).toContain("plan_123");
@@ -219,7 +219,7 @@ describe("installmentPlanDeleteTool", () => {
 
   it("should fail validation for missing or invalid fields", () => {
     const missingId = {};
-    const invalidId = { planId: null };
+    const invalidId = { plan_id: null };
     expect(() => deleteSchema.parse(missingId)).toThrow();
     expect(() => deleteSchema.parse(invalidId)).toThrow();
   });

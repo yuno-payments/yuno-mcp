@@ -50,7 +50,7 @@ const installmentPlanCreateSchema = z
 
 const installmentPlanUpdateSchema = z
   .object({
-    planId: z.string().describe("The unique identifier of the installment plan to update"),
+    plan_id: z.string().describe("The unique identifier of the installment plan to update"),
     name: z.string().nullish(),
     account_id: z.array(z.string()).nullish().describe("Account IDs for the plan"),
     merchant_reference: z.string().nullish(),
