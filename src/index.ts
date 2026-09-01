@@ -4,7 +4,7 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
-import { normalizeParamKeys } from "./tools/aliases";
+import { normalizeParamKeys, withTwinKeys } from "./tools/aliases";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -53,7 +53,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       : undefined;
     const inputSchemaShape = requiresConfirmation
       ? {
-          ...registeredInputSchema.shape,
+          ...withTwinKeys(registeredInputSchema.shape),
           confirm_token: z
             .string()
             .optional()
@@ -61,7 +61,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
             ),
         }
-      : registeredInputSchema.shape;
+      : withTwinKeys(registeredInputSchema.shape);
 
     server.registerTool(
       tool.method,
