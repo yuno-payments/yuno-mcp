@@ -4,6 +4,7 @@ import {
   paymentCaptureAuthorizationSchema,
   paymentCreateSchema,
   paymentRefundSchema,
+  paymentCancelOrRefundSchema,
   yunoPaymentOutputSchema,
   yunoPaymentListOutputSchema,
 } from "../../schemas";
@@ -213,7 +214,7 @@ export const paymentCancelOrRefundTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Cancel or Refund Payment", destructiveHint: true, idempotentHint: false },
   schema: z.object({
     paymentId: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
-    body: paymentRefundSchema,
+    body: paymentCancelOrRefundSchema,
     idempotencyKey: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,

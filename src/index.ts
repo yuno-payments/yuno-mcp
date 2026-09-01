@@ -4,6 +4,7 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { normalizeParamKeys } from "./tools/aliases";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -76,7 +77,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
           const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
-          const params = requiresConfirmation ? strippedParams : rawParams;
+          const params = normalizeParamKeys(tool.schema, requiresConfirmation ? strippedParams : rawParams);
 
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {

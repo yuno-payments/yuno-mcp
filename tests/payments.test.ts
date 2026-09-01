@@ -400,3 +400,17 @@ describe("paymentCaptureAuthorizationTool", () => {
     expect(() => paymentCaptureAuthorizationSchema.parse(invalidId)).toThrow();
   });
 });
+
+describe("refund reasons", () => {
+  const base = { merchant_reference: "ref-123", amount: { currency: "USD", value: 10 } };
+
+  it("accepts REVERSE, which the API documents for refunds", () => {
+    expect(paymentRefundSchema.safeParse({ ...base, reason: "REVERSE" }).success).toBe(true);
+  });
+
+  it("requires a reason on cancel-or-refund, and only there", () => {
+    expect(paymentCancelOrRefundTool.schema.safeParse({ paymentId: "p".repeat(36), body: base }).success).toBe(false);
+    expect(paymentCancelOrRefundTool.schema.safeParse({ paymentId: "p".repeat(36), body: { ...base, reason: "DUPLICATE" } }).success).toBe(true);
+    expect(paymentRefundTool.schema.safeParse({ paymentId: "p".repeat(36), transactionId: "t".repeat(36), body: base }).success).toBe(true);
+  });
+});

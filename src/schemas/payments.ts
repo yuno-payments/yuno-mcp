@@ -152,7 +152,10 @@ const operationPaymentResponseAdditionalDataSchema = z
 const paymentRefundSchema = z
   .object({
     description: z.string().min(3).max(255).nullish(),
-    reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER"]).nullish(),
+    reason: z
+      .enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER", "REVERSE"])
+      .nullish()
+      .describe("REVERSE also reverses the recipient funds when a recipient is involved"),
     merchant_reference: z.string().min(3).max(255),
     amount: z
       .object({
@@ -205,6 +208,11 @@ const paymentRefundSchema = z
       .describe("Payment method details for the refund"),
   })
   .passthrough();
+
+// Cancel-or-refund is the one endpoint where the API requires the reason.
+const paymentCancelOrRefundSchema = paymentRefundSchema.extend({
+  reason: z.enum(["DUPLICATE", "FRAUDULENT", "REQUESTED_BY_CUSTOMER", "REVERSE"]),
+});
 
 const paymentCancelSchema = z
   .object({
@@ -336,6 +344,7 @@ const yunoPaymentListOutputSchema = z
 export {
   paymentCreateSchema,
   paymentRefundSchema,
+  paymentCancelOrRefundSchema,
   paymentCancelSchema,
   paymentCaptureAuthorizationSchema,
   yunoPaymentOutputSchema,
