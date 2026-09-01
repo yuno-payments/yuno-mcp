@@ -15,6 +15,7 @@ import type {
   PaymentCaptureAuthorizationSchema,
   PaymentCreateBody,
   PaymentCreateSchema,
+  PaymentCancelOrRefundSchema,
   PaymentRefundSchema,
   YunoPayment,
 } from "./types";
@@ -226,7 +227,7 @@ export const paymentCancelOrRefundTool = {
       idempotency_key: idempotencyKey,
     }: {
       payment_id: string;
-      body: PaymentRefundSchema;
+      body: PaymentCancelOrRefundSchema;
       idempotency_key: string;
     }): Promise<Output<TType, YunoPayment>> => {
       const finalIdempotencyKey = idempotencyKey || randomUUID();
