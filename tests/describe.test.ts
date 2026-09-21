@@ -1,5 +1,7 @@
 import { expect, it, describe } from "@rstest/core";
 import { describeTool } from "../src/tools/describe";
+import { EXAMPLES } from "../src/tools/describe/examples";
+import { tools } from "../src/tools";
 import type { YunoClient } from "../src/client";
 
 const context = { yunoClient: {} as YunoClient, type: "object" as const };
@@ -53,5 +55,19 @@ describe("describeTool", () => {
         }
       }
     }
+  });
+});
+
+describe("describeTool worked examples", () => {
+  /**
+   * describeTool is where every compacted tool sends a model for the full schema,
+   * and a model copies the example it gets back. An example its own schema rejects
+   * teaches the model to make a call that fails.
+   */
+  it.each(Object.keys(EXAMPLES))("%s example passes its own input schema", (method) => {
+    const tool = tools.find((candidate) => candidate.method === method);
+    expect(tool).toBeDefined();
+    const result = tool?.schema.safeParse(EXAMPLES[method]);
+    expect(result?.error?.issues ?? []).toEqual([]);
   });
 });

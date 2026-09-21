@@ -26,7 +26,7 @@ export const EXAMPLES: Partial<Record<string, unknown>> = {
           },
         },
       },
-      customer_payer: { id: "customer-uuid", email: "jane@example.com" },
+      customer_payer: { id: "8f4c0c1e-5b6a-4a51-9b8e-6f0d2c3a7e11", email: "jane@example.com" },
     },
   },
   paymentAuthorize: {
@@ -55,7 +55,8 @@ export const EXAMPLES: Partial<Record<string, unknown>> = {
     country: "BR",
     amount: { currency: "BRL", value: 49.9 },
     frequency: { type: "MONTH", value: 1 },
-    customer_payer: { customer_id: "customer-uuid", payment_method_code: "vaulted-method-code" },
+    customer_payer: { id: "8f4c0c1e-5b6a-4a51-9b8e-6f0d2c3a7e11" },
+    payment_method: { type: "CARD", vaulted_token: "vaulted-token-from-paymentMethodEnroll" },
   },
   customerCreate: {
     merchant_customer_id: "user-123",
@@ -66,11 +67,26 @@ export const EXAMPLES: Partial<Record<string, unknown>> = {
   },
   checkoutSessionCreateOtt: {
     session_id: "checkout-session-uuid",
-    body: {
-      payment_method: {
-        type: "CARD",
-        detail: { card: { card_data: { number: "4111111111111111", expiration_month: 12, expiration_year: 2030, security_code: "123", holder_name: "JANE DOE" } } },
+    payment_method: {
+      type: "CARD",
+      vault_on_success: false,
+      card: { number: "4111111111111111", expiration_month: 12, expiration_year: 30, security_code: "123", holder_name: "JANE DOE" },
+      customer: {
+        browser_info: {
+          browser_time_difference: "300",
+          color_depth: "24",
+          java_enabled: false,
+          screen_width: "1920",
+          screen_height: "1080",
+          user_agent: "Mozilla/5.0",
+          language: "en-US",
+          javascript_enabled: true,
+          accept_browser: "text/html",
+          accept_content: "text/html",
+          accept_header: "text/html",
+        },
       },
     },
+    three_d_secure: {},
   },
 };
