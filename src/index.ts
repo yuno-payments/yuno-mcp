@@ -15,6 +15,19 @@ type CreateOptions = {
   mode?: ServerMode;
 };
 
+const toSnakeCase = (key: string) => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+// Names the spelling a model should have used, so the retry is one step away. No
+// quotes: the SDK embeds this message in a JSON dump, which would escape them.
+function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
+  if (issue.code !== "unrecognized_keys") return undefined;
+  const hints = issue.keys.map((key) => {
+    const snake = toSnakeCase(key);
+    return snake === key ? key : `${key} (did you mean ${snake}?)`;
+  });
+  return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
+}
+
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
     {
@@ -65,13 +78,17 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             ),
         }
       : registeredInputSchema.shape;
+    // Strict at the top level: a raw shape registers in strip mode, and the SDK would
+    // drop an unknown key before the handler ran. A mistyped optional parameter must
+    // fail loudly — a dropped `idempotencyKey` means a retry charges or refunds twice.
+    const registeredInput = z.strictObject(inputSchemaShape, { error: unknownParameterError });
 
     server.registerTool(
       tool.method,
       {
         title: tool.annotations.title,
         description: tool.description,
-        inputSchema: inputSchemaShape,
+        inputSchema: registeredInput,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
