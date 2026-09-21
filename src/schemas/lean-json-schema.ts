@@ -60,6 +60,35 @@ function foldNullableUnion(node: JsonSchemaNode): JsonSchemaNode {
   return { ...other, ...rest, type: [other.type, "null"] };
 }
 
+/**
+ * Leans only the schema fields of a `tools/list` result: each tool's `inputSchema`
+ * and `outputSchema`. Everything else in the envelope — names, titles,
+ * descriptions, annotations, `_meta`, pagination — passes through untouched.
+ *
+ * leanJsonSchema is only correct on JSON Schema documents. Applied to the whole
+ * envelope it would also strip any `$schema` key and fold any null-union it found
+ * in fields that are not schemas, which is harmless today and a silent rewrite the
+ * day one of them happens to take that shape.
+ */
+export function leanToolsListResult<T>(result: T): T {
+  if (!result || typeof result !== "object") return result;
+  const envelope = result as Record<string, unknown>;
+  if (!Array.isArray(envelope.tools)) return result;
+  const tools: unknown[] = envelope.tools;
+  return {
+    ...envelope,
+    tools: tools.map((tool) => {
+      if (!tool || typeof tool !== "object") return tool;
+      const { inputSchema, outputSchema, ...rest } = tool as Record<string, unknown>;
+      return {
+        ...rest,
+        ...(inputSchema !== undefined && { inputSchema: leanJsonSchema(inputSchema) }),
+        ...(outputSchema !== undefined && { outputSchema: leanJsonSchema(outputSchema) }),
+      };
+    }),
+  } as T;
+}
+
 /** Recursively applies both rewrites. Returns a new structure; the input is untouched. */
 export function leanJsonSchema<T>(node: T): T {
   if (Array.isArray(node)) {

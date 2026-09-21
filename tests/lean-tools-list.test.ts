@@ -1,7 +1,7 @@
 import { expect, it, describe, afterEach } from "@rstest/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { leanJsonSchema } from "../src/schemas/lean-json-schema";
+import { leanJsonSchema, leanToolsListResult } from "../src/schemas/lean-json-schema";
 import { initializeYunoMCP } from "../src/index";
 
 describe("leanJsonSchema", () => {
@@ -69,6 +69,37 @@ describe("leanJsonSchema", () => {
     const input = { anyOf: [{ type: "string" }, { type: "null" }] };
     leanJsonSchema(input);
     expect(input).toEqual({ anyOf: [{ type: "string" }, { type: "null" }] });
+  });
+});
+
+describe("leanToolsListResult", () => {
+  const nullable = { anyOf: [{ type: "string" }, { type: "null" }] };
+
+  it("leans each tool's inputSchema and outputSchema", () => {
+    const result = leanToolsListResult({ tools: [{ name: "t", inputSchema: { $schema: "x", properties: { a: nullable } }, outputSchema: nullable }] });
+    expect(result.tools[0]).toEqual({ name: "t", inputSchema: { properties: { a: { type: ["string", "null"] } } }, outputSchema: { type: ["string", "null"] } });
+  });
+
+  it("leaves every non-schema field alone, even one shaped like a schema", () => {
+    const envelope = {
+      tools: [{ name: "t", description: "d", annotations: { hint: nullable }, _meta: { $schema: "keep" }, inputSchema: { type: "object" } }],
+      _meta: { $schema: "keep", fold: nullable },
+      nextCursor: "c",
+    };
+    const result = leanToolsListResult(envelope);
+    expect(result.tools[0].annotations).toEqual({ hint: nullable });
+    expect(result.tools[0]._meta).toEqual({ $schema: "keep" });
+    expect(result._meta).toEqual({ $schema: "keep", fold: nullable });
+    expect(result.nextCursor).toBe("c");
+  });
+
+  it("omits a schema field the tool did not have", () => {
+    expect(leanToolsListResult({ tools: [{ name: "t", inputSchema: {} }] }).tools[0]).not.toHaveProperty("outputSchema");
+  });
+
+  it("passes through anything that is not a tool list", () => {
+    expect(leanToolsListResult(null)).toBeNull();
+    expect(leanToolsListResult({ other: nullable })).toEqual({ other: nullable });
   });
 });
 

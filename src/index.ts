@@ -4,7 +4,7 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
-import { leanJsonSchema } from "./schemas/lean-json-schema";
+import { leanToolsListResult } from "./schemas/lean-json-schema";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -194,8 +194,8 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 }
 
 /**
- * Rewrites the `tools/list` response through leanJsonSchema
- * (src/schemas/lean-json-schema.ts), which strips `$schema` and folds
+ * Rewrites the schema fields of the `tools/list` response through
+ * leanToolsListResult (src/schemas/lean-json-schema.ts), which strips `$schema` and folds
  * `anyOf: [X, null]` into `type: [X, "null"]` — 17% of the payload, with no
  * change to what any schema accepts.
  *
@@ -218,7 +218,7 @@ function applyLeanToolsList(server: McpServer): void {
     console.error("🚨  Yuno MCP: no tools/list handler to wrap; serving unabbreviated schemas");
     return;
   }
-  protocol._requestHandlers.set("tools/list", async (request, extra) => leanJsonSchema(await registered(request, extra)));
+  protocol._requestHandlers.set("tools/list", async (request, extra) => leanToolsListResult(await registered(request, extra)));
 }
 
 async function initializeYunoMCP({
