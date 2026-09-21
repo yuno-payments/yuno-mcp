@@ -183,10 +183,16 @@ const ottCreateSchema = z
       .object({
         type: z.string().describe("Payment method type (e.g., 'CARD', 'NEQUI', etc.)"),
         vault_on_success: z.boolean().describe("Whether to vault the payment method on success"),
-        // expiration_year is inherited from cardDataSchema: either format is accepted
-        // here, and the handler normalizes to YY before calling the API.
+        // Either format is accepted here, and the handler normalizes to YY before
+        // calling the API. YY can only name 2000-2099, so a 4-digit year outside
+        // that range is rejected rather than wrapped (2100 would become 00).
         card: cardDataSchema
           .extend({
+            expiration_year: cardDataSchema.shape.expiration_year
+              .refine((year) => year <= 99 || (year >= 2000 && year <= 2099), {
+                message: "checkoutSessionCreateOtt sends a 2-digit year, so a 4-digit expiration_year must be 2000-2099",
+              })
+              .describe("Card expiration year, as YY (29) or YYYY (2029, 2000-2099)"),
             security_code: z.string().describe("Card security code (CVV)"),
             holder_name: z.string().describe("Cardholder name"),
           })

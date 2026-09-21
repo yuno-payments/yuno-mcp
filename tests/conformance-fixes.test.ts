@@ -132,6 +132,24 @@ describe("card expiration year", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it.each([
+    [2000, true],
+    [2099, true],
+    [1999, false],
+    [2100, false],
+    [3026, false],
+  ])("checkoutSessionCreateOtt takes %i as a 4-digit year: %s", (expiration_year, accepted) => {
+    const parsed = ottCreateSchema.shape.payment_method.shape.card.unwrap().unwrap().shape.expiration_year.safeParse(expiration_year);
+    expect(parsed.success).toBe(accepted);
+  });
+
+  it("never wraps a year it cannot represent as YY", () => {
+    expect(toTwoDigitExpirationYear({ payment_method: { card: { expiration_year: 2000 } } }).payment_method.card.expiration_year).toBe(0);
+    for (const expiration_year of [2100, 3026, 1999]) {
+      expect(() => toTwoDigitExpirationYear({ payment_method: { card: { expiration_year } } })).toThrow("has no 2-digit form");
+    }
+  });
+
   it("sends YY to the OTT endpoint whichever format the caller used", () => {
     const request = { payment_method: { card: { expiration_year: 2029 } } };
     expect(toTwoDigitExpirationYear(request).payment_method.card.expiration_year).toBe(29);

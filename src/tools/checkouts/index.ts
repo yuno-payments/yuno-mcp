@@ -18,8 +18,12 @@ export function toTwoDigitExpirationYear<T extends { payment_method: { card?: { 
   request: T,
 ): T {
   const card = request.payment_method.card;
-  if (!card || card.expiration_year < 1000) return request;
-  return { ...request, payment_method: { ...request.payment_method, card: { ...card, expiration_year: card.expiration_year % 100 } } };
+  if (!card || card.expiration_year <= 99) return request;
+  // ottCreateSchema already rejects these; a wrapped year would be a wrong card.
+  if (card.expiration_year < 2000 || card.expiration_year > 2099) {
+    throw new Error(`expiration_year ${String(card.expiration_year)} has no 2-digit form; use 2000-2099 or YY`);
+  }
+  return { ...request, payment_method: { ...request.payment_method, card: { ...card, expiration_year: card.expiration_year - 2000 } } };
 }
 
 export const checkoutSessionCreateTool = {
