@@ -236,8 +236,12 @@ describe("a live tools/list", () => {
   });
 
   it("stays within the payload budget", async () => {
-    /** Measured at 139,653 bytes when written, down from 153,517 on the base branch (#51). */
-    const BUDGET_BYTES = 142_000;
+    /**
+     * Measured at 139,653 bytes when written, down from 153,517 on the base branch
+     * (#51). The headroom is for #53, which restores ~11 KB of parameter
+     * descriptions compactSchema used to drop: 150,520 bytes with both.
+     */
+    const BUDGET_BYTES = 155_000;
     const bytes = Buffer.byteLength(JSON.stringify((await listTools()).lean));
     console.log(`live tools/list: ${String(bytes)} bytes (~${String(Math.round(bytes / 4))} tokens), budget ${String(BUDGET_BYTES)}`);
     expect(bytes).toBeLessThan(BUDGET_BYTES);
