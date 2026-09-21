@@ -4,7 +4,6 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
-import { normalizeParamKeys, withTwinKeys } from "./tools/aliases";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -51,9 +50,13 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     const registeredOutputSchema = tool.outputSchema
       ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
       : undefined;
+    // Every parameter is snake_case, matching the Yuno API. camelCase aliases used
+    // to be advertised beside each key, but buying that tolerance meant marking the
+    // canonical key optional, which emptied `required[]` on 25 of the 38 tools.
+    // A schema a model can trust is worth more than one that forgives a guess.
     const inputSchemaShape = requiresConfirmation
       ? {
-          ...withTwinKeys(registeredInputSchema.shape),
+          ...registeredInputSchema.shape,
           confirm_token: z
             .string()
             .optional()
@@ -61,7 +64,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
             ),
         }
-      : withTwinKeys(registeredInputSchema.shape);
+      : registeredInputSchema.shape;
 
     server.registerTool(
       tool.method,
@@ -77,7 +80,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
           const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
-          const params = normalizeParamKeys(tool.schema, requiresConfirmation ? strippedParams : rawParams);
+          const params: unknown = requiresConfirmation ? strippedParams : rawParams;
 
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
