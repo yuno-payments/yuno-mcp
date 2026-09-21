@@ -67,10 +67,17 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
     // Registration advertises compacted schemas (see src/schemas/compact.ts);
     // the strict tool.schema still validates inside the handler below.
-    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS });
+    const collapse = { seen: false };
+    const onCollapse = () => {
+      collapse.seen = true;
+    };
+    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS, onCollapse });
     const registeredOutputSchema = tool.outputSchema
-      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
+      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true, onCollapse })
       : undefined;
+    // Point at describeTool only where something was actually left out, and never
+    // from describeTool itself.
+    const description = collapse.seen && tool !== describeTool ? `${tool.description} ${COMPACTED_SCHEMA_HINT}` : tool.description;
     // Every parameter is snake_case, matching the Yuno API. camelCase aliases used
     // to be advertised beside each key, but buying that tolerance meant marking the
     // canonical key optional, which emptied `required[]` on 25 of the 38 tools.
@@ -95,7 +102,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       tool.method,
       {
         title: tool.annotations.title,
-        description: `${tool.description} ${COMPACTED_SCHEMA_HINT}`,
+        description,
         inputSchema: registeredInput,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,

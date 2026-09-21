@@ -5,6 +5,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { ListToolsRequestSchema, type ListToolsResult } from "@modelcontextprotocol/sdk/types.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { leanJsonSchema, leanToolsListResult } from "../src/schemas/lean-json-schema";
+import { compactSchema, HEAVY_KEYS } from "../src/schemas/compact";
+import { tools } from "../src/tools";
+import { describeTool } from "../src/tools/describe";
 import { initializeYunoMCP } from "../src/index";
 
 describe("leanJsonSchema", () => {
@@ -160,12 +163,28 @@ describe("a live tools/list", () => {
     expect(arrays).toEqual([]);
   });
 
-  it("serves the describeTool pointer once per tool, not once per collapsed field", async () => {
+  it("points at describeTool only from tools whose schema was abbreviated", async () => {
     const { lean } = await listTools();
-    const raw = JSON.stringify(lean);
-    const mentions = raw.split("describeTool for the full schema").length - 1;
-    expect(mentions).toBe(lean.tools.length);
-    expect(raw).not.toContain("full field list");
+    const abbreviated = [...tools, describeTool]
+      .filter((tool) => {
+        let collapsed = false;
+        const onCollapse = () => {
+          collapsed = true;
+        };
+        compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS, onCollapse });
+        if (tool.outputSchema) compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true, onCollapse });
+        return collapsed && tool !== describeTool;
+      })
+      .map((tool) => tool.method)
+      .sort();
+    const hinted = lean.tools
+      .filter((tool) => tool.description?.includes("call describeTool for the full schema"))
+      .map((tool) => tool.name)
+      .sort();
+    expect(hinted).toEqual(abbreviated);
+    expect(hinted).not.toContain("describeTool");
+    expect(hinted.length).toBeLessThan(lean.tools.length);
+    expect(JSON.stringify(lean)).not.toContain("full field list");
   });
 
   it("still advertises a nullable field as accepting null", async () => {
@@ -217,7 +236,7 @@ describe("a live tools/list", () => {
   });
 
   it("stays within the payload budget", async () => {
-    /** Measured at 140,091 bytes when written, down from 152,386 before #52. */
+    /** Measured at 139,653 bytes when written, down from 153,517 on the base branch (#51). */
     const BUDGET_BYTES = 142_000;
     const bytes = Buffer.byteLength(JSON.stringify((await listTools()).lean));
     console.log(`live tools/list: ${String(bytes)} bytes (~${String(Math.round(bytes / 4))} tokens), budget ${String(BUDGET_BYTES)}`);

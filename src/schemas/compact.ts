@@ -29,7 +29,13 @@ type CompactOptions = {
    * own that must also pass output validation. Do not remove one without the other.
    */
   partialTopLevel?: boolean;
+  /** Called once per subtree that is collapsed, i.e. whenever the result abbreviates the schema. */
+  onCollapse?: () => void;
 };
+
+function withDescription<T extends z.ZodType>(rebuilt: T, original: z.ZodType): T {
+  return original.description ? rebuilt.describe(original.description) : rebuilt;
+}
 
 /**
  * A collapsed subtree keeps its own description and nothing more.
@@ -37,18 +43,12 @@ type CompactOptions = {
  * This used to append "Call describeTool with this tool's name for the full field
  * list." to every collapsed node — 141 copies across the tool list, 9,024 bytes of
  * a 152 KB `tools/list`, repeating one fact a client only needs once. The pointer
- * to describeTool now lives once per tool, in COMPACTED_SCHEMA_HINT (src/index.ts).
+ * to describeTool now lives once per tool, in COMPACTED_SCHEMA_HINT (src/index.ts),
+ * and only on tools where `onCollapse` fired.
  */
-function collapsedDescription(schema: z.ZodType): string | undefined {
-  return schema.description;
-}
-
-function describeIf<T extends z.ZodType>(rebuilt: T, description: string | undefined): T {
-  return description ? rebuilt.describe(description) : rebuilt;
-}
-
-function withDescription<T extends z.ZodType>(rebuilt: T, original: z.ZodType): T {
-  return original.description ? rebuilt.describe(original.description) : rebuilt;
+function collapsed<T extends z.ZodType>(rebuilt: T, original: z.ZodType, options: CompactOptions): T {
+  options.onCollapse?.();
+  return withDescription(rebuilt, original);
 }
 
 function walk(schema: z.ZodType, options: CompactOptions, depth: number): z.ZodType {
@@ -62,20 +62,20 @@ function walk(schema: z.ZodType, options: CompactOptions, depth: number): z.ZodT
   }
   if (schema instanceof z.ZodArray) {
     if (depth >= options.maxDepth) {
-      return describeIf(z.array(z.unknown()), collapsedDescription(schema));
+      return collapsed(z.array(z.unknown()), schema, options);
     }
     return withDescription(z.array(walk(schema.element as z.ZodType, options, depth + 1)), schema);
   }
   if (schema instanceof z.ZodUnion) {
     if (depth >= options.maxDepth) {
-      return describeIf(z.unknown(), collapsedDescription(schema));
+      return collapsed(z.unknown(), schema, options);
     }
     const members = (schema.options as z.ZodType[]).map((option) => walk(option, options, depth + 1));
     return withDescription(z.union(members as [z.ZodType, z.ZodType, ...z.ZodType[]]), schema);
   }
   if (schema instanceof z.ZodObject) {
     if (depth >= options.maxDepth) {
-      return describeIf(z.record(z.string(), z.unknown()), collapsedDescription(schema));
+      return collapsed(z.record(z.string(), z.unknown()), schema, options);
     }
     const shape: Record<string, z.ZodType> = {};
     for (const [key, value] of Object.entries(schema.shape as Record<string, z.ZodType>)) {
