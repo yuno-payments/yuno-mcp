@@ -60,29 +60,43 @@ function generateBaseUrlApi(publicApiKey: string) {
 }
 
 /**
- * An authorization must not capture. The API captures a card payment unless
- * `payment_method.detail.card.capture` is false, and this used to be set only when
- * the caller had already sent `detail.card` — so authorizing with just a
- * `vaulted_token` or `token` went out as a PURCHASE and charged the customer.
- * Verified against api-staging on 2026-09-21: the same authorize call produced a
- * PURCHASE transaction without `detail.card` and an AUTHORIZE transaction with it.
+ * An authorization must not capture. The API captures unless the payment method's
+ * detail says `capture: false`, and this used to be set only when the caller had
+ * already sent `detail.card` — so authorizing with just a `vaulted_token` or `token`
+ * went out as a PURCHASE and charged the customer. Verified against api-staging on
+ * 2026-09-21: the same authorize call produced a PURCHASE transaction without
+ * `detail.card` and an AUTHORIZE transaction with it.
  *
- * Returns a copy; the caller's object is not mutated. Only card payments carry a
- * capture flag, so other payment method types pass through untouched unless the
- * caller already supplied `detail.card`.
+ * public-api reads the flag from `detail.card.capture` for cards and from
+ * `detail.wallet.capture` for wallets (Google Pay, Apple Pay), so:
+ * - a `card` or `wallet` detail the caller sent always gets `capture: false`;
+ * - a CARD or known wallet type without one gets it created;
+ * - any other type is refused. There is no flag this client knows to hold its
+ *   funds, and a refusal is better than a silent purchase.
+ *
+ * The type is matched case-insensitively. Returns a copy; the caller's object is
+ * not mutated.
  */
+const CARD_TYPES: ReadonlySet<string> = new Set(["CARD"]);
+const WALLET_TYPES: ReadonlySet<string> = new Set(["GOOGLE_PAY", "APPLE_PAY"]);
+
 export function withCaptureDisabled(payment: PaymentCreateSchema["payment"]): PaymentCreateSchema["payment"] {
   const paymentMethod = payment.payment_method;
   if (!paymentMethod) return payment;
-  const card = paymentMethod.detail?.card;
-  if (paymentMethod.type !== "CARD" && !card) return payment;
-  return {
-    ...payment,
-    payment_method: {
-      ...paymentMethod,
-      detail: { ...paymentMethod.detail, card: { ...card, capture: false } },
-    },
+  const type = paymentMethod.type.toUpperCase();
+  const detail: Record<string, unknown> = { ...paymentMethod.detail };
+  const holdsFunds = (key: "card" | "wallet") => {
+    detail[key] = { ...(detail[key] as Record<string, unknown> | null | undefined), capture: false };
   };
+
+  if (detail.card || CARD_TYPES.has(type)) holdsFunds("card");
+  if (detail.wallet || WALLET_TYPES.has(type)) holdsFunds("wallet");
+  if (!detail.card && !detail.wallet) {
+    throw new Error(
+      `UNSUPPORTED_AUTHORIZATION: paymentAuthorize holds funds only for CARD, GOOGLE_PAY and APPLE_PAY payment methods, or a payment_method.detail.card or detail.wallet. Nothing was sent for type ${paymentMethod.type}; use paymentCreate to charge it directly.`,
+    );
+  }
+  return { ...payment, payment_method: { ...paymentMethod, detail } };
 }
 
 /**

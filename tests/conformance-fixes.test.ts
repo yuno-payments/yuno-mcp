@@ -4,6 +4,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { initializeYunoMCP } from "../src/index";
 import { cardDataSchema, ottCreateSchema } from "../src/schemas";
 import { toTwoDigitExpirationYear } from "../src/tools/checkouts";
+import { withCaptureDisabled } from "../src/client/YunoClient";
 
 /**
  * Fixes for findings from the conformance review of 2026-09-20. Each block pins
@@ -166,15 +167,22 @@ describe("paymentAuthorize never captures", () => {
    */
   const base = { description: "d", country: "CO", merchant_order_id: "m", amount: { currency: "COP", value: 1 }, workflow: "DIRECT" as const };
 
-  async function sentBody(payment: Record<string, unknown>) {
+  async function authorize(payment: Record<string, unknown>) {
     let body: Record<string, unknown> | undefined;
     const client = await connect("staging_key");
     globalThis.fetch = ((_url: string, init?: { body?: string }) => {
       body = init?.body ? (JSON.parse(init.body) as Record<string, unknown>) : undefined;
       return Promise.resolve(new Response(JSON.stringify({ id: PAYMENT_ID }), { status: 200 }));
     }) as unknown as typeof fetch;
-    await client.callTool({ name: "paymentAuthorize", arguments: { payment: { ...base, ...payment } } });
-    return body as { payment_method: { detail?: { card?: { capture?: boolean; installments?: number } } } };
+    const result = await client.callTool({ name: "paymentAuthorize", arguments: { payment: { ...base, ...payment } } });
+    type Detail = { capture?: boolean; installments?: number; payment_token?: string };
+    return { result, body: body as { payment_method: { detail?: { card?: Detail; wallet?: Detail } } } | undefined };
+  }
+
+  async function sentBody(payment: Record<string, unknown>) {
+    const { body } = await authorize(payment);
+    if (!body) throw new Error("nothing was sent");
+    return body;
   }
 
   it("disables capture for a vaulted card sent without detail.card", async () => {
@@ -192,8 +200,42 @@ describe("paymentAuthorize never captures", () => {
     expect(body.payment_method.detail?.card).toEqual({ installments: 3, capture: false });
   });
 
-  it("leaves a non-card payment method without a card detail untouched", async () => {
-    const body = await sentBody({ payment_method: { type: "PIX" } });
-    expect(body.payment_method.detail).toBeUndefined();
+  it("matches the card type case-insensitively", async () => {
+    const body = await sentBody({ payment_method: { type: "card", token: "t" } });
+    expect(body.payment_method.detail?.card?.capture).toBe(false);
+  });
+
+  /**
+   * public-api reads a wallet's capture flag from detail.wallet, and defaults it to
+   * true — a Google Pay or Apple Pay "authorization" was a purchase.
+   */
+  it.each(["GOOGLE_PAY", "APPLE_PAY", "google_pay"])("disables capture for a %s wallet sent without a detail", async (type) => {
+    const body = await sentBody({ payment_method: { type, token: "t" } });
+    expect(body.payment_method.detail?.wallet?.capture).toBe(false);
+    expect(body.payment_method.detail?.card).toBeUndefined();
+  });
+
+  it("keeps the caller's wallet details and overrides capture: true", async () => {
+    const body = await sentBody({ payment_method: { type: "APPLE_PAY", detail: { wallet: { payment_token: "ap", capture: true } } } });
+    expect(body.payment_method.detail?.wallet).toEqual({ payment_token: "ap", capture: false });
+  });
+
+  it("disables capture on a wallet detail whatever the type says", async () => {
+    const body = await sentBody({ payment_method: { type: "SOME_NEW_WALLET", detail: { wallet: { payment_token: "w" } } } });
+    expect(body.payment_method.detail?.wallet?.capture).toBe(false);
+  });
+
+  it("refuses a type it cannot hold funds for, and sends nothing", async () => {
+    const { result, body } = await authorize({ payment_method: { type: "PIX" } });
+    expect(result.isError).toBe(true);
+    expect(textFrom(result)).toContain("UNSUPPORTED_AUTHORIZATION");
+    expect(textFrom(result)).toContain("paymentCreate");
+    expect(body).toBeUndefined();
+  });
+
+  it("does not mutate the caller's payment", () => {
+    const payment = { ...base, payment_method: { type: "CARD", detail: { card: { capture: true } } } };
+    withCaptureDisabled(payment);
+    expect(payment.payment_method.detail.card.capture).toBe(true);
   });
 });
