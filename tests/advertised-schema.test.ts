@@ -24,13 +24,15 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-async function connectedClient(): Promise<{ client: Client; bodies: () => unknown[]; headers: () => Record<string, string>[] }> {
+async function connectedClient(
+  respond: () => Response = () => new Response(JSON.stringify({ id: PAYMENT_ID }), { status: 200 }),
+): Promise<{ client: Client; bodies: () => unknown[]; headers: () => Record<string, string>[] }> {
   const bodies: unknown[] = [];
   const headers: Record<string, string>[] = [];
   globalThis.fetch = ((_url: string, init?: { body?: string; headers?: Record<string, string> }) => {
     bodies.push(init?.body ? JSON.parse(init.body) : undefined);
     headers.push(init?.headers ?? {});
-    return Promise.resolve(new Response(JSON.stringify({ id: PAYMENT_ID }), { status: 200 }));
+    return Promise.resolve(respond());
   }) as unknown as typeof fetch;
   const result = await initializeYunoMCP({ accountCode: "acct", publicApiKey: "staging_key", privateSecretKey: "test-secret" });
   if (!result?.yunoMCP) throw new Error("initializeYunoMCP failed");
@@ -198,5 +200,13 @@ describe("the advertised schema through the MCP SDK", () => {
     });
     expect(result.isError).toBeFalsy();
     expect(headers()[0]["x-idempotency-key"]).toBe(KEY);
+  });
+
+  it("returns a no-content delete as a success, not an output validation error", async () => {
+    const { client } = await connectedClient(() => new Response(null, { status: 204 }));
+    const result = await client.callTool({ name: "recipientDelete", arguments: { recipient_id: "r".repeat(36) } });
+    expect(result.isError).toBeFalsy();
+    expect(result.structuredContent).toEqual({});
+    expect(textFrom(result)).toBe("(empty response body)");
   });
 });

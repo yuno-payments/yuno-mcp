@@ -124,6 +124,7 @@ describe("recipientDeleteTool", () => {
     expect(result.content[0].text).toContain("DELETED");
   });
 
+  // Through the server, tests/advertised-schema.test.ts covers the same case.
   it("should tolerate an empty body from a no-content delete", async () => {
     const mockYunoClient = {
       recipients: { delete: rstest.fn().mockResolvedValue({ body: undefined, status: 201, headers: {} }) },

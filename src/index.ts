@@ -151,7 +151,10 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           const content: { type: "text"; text: string }[] = handlerResult.content.map((entry) => {
             if (entry.type === "object") {
-              return { type: "text" as const, text: JSON.stringify(entry.object, null, 4) };
+              // A no-content response (e.g. recipientDelete) has no body to print, and
+              // JSON.stringify(undefined) returns undefined despite its declared type.
+              const body = JSON.stringify(entry.object, null, 4) as string | undefined;
+              return { type: "text" as const, text: body ?? "(empty response body)" };
             }
             return { type: "text" as const, text: (entry as unknown as { type: "text"; text: string }).text };
           });
@@ -186,7 +189,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             return { content: enrichedContent };
           }
 
-          const structuredContent = primary?.type === "object" ? (primary.object as Record<string, unknown>) : {};
+          // An empty body still owes the SDK a structuredContent; the partial top level
+          // of every output schema accepts {}.
+          const structuredContent = (primaryBody ?? {}) as Record<string, unknown>;
 
           return { content: enrichedContent, structuredContent };
         } catch (error) {
