@@ -238,15 +238,18 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
  */
 function applyLeanToolsList(server: McpServer): void {
   const protocol = server.server as unknown as {
-    _requestHandlers: Map<string, (request: unknown, extra: unknown) => Promise<unknown>>;
+    // Optional because it is private: if an SDK release renames it, fall back
+    // instead of throwing, which would fail initializeYunoMCP on every request.
+    _requestHandlers?: Map<string, (request: unknown, extra: unknown) => Promise<unknown>>;
   };
-  const registered = protocol._requestHandlers.get("tools/list");
-  if (!registered) {
+  const handlers = protocol._requestHandlers;
+  const registered = handlers?.get("tools/list");
+  if (!handlers || !registered) {
     // Better a full-size tool list than a server that cannot list its tools.
     console.error("🚨  Yuno MCP: no tools/list handler to wrap; serving unabbreviated schemas");
     return;
   }
-  protocol._requestHandlers.set("tools/list", async (request, extra) => leanToolsListResult(await registered(request, extra)));
+  handlers.set("tools/list", async (request, extra) => leanToolsListResult(await registered(request, extra)));
 }
 
 async function initializeYunoMCP({
