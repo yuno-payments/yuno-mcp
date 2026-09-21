@@ -43,13 +43,28 @@ async function parseJsonBody<T>(response: Response): Promise<T> {
   return JSON.parse(raw) as T;
 }
 
+const isApiKeyPrefix = (prefix: string): prefix is ApiKeyPrefix => Object.hasOwn(apiKeyPrefixToEnvironmentSuffix, prefix);
+
+/**
+ * The environment is chosen by the public key's prefix. An unrecognized prefix
+ * used to fall through to `https://apiundefined.y.uno/v1` — a host that does not
+ * resolve — so a mistyped key surfaced as undici's bare "fetch failed" while a
+ * mistyped private key got a proper INVALID_CREDENTIALS from the API. Returning
+ * undefined lets request() say what is actually wrong.
+ */
 function generateBaseUrlApi(publicApiKey: string) {
   const [apiKeyPrefix] = publicApiKey.split("_");
-  const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix as ApiKeyPrefix] as EnvironmentSuffix;
-  const baseURL = `https://api${environmentSuffix}.y.uno/v1` as const;
-
-  return baseURL;
+  if (!isApiKeyPrefix(apiKeyPrefix)) return undefined;
+  const environmentSuffix: EnvironmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix];
+  return `https://api${environmentSuffix}.y.uno/v1` as const;
 }
+
+/**
+ * Deliberately echoes nothing from the key: with no underscore in it, the
+ * "prefix" is the whole credential.
+ */
+const INVALID_PUBLIC_KEY_MESSAGE =
+  "INVALID_PUBLIC_API_KEY: the public-api-key is not recognized. It must start with dev_, staging_, sandbox_ or prod_, which selects the Yuno environment.";
 
 export class YunoClient {
   public accountCode: string;
@@ -81,6 +96,12 @@ export class YunoClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
+    // Fails per call rather than at construction: a thrown tool error reaches the
+    // client verbatim, while an initialization failure becomes a generic 500 in
+    // remote-yuno-mcp — which would hide the very message this exists to show.
+    if (this.baseUrl === undefined) {
+      throw new Error(INVALID_PUBLIC_KEY_MESSAGE);
+    }
     try {
       const url = `${this.baseUrl}${endpoint}`;
 

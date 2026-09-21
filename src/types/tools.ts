@@ -49,6 +49,12 @@ type Content<TType extends "text" | "object" = "object" | "text", TResult extend
 
 type Output<TType extends "text" | "object" = "object" | "text", TResult extends any = any> = {
   content: Content<TType, TResult>[];
+  /**
+   * Set by a handler that failed without an upstream call to point at — describeTool
+   * on an unknown name, say. Upstream failures are flagged by the registration
+   * wrapper from the HTTP status instead, so handlers that call the API need not set it.
+   */
+  isError?: boolean;
 };
 
 type HandlerContext<TType extends "object" | "text" = "object" | "text"> = {

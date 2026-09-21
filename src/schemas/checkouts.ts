@@ -183,9 +183,10 @@ const ottCreateSchema = z
       .object({
         type: z.string().describe("Payment method type (e.g., 'CARD', 'NEQUI', etc.)"),
         vault_on_success: z.boolean().describe("Whether to vault the payment method on success"),
+        // expiration_year is inherited from cardDataSchema: either format is accepted
+        // here, and the handler normalizes to YY before calling the API.
         card: cardDataSchema
           .extend({
-            expiration_year: z.number().int().min(20).max(99).describe("Card expiration year (YY format)"),
             security_code: z.string().describe("Card security code (CVV)"),
             holder_name: z.string().describe("Cardholder name"),
           })
