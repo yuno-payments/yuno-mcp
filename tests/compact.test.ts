@@ -101,11 +101,13 @@ describe("compactSchema", () => {
         ? JSON.stringify(z.toJSONSchema(compactSchema(tool.outputSchema, OUTPUT_OPTIONS), { unrepresentable: "any" }))
         : "";
       const size = input.length + output.length;
-      expect(size, `${tool.method} schema payload too large (${String(size)} chars)`).toBeLessThan(9_000);
+      // 9,000 until wrapper descriptions stopped being dropped: paymentCreate is 9,156 with them.
+      expect(size, `${tool.method} schema payload too large (${String(size)} chars)`).toBeLessThan(9_500);
       total += size;
     }
     // The full schemas serialize to ~500KB. Compaction exists to keep the whole
     // surface well under a small fraction of that; raise deliberately if it grows.
-    expect(total).toBeLessThan(150_000);
+    // 150,000 until wrapper descriptions stopped being dropped: 141,012 → 151,527.
+    expect(total).toBeLessThan(160_000);
   });
 });

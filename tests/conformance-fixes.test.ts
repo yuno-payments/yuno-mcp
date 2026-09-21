@@ -162,6 +162,37 @@ describe("payment method identifier", () => {
     const { yunoPaymentMethodOutputSchema } = await import("../src/schemas");
     expect(yunoPaymentMethodOutputSchema.shape.vaulted_token.description).toContain("payment_method_id");
   });
+
+  /**
+   * The two tests above read the source schemas. A client reads tools/list, and
+   * compactSchema used to rebuild `.nullish()` wrappers without the description
+   * sitting on them, so neither hint reached it.
+   */
+  it("says so in the live tools/list too", async () => {
+    const client = await connect("staging_key");
+    const listed = await client.listTools();
+    type Listed = { properties?: Record<string, { description?: string }> };
+    const enroll = listed.tools.find((tool) => tool.name === "paymentMethodEnroll")?.outputSchema as Listed;
+    expect(enroll.properties?.vaulted_token?.description).toContain("payment_method_id");
+    const retrieve = listed.tools.find((tool) => tool.name === "paymentMethodRetrieve")?.inputSchema as Listed;
+    expect(retrieve.properties?.payment_method_id?.description).toContain("vaulted_token");
+  });
+
+  it("keeps every top-level parameter description in the live tools/list", async () => {
+    const { tools } = await import("../src/tools");
+    const client = await connect("staging_key");
+    const listed = await client.listTools();
+    const missing = tools.flatMap((tool) => {
+      const properties = (listed.tools.find((listedTool) => listedTool.name === tool.method)?.inputSchema.properties ?? {}) as Record<
+        string,
+        { description?: string }
+      >;
+      return Object.entries(tool.schema.shape as Record<string, { description?: string }>)
+        .filter(([key, value]) => value.description && !properties[key]?.description)
+        .map(([key]) => `${tool.method}.${key}`);
+    });
+    expect(missing).toEqual([]);
+  });
 });
 
 describe("paymentAuthorize never captures", () => {
