@@ -4,11 +4,19 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { leanJsonSchema } from "./schemas/lean-json-schema";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
 type ServerMode = "read-only" | "full";
+
+/**
+ * Said once per tool instead of once per collapsed subtree (see
+ * src/schemas/compact.ts). Deep fields are advertised as permissive records, so a
+ * client needs to know where the real shape lives — but it only needs telling once.
+ */
+const COMPACTED_SCHEMA_HINT = "Deep fields are abbreviated here; call describeTool for the full schema.";
 
 type CreateOptions = {
   /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
@@ -70,7 +78,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       tool.method,
       {
         title: tool.annotations.title,
-        description: tool.description,
+        description: `${tool.description} ${COMPACTED_SCHEMA_HINT}`,
         inputSchema: inputSchemaShape,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
@@ -180,7 +188,37 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     );
   }
 
+  applyLeanToolsList(server);
+
   return server;
+}
+
+/**
+ * Rewrites the `tools/list` response through leanJsonSchema
+ * (src/schemas/lean-json-schema.ts), which strips `$schema` and folds
+ * `anyOf: [X, null]` into `type: [X, "null"]` — 17% of the payload, with no
+ * change to what any schema accepts.
+ *
+ * The SDK converts zod to JSON Schema inside its own `tools/list` handler, so
+ * there is no conversion hook to pass this to: the only seam is the handler
+ * itself. We take the one McpServer registered, and register a wrapper that
+ * defers to it and leans the result. `setRequestHandler` overwrites silently,
+ * so nothing is lost — but reading `_requestHandlers` reaches past the SDK's
+ * public surface, so tests/lean-tools-list.test.ts asserts the rewrite really
+ * reaches a live `tools/list`. If a future SDK moves this, that test fails
+ * loudly instead of the payload quietly growing back.
+ */
+function applyLeanToolsList(server: McpServer): void {
+  const protocol = server.server as unknown as {
+    _requestHandlers: Map<string, (request: unknown, extra: unknown) => Promise<unknown>>;
+  };
+  const registered = protocol._requestHandlers.get("tools/list");
+  if (!registered) {
+    // Better a full-size tool list than a server that cannot list its tools.
+    console.error("🚨  Yuno MCP: no tools/list handler to wrap; serving unabbreviated schemas");
+    return;
+  }
+  protocol._requestHandlers.set("tools/list", async (request, extra) => leanJsonSchema(await registered(request, extra)));
 }
 
 async function initializeYunoMCP({

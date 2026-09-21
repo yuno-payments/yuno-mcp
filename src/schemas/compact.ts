@@ -31,11 +31,20 @@ type CompactOptions = {
   partialTopLevel?: boolean;
 };
 
-const DESCRIBE_HINT = "Call describeTool with this tool's name for the full field list.";
+/**
+ * A collapsed subtree keeps its own description and nothing more.
+ *
+ * This used to append "Call describeTool with this tool's name for the full field
+ * list." to every collapsed node — 141 copies across the tool list, 9,024 bytes of
+ * a 152 KB `tools/list`, repeating one fact a client only needs once. The pointer
+ * to describeTool now lives once per tool, in COMPACTED_SCHEMA_HINT (src/index.ts).
+ */
+function collapsedDescription(schema: z.ZodType): string | undefined {
+  return schema.description;
+}
 
-function collapsedDescription(schema: z.ZodType): string {
-  const own = schema.description;
-  return own ? `${own}. ${DESCRIBE_HINT}` : DESCRIBE_HINT;
+function describeIf<T extends z.ZodType>(rebuilt: T, description: string | undefined): T {
+  return description ? rebuilt.describe(description) : rebuilt;
 }
 
 function withDescription<T extends z.ZodType>(rebuilt: T, original: z.ZodType): T {
@@ -53,20 +62,20 @@ function walk(schema: z.ZodType, options: CompactOptions, depth: number): z.ZodT
   }
   if (schema instanceof z.ZodArray) {
     if (depth >= options.maxDepth) {
-      return z.array(z.unknown()).describe(collapsedDescription(schema));
+      return describeIf(z.array(z.unknown()), collapsedDescription(schema));
     }
     return withDescription(z.array(walk(schema.element as z.ZodType, options, depth + 1)), schema);
   }
   if (schema instanceof z.ZodUnion) {
     if (depth >= options.maxDepth) {
-      return z.unknown().describe(collapsedDescription(schema));
+      return describeIf(z.unknown(), collapsedDescription(schema));
     }
     const members = (schema.options as z.ZodType[]).map((option) => walk(option, options, depth + 1));
     return withDescription(z.union(members as [z.ZodType, z.ZodType, ...z.ZodType[]]), schema);
   }
   if (schema instanceof z.ZodObject) {
     if (depth >= options.maxDepth) {
-      return z.record(z.string(), z.unknown()).describe(collapsedDescription(schema));
+      return describeIf(z.record(z.string(), z.unknown()), collapsedDescription(schema));
     }
     const shape: Record<string, z.ZodType> = {};
     for (const [key, value] of Object.entries(schema.shape as Record<string, z.ZodType>)) {

@@ -30,8 +30,11 @@ describe("compactSchema", () => {
       properties: Record<string, { description?: string; properties?: unknown }>;
     };
 
-    expect(jsonSchema.properties.additional_data.description).toContain("Order details");
-    expect(jsonSchema.properties.additional_data.description).toContain("describeTool");
+    expect(jsonSchema.properties.additional_data.description).toBe("Order details");
+    // The pointer to describeTool is no longer repeated on every collapsed node —
+    // it is stated once per tool at registration (COMPACTED_SCHEMA_HINT in src/index.ts),
+    // which is asserted in tests/lean-tools-list.test.ts.
+    expect(jsonSchema.properties.additional_data.description).not.toContain("describeTool");
     expect(jsonSchema.properties.additional_data.properties).toBeUndefined();
   });
 
