@@ -22,7 +22,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "0.7.0",
+      version: "1.0.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
