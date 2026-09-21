@@ -1,7 +1,7 @@
 {
   "name": "@yuno/yuno-mcp",
   "version": "1.0.0",
-  "description": "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, payment links, and routing on the Yuno payments platform.",
+  "description": "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
   "type": "module",
   "exports": {
     ".": {
