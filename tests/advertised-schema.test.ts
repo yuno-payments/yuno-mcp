@@ -103,12 +103,13 @@ describe("tools/list payload budget", () => {
   /**
    * A ceiling, not a target. `tools/list` is paid by every client on connect
    * before it can do any work, so growth here should be a deliberate decision.
-   * Measured over a live tools/list at 153,623 bytes when this test was written;
-   * raise it only with a reason in the PR description. Note outputSchema is ~45%
-   * of it — that, not the parameter list, is where the next real reduction has to
-   * come from.
+   * Measured over a live tools/list at 153,517 bytes when this test was written;
+   * raise it only with a reason in the PR description. The headroom is for #53,
+   * which restores ~11 KB of parameter descriptions compactSchema used to drop
+   * (164,384 bytes with both). Note outputSchema is ~45% of it — that, not the
+   * parameter list, is where the next real reduction has to come from.
    */
-  const BUDGET_BYTES = 160_000;
+  const BUDGET_BYTES = 170_000;
 
   it("serializes under the budget", async () => {
     const { client } = await connectedClient();
