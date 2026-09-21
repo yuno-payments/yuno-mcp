@@ -136,3 +136,23 @@ describe("card expiration year", () => {
     expect(toTwoDigitExpirationYear(request)).toBe(request);
   });
 });
+
+describe("payment method identifier", () => {
+  /**
+   * The enroll response carries no `id` — vaulted_token is the identifier, and it is
+   * what retrieve/unenroll take as payment_method_id. Verified against api-staging on
+   * 2026-09-21: enroll returned vaulted_token and no id; retrieve by vaulted_token → 200.
+   * The finding was that nothing on the tool surface connected the two.
+   */
+  it("tells the caller that payment_method_id is the vaulted_token", async () => {
+    const { paymentMethodRetrieveTool, paymentMethodUnenrollTool } = await import("../src/tools/paymentMethods");
+    for (const tool of [paymentMethodRetrieveTool, paymentMethodUnenrollTool]) {
+      expect(tool.schema.shape.payment_method_id.description).toContain("vaulted_token");
+    }
+  });
+
+  it("points from vaulted_token in the enroll output to payment_method_id", async () => {
+    const { yunoPaymentMethodOutputSchema } = await import("../src/schemas");
+    expect(yunoPaymentMethodOutputSchema.shape.vaulted_token.description).toContain("payment_method_id");
+  });
+});
