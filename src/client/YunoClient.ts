@@ -52,10 +52,13 @@ const isApiKeyPrefix = (prefix: string): prefix is ApiKeyPrefix => Object.hasOwn
  * mistyped private key got a proper INVALID_CREDENTIALS from the API. Returning
  * undefined lets request() say what is actually wrong.
  */
-function generateBaseUrlApi(publicApiKey: string) {
+function environmentOf(publicApiKey: string): ApiKeyPrefix | undefined {
   const [apiKeyPrefix] = publicApiKey.split("_");
-  if (!isApiKeyPrefix(apiKeyPrefix)) return undefined;
-  const environmentSuffix: EnvironmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix];
+  return isApiKeyPrefix(apiKeyPrefix) ? apiKeyPrefix : undefined;
+}
+
+function generateBaseUrlApi(environment: ApiKeyPrefix) {
+  const environmentSuffix: EnvironmentSuffix = apiKeyPrefixToEnvironmentSuffix[environment];
   return `https://api${environmentSuffix}.y.uno/v1` as const;
 }
 
@@ -110,24 +113,21 @@ export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
-  private baseUrl: ReturnType<typeof generateBaseUrlApi>;
+  private baseUrl: ReturnType<typeof generateBaseUrlApi> | undefined;
+  /** Inferred from the public API key prefix; undefined when the prefix is not recognized. */
+  public readonly environment: ApiKeyPrefix | undefined;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
-    this.baseUrl = generateBaseUrlApi(this.publicApiKey);
+    this.environment = environmentOf(this.publicApiKey);
+    this.baseUrl = this.environment && generateBaseUrlApi(this.environment);
   }
 
   static initialize(config: YunoClientConfig): YunoClient {
     const client = new YunoClient(config);
     return client;
-  }
-
-  /** Environment inferred from the public API key prefix (dev/staging/sandbox/prod). */
-  get environment(): ApiKeyPrefix {
-    const [apiKeyPrefix] = this.publicApiKey.split("_");
-    return apiKeyPrefix as ApiKeyPrefix;
   }
 
   /** HMAC key for destructive-operation confirm tokens (src/confirm.ts). */

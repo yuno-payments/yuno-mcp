@@ -4,7 +4,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { initializeYunoMCP } from "../src/index";
 import { cardDataSchema, ottCreateSchema } from "../src/schemas";
 import { toTwoDigitExpirationYear } from "../src/tools/checkouts";
-import { withCaptureDisabled } from "../src/client/YunoClient";
+import { YunoClient, withCaptureDisabled } from "../src/client/YunoClient";
 
 /**
  * Fixes for findings from the conformance review of 2026-09-20. Each block pins
@@ -68,6 +68,12 @@ describe("an unrecognized public-api-key prefix", () => {
     await client.callTool({ name: "paymentRetrieve", arguments: { payment_id: PAYMENT_ID } });
     const suffix = prefix === "prod" ? "" : `-${prefix}`;
     expect(urls[0]).toBe(`https://api${suffix}.y.uno/v1/payments/${PAYMENT_ID}`);
+  });
+
+  it("reports the environment only for a recognized prefix", () => {
+    const config = { accountCode: "acct", privateSecretKey: "secret" };
+    expect(YunoClient.initialize({ ...config, publicApiKey: "prod_key" }).environment).toBe("prod");
+    expect(YunoClient.initialize({ ...config, publicApiKey: "typo_key" }).environment).toBeUndefined();
   });
 });
 
