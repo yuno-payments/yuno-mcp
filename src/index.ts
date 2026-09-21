@@ -217,9 +217,8 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
 /**
  * Rewrites the schema fields of the `tools/list` response through
- * leanToolsListResult (src/schemas/lean-json-schema.ts), which strips `$schema` and folds
- * `anyOf: [X, null]` into `type: [X, "null"]` — 17% of the payload, with no
- * change to what any schema accepts.
+ * leanToolsListResult (src/schemas/lean-json-schema.ts), which strips `$schema` and
+ * null members that say nothing, with no change to what any schema accepts.
  *
  * The SDK converts zod to JSON Schema inside its own `tools/list` handler, so
  * there is no conversion hook to pass this to: the only seam is the handler

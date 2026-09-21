@@ -2,21 +2,26 @@
  * Shrinks the JSON Schema the MCP SDK emits for `tools/list`, without changing
  * what any schema accepts.
  *
- * Every client pays `tools/list` on connect before it can do any work, and two
- * purely cosmetic habits of the zod → JSON Schema conversion account for 17% of
- * a 152 KB payload:
+ * Every client pays `tools/list` on connect before it can do any work. Three
+ * habits of the zod → JSON Schema conversion carry no information:
  *
- * 1. `.nullish()` serializes as `{"anyOf":[{"type":"string"},{"type":"null"}]}`.
- *    JSON Schema's own shorthand for that is `{"type":["string","null"]}` — the
- *    same constraint, 26 fewer bytes. The tool schemas mark almost every optional
- *    field nullish, so this pattern appears 1,177 times (~30 KB).
- * 2. Each of the 75 schema documents carries a `$schema` declaration. MCP already
+ * 1. Each of the 75 schema documents carries a `$schema` declaration. MCP already
  *    defines the dialect for `inputSchema`/`outputSchema`, so no client needs it.
+ * 2. A collapsed `z.unknown().nullish()` (src/schemas/compact.ts) serializes as
+ *    `{"anyOf":[{},{"type":"null"}]}`. The empty member already accepts null.
+ * 3. A nullish nested in a nullish repeats the `{"type":"null"}` member.
  *
- * Both rewrites are semantics-preserving, which is the whole point: a client that
+ * Every rewrite is semantics-preserving, which is the whole point: a client that
  * validates against the lean schema accepts and rejects exactly what it did
- * before. Anything that changes what is accepted belongs in compactSchema
- * (src/schemas/compact.ts), not here.
+ * before (tests/lean-tools-list.test.ts checks this against every tool). Anything
+ * that changes what is accepted belongs in compactSchema, not here.
+ *
+ * A nullable field keeps its long `anyOf: [X, {type: "null"}]` form on purpose.
+ * The shorthand `type: [X, "null"]` is valid JSON Schema, but released versions of
+ * @yuno-payments/agent-toolkit read `type` only as a string (jsonSchemaToZod in
+ * shared/schema-utils.ts), so every such field would become `z.unknown()` there.
+ * remote-yuno-mcp picks up this package without a toolkit release, so the output
+ * must stay readable by the toolkits already in use.
  */
 
 type JsonSchemaNode = Record<string, unknown>;
@@ -24,23 +29,25 @@ type JsonSchemaNode = Record<string, unknown>;
 const isNullMember = (member: unknown): boolean =>
   typeof member === "object" && member !== null && Object.keys(member).length === 1 && (member as JsonSchemaNode).type === "null";
 
-/**
- * `anyOf: [X, {type: "null"}]` → `{...X, type: [X.type, "null"]}`.
- *
- * Only folds when the non-null member is a plain typed schema. A member carrying
- * its own `anyOf`, `enum` or `$ref` keeps the long form, because hoisting its
- * keywords next to a `type` array would change what the schema means.
- */
-function foldNullableUnion(node: JsonSchemaNode): JsonSchemaNode {
+/** `anyOf: [X, {type: "null"}]`, in either order, with X returned. */
+function nullableMember(node: JsonSchemaNode): JsonSchemaNode | undefined {
   const members = node.anyOf;
-  if (!Array.isArray(members) || members.length !== 2) return node;
-
+  if (!Array.isArray(members) || members.length !== 2) return undefined;
   const nullIndex = members.findIndex(isNullMember);
-  if (nullIndex === -1) return node;
+  if (nullIndex === -1) return undefined;
+  const other = members[1 - nullIndex] as unknown;
+  if (!other || typeof other !== "object" || Array.isArray(other)) return undefined;
+  return other as JsonSchemaNode;
+}
 
-  const other = members[1 - nullIndex] as JsonSchemaNode | undefined;
-  if (!other || typeof other !== "object" || Array.isArray(other)) return node;
-  if ("anyOf" in other || "oneOf" in other || "allOf" in other || "$ref" in other) return node;
+/**
+ * Drops a `{type: "null"}` member that says nothing: next to an empty member, which
+ * accepts anything, or next to a member that is itself `anyOf: [Y, null]`. Any
+ * other nullable union is returned unchanged.
+ */
+function simplifyNullableUnion(node: JsonSchemaNode): JsonSchemaNode {
+  const other = nullableMember(node);
+  if (!other) return node;
 
   // `rest` wins over `other`: a description or title sitting on the union itself
   // is the more specific one, and dropping it would lose documentation.
@@ -52,12 +59,14 @@ function foldNullableUnion(node: JsonSchemaNode): JsonSchemaNode {
   if (Object.keys(other).length === 0) return rest;
 
   // Already nullable one level down — the tool schemas nest nullish inside nullish
-  // in a few places, and compactSchema preserves both wrappers. The outer null
-  // member is then redundant.
-  if (Array.isArray(other.type) && other.type.includes("null")) return { ...other, ...rest };
+  // in a few places, and compactSchema preserves both wrappers. Only the bare
+  // `anyOf` is hoisted: keywords beside it would merge into the outer node.
+  const inner = nullableMember(other);
+  if (inner && Object.keys(other).every((key) => key === "anyOf" || key === "description")) {
+    return { ...other, ...rest };
+  }
 
-  if (typeof other.type !== "string") return node;
-  return { ...other, ...rest, type: [other.type, "null"] };
+  return node;
 }
 
 /**
@@ -89,7 +98,7 @@ export function leanToolsListResult<T>(result: T): T {
   } as T;
 }
 
-/** Recursively applies both rewrites. Returns a new structure; the input is untouched. */
+/** Recursively applies every rewrite. Returns a new structure; the input is untouched. */
 export function leanJsonSchema<T>(node: T): T {
   if (Array.isArray(node)) {
     const items: unknown[] = node;
@@ -102,5 +111,5 @@ export function leanJsonSchema<T>(node: T): T {
     if (key === "$schema") continue;
     out[key] = leanJsonSchema(value);
   }
-  return foldNullableUnion(out) as unknown as T;
+  return simplifyNullableUnion(out) as unknown as T;
 }
