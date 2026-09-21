@@ -156,3 +156,44 @@ describe("payment method identifier", () => {
     expect(yunoPaymentMethodOutputSchema.shape.vaulted_token.description).toContain("payment_method_id");
   });
 });
+
+describe("paymentAuthorize never captures", () => {
+  /**
+   * Verified against api-staging on 2026-09-21: authorizing a vaulted card without
+   * `detail.card` produced a PURCHASE transaction — a charge — and with
+   * `detail.card.capture: false` an AUTHORIZE. The old code only set the flag when the
+   * caller had already sent `detail.card`.
+   */
+  const base = { description: "d", country: "CO", merchant_order_id: "m", amount: { currency: "COP", value: 1 }, workflow: "DIRECT" as const };
+
+  async function sentBody(payment: Record<string, unknown>) {
+    let body: Record<string, unknown> | undefined;
+    const client = await connect("staging_key");
+    globalThis.fetch = ((_url: string, init?: { body?: string }) => {
+      body = init?.body ? (JSON.parse(init.body) as Record<string, unknown>) : undefined;
+      return Promise.resolve(new Response(JSON.stringify({ id: PAYMENT_ID }), { status: 200 }));
+    }) as unknown as typeof fetch;
+    await client.callTool({ name: "paymentAuthorize", arguments: { payment: { ...base, ...payment } } });
+    return body as { payment_method: { detail?: { card?: { capture?: boolean; installments?: number } } } };
+  }
+
+  it("disables capture for a vaulted card sent without detail.card", async () => {
+    const body = await sentBody({ payment_method: { type: "CARD", vaulted_token: "v".repeat(36) } });
+    expect(body.payment_method.detail?.card?.capture).toBe(false);
+  });
+
+  it("disables capture even when the caller asked for it", async () => {
+    const body = await sentBody({ payment_method: { type: "CARD", token: "t", detail: { card: { capture: true } } } });
+    expect(body.payment_method.detail?.card?.capture).toBe(false);
+  });
+
+  it("keeps the caller's other card details", async () => {
+    const body = await sentBody({ payment_method: { type: "CARD", token: "t", detail: { card: { installments: 3 } } } });
+    expect(body.payment_method.detail?.card).toEqual({ installments: 3, capture: false });
+  });
+
+  it("leaves a non-card payment method without a card detail untouched", async () => {
+    const body = await sentBody({ payment_method: { type: "PIX" } });
+    expect(body.payment_method.detail).toBeUndefined();
+  });
+});

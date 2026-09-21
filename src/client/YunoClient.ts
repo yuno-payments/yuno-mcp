@@ -60,6 +60,32 @@ function generateBaseUrlApi(publicApiKey: string) {
 }
 
 /**
+ * An authorization must not capture. The API captures a card payment unless
+ * `payment_method.detail.card.capture` is false, and this used to be set only when
+ * the caller had already sent `detail.card` — so authorizing with just a
+ * `vaulted_token` or `token` went out as a PURCHASE and charged the customer.
+ * Verified against api-staging on 2026-09-21: the same authorize call produced a
+ * PURCHASE transaction without `detail.card` and an AUTHORIZE transaction with it.
+ *
+ * Returns a copy; the caller's object is not mutated. Only card payments carry a
+ * capture flag, so other payment method types pass through untouched unless the
+ * caller already supplied `detail.card`.
+ */
+export function withCaptureDisabled(payment: PaymentCreateSchema["payment"]): PaymentCreateSchema["payment"] {
+  const paymentMethod = payment.payment_method;
+  if (!paymentMethod) return payment;
+  const card = paymentMethod.detail?.card;
+  if (paymentMethod.type !== "CARD" && !card) return payment;
+  return {
+    ...payment,
+    payment_method: {
+      ...paymentMethod,
+      detail: { ...paymentMethod.detail, card: { ...card, capture: false } },
+    },
+  };
+}
+
+/**
  * Deliberately echoes nothing from the key: with no underscore in it, the
  * "prefix" is the whole credential.
  */
@@ -276,13 +302,10 @@ export class YunoClient {
     authorize: async (payment: PaymentCreateSchema["payment"], idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      if (payment && payment.payment_method && payment.payment_method.detail && payment.payment_method.detail.card) {
-        payment.payment_method.detail.card.capture = false;
-      }
       return this.request<YunoPayment>("/payments", {
         method: "POST",
         headers,
-        body: JSON.stringify(payment),
+        body: JSON.stringify(withCaptureDisabled(payment)),
       });
     },
 
