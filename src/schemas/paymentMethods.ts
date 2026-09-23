@@ -41,7 +41,13 @@ const yunoPaymentMethodOutputSchema = z
     country: z.string().nullish(),
     status: z.string().nullish(),
     sub_status: z.string().nullish(),
-    vaulted_token: z.string().nullish(),
+    // The API returns no `id` for a payment method: vaulted_token is its identifier
+    // (verified against api-staging 2026-09-21), and it is what retrieve/unenroll
+    // expect as payment_method_id.
+    vaulted_token: z
+      .string()
+      .nullish()
+      .describe("Identifies this payment method. Pass it as payment_method_id to paymentMethodRetrieve and paymentMethodUnenroll."),
   })
   .passthrough();
 

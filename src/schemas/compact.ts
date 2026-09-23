@@ -53,12 +53,13 @@ function collapsed<T extends z.ZodType>(rebuilt: T, original: z.ZodType, options
 
 function walk(schema: z.ZodType, options: CompactOptions, depth: number): z.ZodType {
   // Wrappers are preserved so a collapsed `airline.nullish()` still accepts null
-  // from raw responses — output validation depends on it.
+  // from raw responses — output validation depends on it. So is their description:
+  // `.nullish().describe(...)` puts it on the wrapper, not on the inner type.
   if (schema instanceof z.ZodOptional) {
-    return walk(schema.unwrap() as z.ZodType, options, depth).optional();
+    return withDescription(walk(schema.unwrap() as z.ZodType, options, depth).optional(), schema);
   }
   if (schema instanceof z.ZodNullable) {
-    return walk(schema.unwrap() as z.ZodType, options, depth).nullable();
+    return withDescription(walk(schema.unwrap() as z.ZodType, options, depth).nullable(), schema);
   }
   if (schema instanceof z.ZodArray) {
     if (depth >= options.maxDepth) {

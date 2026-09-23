@@ -43,36 +43,91 @@ async function parseJsonBody<T>(response: Response): Promise<T> {
   return JSON.parse(raw) as T;
 }
 
-function generateBaseUrlApi(publicApiKey: string) {
-  const [apiKeyPrefix] = publicApiKey.split("_");
-  const environmentSuffix = apiKeyPrefixToEnvironmentSuffix[apiKeyPrefix as ApiKeyPrefix] as EnvironmentSuffix;
-  const baseURL = `https://api${environmentSuffix}.y.uno/v1` as const;
+const isApiKeyPrefix = (prefix: string): prefix is ApiKeyPrefix => Object.hasOwn(apiKeyPrefixToEnvironmentSuffix, prefix);
 
-  return baseURL;
+/**
+ * The environment is chosen by the public key's prefix. An unrecognized prefix
+ * used to fall through to `https://apiundefined.y.uno/v1` — a host that does not
+ * resolve — so a mistyped key surfaced as undici's bare "fetch failed" while a
+ * mistyped private key got a proper INVALID_CREDENTIALS from the API. Returning
+ * undefined lets request() say what is actually wrong.
+ */
+function environmentOf(publicApiKey: string): ApiKeyPrefix | undefined {
+  const [apiKeyPrefix] = publicApiKey.split("_");
+  return isApiKeyPrefix(apiKeyPrefix) ? apiKeyPrefix : undefined;
 }
+
+function generateBaseUrlApi(environment: ApiKeyPrefix) {
+  const environmentSuffix: EnvironmentSuffix = apiKeyPrefixToEnvironmentSuffix[environment];
+  return `https://api${environmentSuffix}.y.uno/v1` as const;
+}
+
+/**
+ * An authorization must not capture. The API captures unless the payment method's
+ * detail says `capture: false`, and this used to be set only when the caller had
+ * already sent `detail.card` — so authorizing with just a `vaulted_token` or `token`
+ * went out as a PURCHASE and charged the customer. Verified against api-staging on
+ * 2026-09-21: the same authorize call produced a PURCHASE transaction without
+ * `detail.card` and an AUTHORIZE transaction with it.
+ *
+ * public-api reads the flag from `detail.card.capture` for cards and from
+ * `detail.wallet.capture` for wallets (Google Pay, Apple Pay), so:
+ * - a `card` or `wallet` detail the caller sent always gets `capture: false`;
+ * - a CARD or known wallet type without one gets it created;
+ * - any other type is refused. There is no flag this client knows to hold its
+ *   funds, and a refusal is better than a silent purchase.
+ *
+ * The type is matched case-insensitively. Returns a copy; the caller's object is
+ * not mutated.
+ */
+const CARD_TYPES: ReadonlySet<string> = new Set(["CARD"]);
+const WALLET_TYPES: ReadonlySet<string> = new Set(["GOOGLE_PAY", "APPLE_PAY"]);
+
+export function withCaptureDisabled(payment: PaymentCreateSchema["payment"]): PaymentCreateSchema["payment"] {
+  const paymentMethod = payment.payment_method;
+  if (!paymentMethod) return payment;
+  const type = paymentMethod.type.toUpperCase();
+  const detail: Record<string, unknown> = { ...paymentMethod.detail };
+  const holdsFunds = (key: "card" | "wallet") => {
+    detail[key] = { ...(detail[key] as Record<string, unknown> | null | undefined), capture: false };
+  };
+
+  if (detail.card || CARD_TYPES.has(type)) holdsFunds("card");
+  if (detail.wallet || WALLET_TYPES.has(type)) holdsFunds("wallet");
+  if (!detail.card && !detail.wallet) {
+    throw new Error(
+      `UNSUPPORTED_AUTHORIZATION: paymentAuthorize holds funds only for CARD, GOOGLE_PAY and APPLE_PAY payment methods, or a payment_method.detail.card or detail.wallet. Nothing was sent for type ${paymentMethod.type}; use paymentCreate to charge it directly.`,
+    );
+  }
+  return { ...payment, payment_method: { ...paymentMethod, detail } };
+}
+
+/**
+ * Deliberately echoes nothing from the key: with no underscore in it, the
+ * "prefix" is the whole credential.
+ */
+const INVALID_PUBLIC_KEY_MESSAGE =
+  "INVALID_PUBLIC_API_KEY: the public-api-key is not recognized. It must start with dev_, staging_, sandbox_ or prod_, which selects the Yuno environment.";
 
 export class YunoClient {
   public accountCode: string;
   private publicApiKey: string;
   private privateSecretKey: string;
-  private baseUrl: ReturnType<typeof generateBaseUrlApi>;
+  private baseUrl: ReturnType<typeof generateBaseUrlApi> | undefined;
+  /** Inferred from the public API key prefix; undefined when the prefix is not recognized. */
+  public readonly environment: ApiKeyPrefix | undefined;
 
   private constructor(config: YunoClientConfig) {
     this.accountCode = config.accountCode;
     this.publicApiKey = config.publicApiKey;
     this.privateSecretKey = config.privateSecretKey;
-    this.baseUrl = generateBaseUrlApi(this.publicApiKey);
+    this.environment = environmentOf(this.publicApiKey);
+    this.baseUrl = this.environment && generateBaseUrlApi(this.environment);
   }
 
   static initialize(config: YunoClientConfig): YunoClient {
     const client = new YunoClient(config);
     return client;
-  }
-
-  /** Environment inferred from the public API key prefix (dev/staging/sandbox/prod). */
-  get environment(): ApiKeyPrefix {
-    const [apiKeyPrefix] = this.publicApiKey.split("_");
-    return apiKeyPrefix as ApiKeyPrefix;
   }
 
   /** HMAC key for destructive-operation confirm tokens (src/confirm.ts). */
@@ -81,6 +136,12 @@ export class YunoClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
+    // Fails per call rather than at construction: a thrown tool error reaches the
+    // client verbatim, while an initialization failure becomes a generic 500 in
+    // remote-yuno-mcp — which would hide the very message this exists to show.
+    if (this.baseUrl === undefined) {
+      throw new Error(INVALID_PUBLIC_KEY_MESSAGE);
+    }
     try {
       const url = `${this.baseUrl}${endpoint}`;
 
@@ -255,13 +316,10 @@ export class YunoClient {
     authorize: async (payment: PaymentCreateSchema["payment"], idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      if (payment && payment.payment_method && payment.payment_method.detail && payment.payment_method.detail.card) {
-        payment.payment_method.detail.card.capture = false;
-      }
       return this.request<YunoPayment>("/payments", {
         method: "POST",
         headers,
-        body: JSON.stringify(payment),
+        body: JSON.stringify(withCaptureDisabled(payment)),
       });
     },
 

@@ -8,6 +8,24 @@ import {
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttCreateSchema, YunoOttRequest, YunoOttResponse } from "./types";
 
+/**
+ * The OTT endpoint was written against YY (the schema used to require 20-99), and
+ * whether the tokenization path behind it accepts YYYY is not something this repo
+ * can verify. So both formats are accepted at the tool boundary and the request
+ * always carries YY — the wire format stays exactly what it has always been.
+ */
+export function toTwoDigitExpirationYear<T extends { payment_method: { card?: { expiration_year: number } | null } }>(
+  request: T,
+): T {
+  const card = request.payment_method.card;
+  if (!card || card.expiration_year <= 99) return request;
+  // ottCreateSchema already rejects these; a wrapped year would be a wrong card.
+  if (card.expiration_year < 2000 || card.expiration_year > 2099) {
+    throw new Error(`expiration_year ${String(card.expiration_year)} has no 2-digit form; use 2000-2099 or YY`);
+  }
+  return { ...request, payment_method: { ...request.payment_method, card: { ...card, expiration_year: card.expiration_year - 2000 } } };
+}
+
 export const checkoutSessionCreateTool = {
   method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
@@ -84,7 +102,10 @@ export const checkoutSessionCreateOttTool = {
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoOttCreateSchema): Promise<Output<TType, YunoOttResponse>> => {
       const { session_id: sessionId, ...ottRequest } = data;
-      const { body: ottResponse, status, headers } = await yunoClient.checkoutSessions.createOtt(sessionId, ottRequest as YunoOttRequest);
+      const { body: ottResponse, status, headers } = await yunoClient.checkoutSessions.createOtt(
+        sessionId,
+        toTwoDigitExpirationYear(ottRequest) as YunoOttRequest,
+      );
 
       if (type === "text") {
         return {
