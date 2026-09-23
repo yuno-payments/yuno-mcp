@@ -18,7 +18,7 @@ export const customerCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(customer, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
@@ -26,7 +26,7 @@ export const customerCreateTool = {
       return {
         content: [
           { type: "object" as const, object: customer },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -49,7 +49,7 @@ export const customerRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(customer, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
@@ -57,7 +57,7 @@ export const customerRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: customer },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -80,7 +80,7 @@ export const customerRetrieveByExternalIdTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(customer, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
@@ -88,7 +88,7 @@ export const customerRetrieveByExternalIdTool = {
       return {
         content: [
           { type: "object" as const, object: customer },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },
@@ -109,7 +109,7 @@ export const customerUpdateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(customer, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCustomer>;
       }
@@ -117,7 +117,7 @@ export const customerUpdateTool = {
       return {
         content: [
           { type: "object" as const, object: customer },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCustomer>;
     },

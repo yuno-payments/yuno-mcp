@@ -23,7 +23,7 @@ export const recipientCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
@@ -31,7 +31,7 @@ export const recipientCreateTool = {
       return {
         content: [
           { type: "object" as const, object: recipient },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -54,7 +54,7 @@ export const recipientRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
@@ -62,7 +62,7 @@ export const recipientRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: recipient },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -83,7 +83,7 @@ export const recipientUpdateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(recipient, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
@@ -91,7 +91,7 @@ export const recipientUpdateTool = {
       return {
         content: [
           { type: "object" as const, object: recipient },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },
@@ -114,7 +114,7 @@ export const recipientDeleteTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoRecipient>;
       }
@@ -122,7 +122,7 @@ export const recipientDeleteTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoRecipient>;
     },

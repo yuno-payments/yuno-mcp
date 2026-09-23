@@ -45,7 +45,7 @@ export const checkoutSessionCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(checkoutSession, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoCheckoutSession>;
       }
@@ -53,7 +53,7 @@ export const checkoutSessionCreateTool = {
       return {
         content: [
           { type: "object" as const, object: checkoutSession },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCheckoutSession>;
     },
@@ -78,15 +78,15 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(paymentMethods, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
-        } as Output<TType>;
+        } as Output<TType, YunoCheckoutPaymentMethodsResponse>;
       }
 
       return {
         content: [
           { type: "object" as const, object: paymentMethods },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoCheckoutPaymentMethodsResponse>;
     },
@@ -111,7 +111,7 @@ export const checkoutSessionCreateOttTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(ottResponse, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoOttResponse>;
       }
@@ -119,7 +119,7 @@ export const checkoutSessionCreateOttTool = {
       return {
         content: [
           { type: "object" as const, object: ottResponse },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoOttResponse>;
     },
