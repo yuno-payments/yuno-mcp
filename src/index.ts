@@ -4,11 +4,15 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
+import { leanToolsListResult } from "./schemas/lean-json-schema";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
 type ServerMode = "read-only" | "full";
+
+/** Said once per tool, not once per collapsed subtree (see src/schemas/compact.ts). */
+const COMPACTED_SCHEMA_HINT = "Deep fields are abbreviated here; call describeTool for the full schema.";
 
 type CreateOptions = {
   /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
@@ -59,10 +63,16 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
     // Registration advertises compacted schemas (see src/schemas/compact.ts);
     // the strict tool.schema still validates inside the handler below.
-    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS });
+    const collapse = { seen: false };
+    const onCollapse = () => {
+      collapse.seen = true;
+    };
+    const registeredInputSchema = compactSchema(tool.schema, { maxDepth: 3, heavyKeys: HEAVY_KEYS, onCollapse });
     const registeredOutputSchema = tool.outputSchema
-      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
+      ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true, onCollapse })
       : undefined;
+    // Only where something was left out, and never from describeTool itself.
+    const description = collapse.seen && tool !== describeTool ? `${tool.description} ${COMPACTED_SCHEMA_HINT}` : tool.description;
     // Every parameter is snake_case, matching the Yuno API. camelCase aliases used
     // to be advertised beside each key, but buying that tolerance meant marking the
     // canonical key optional, which emptied `required[]` on 25 of the 38 tools.
@@ -87,7 +97,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       tool.method,
       {
         title: tool.annotations.title,
-        description: tool.description,
+        description,
         inputSchema: registeredInput,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
@@ -204,7 +214,29 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     );
   }
 
+  applyLeanToolsList(server);
+
   return server;
+}
+
+/**
+ * Leans the `tools/list` response (src/schemas/lean-json-schema.ts). The SDK
+ * converts zod to JSON Schema inside its own handler, so wrapping that handler is
+ * the only seam. It lives in the SDK's private `_requestHandlers`, so
+ * tests/lean-tools-list.test.ts asserts the rewrite reaches a live `tools/list`.
+ */
+function applyLeanToolsList(server: McpServer): void {
+  const protocol = server.server as unknown as {
+    // Optional: if an SDK release renames it, fall back instead of throwing.
+    _requestHandlers?: Map<string, (request: unknown, extra: unknown) => Promise<unknown>>;
+  };
+  const handlers = protocol._requestHandlers;
+  const registered = handlers?.get("tools/list");
+  if (!handlers || !registered) {
+    console.error("🚨  Yuno MCP: no tools/list handler to wrap; serving unabbreviated schemas");
+    return;
+  }
+  handlers.set("tools/list", async (request, extra) => leanToolsListResult(await registered(request, extra)));
 }
 
 async function initializeYunoMCP({
