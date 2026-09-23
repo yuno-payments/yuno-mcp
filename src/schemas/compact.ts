@@ -29,7 +29,7 @@ type CompactOptions = {
    * own that must also pass output validation. Do not remove one without the other.
    */
   partialTopLevel?: boolean;
-  /** Called once per subtree that is collapsed, i.e. whenever the result abbreviates the schema. */
+  /** Called once per collapsed subtree. */
   onCollapse?: () => void;
 };
 
@@ -38,13 +38,8 @@ function withDescription<T extends z.ZodType>(rebuilt: T, original: z.ZodType): 
 }
 
 /**
- * A collapsed subtree keeps its own description and nothing more.
- *
- * This used to append "Call describeTool with this tool's name for the full field
- * list." to every collapsed node — 141 copies across the tool list, 9,024 bytes of
- * a 152 KB `tools/list`, repeating one fact a client only needs once. The pointer
- * to describeTool now lives once per tool, in COMPACTED_SCHEMA_HINT (src/index.ts),
- * and only on tools where `onCollapse` fired.
+ * A collapsed subtree keeps its own description and nothing more: the pointer to
+ * describeTool is said once per tool, in COMPACTED_SCHEMA_HINT (src/index.ts).
  */
 function collapsed<T extends z.ZodType>(rebuilt: T, original: z.ZodType, options: CompactOptions): T {
   options.onCollapse?.();

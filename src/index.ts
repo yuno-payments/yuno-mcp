@@ -11,11 +11,7 @@ import { Tool } from "./types";
 
 type ServerMode = "read-only" | "full";
 
-/**
- * Said once per tool instead of once per collapsed subtree (see
- * src/schemas/compact.ts). Deep fields are advertised as permissive records, so a
- * client needs to know where the real shape lives — but it only needs telling once.
- */
+/** Said once per tool, not once per collapsed subtree (see src/schemas/compact.ts). */
 const COMPACTED_SCHEMA_HINT = "Deep fields are abbreviated here; call describeTool for the full schema.";
 
 type CreateOptions = {
@@ -75,8 +71,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     const registeredOutputSchema = tool.outputSchema
       ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true, onCollapse })
       : undefined;
-    // Point at describeTool only where something was actually left out, and never
-    // from describeTool itself.
+    // Only where something was left out, and never from describeTool itself.
     const description = collapse.seen && tool !== describeTool ? `${tool.description} ${COMPACTED_SCHEMA_HINT}` : tool.description;
     // Every parameter is snake_case, matching the Yuno API. camelCase aliases used
     // to be advertised beside each key, but buying that tolerance meant marking the
@@ -225,29 +220,19 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 }
 
 /**
- * Rewrites the schema fields of the `tools/list` response through
- * leanToolsListResult (src/schemas/lean-json-schema.ts), which strips `$schema` and
- * null members that say nothing, with no change to what any schema accepts.
- *
- * The SDK converts zod to JSON Schema inside its own `tools/list` handler, so
- * there is no conversion hook to pass this to: the only seam is the handler
- * itself. We take the one McpServer registered, and register a wrapper that
- * defers to it and leans the result. `setRequestHandler` overwrites silently,
- * so nothing is lost — but reading `_requestHandlers` reaches past the SDK's
- * public surface, so tests/lean-tools-list.test.ts asserts the rewrite really
- * reaches a live `tools/list`. If a future SDK moves this, that test fails
- * loudly instead of the payload quietly growing back.
+ * Leans the `tools/list` response (src/schemas/lean-json-schema.ts). The SDK
+ * converts zod to JSON Schema inside its own handler, so wrapping that handler is
+ * the only seam. It lives in the SDK's private `_requestHandlers`, so
+ * tests/lean-tools-list.test.ts asserts the rewrite reaches a live `tools/list`.
  */
 function applyLeanToolsList(server: McpServer): void {
   const protocol = server.server as unknown as {
-    // Optional because it is private: if an SDK release renames it, fall back
-    // instead of throwing, which would fail initializeYunoMCP on every request.
+    // Optional: if an SDK release renames it, fall back instead of throwing.
     _requestHandlers?: Map<string, (request: unknown, extra: unknown) => Promise<unknown>>;
   };
   const handlers = protocol._requestHandlers;
   const registered = handlers?.get("tools/list");
   if (!handlers || !registered) {
-    // Better a full-size tool list than a server that cannot list its tools.
     console.error("🚨  Yuno MCP: no tools/list handler to wrap; serving unabbreviated schemas");
     return;
   }
