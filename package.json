@@ -27,6 +27,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc --noEmit && bunchee",
     "test": "rstest run",
+    "conformance": "tsx src/conformance/run.ts",
     "lint": "eslint src",
     "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
   },
@@ -37,6 +38,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv": "^8.18.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
@@ -51,6 +53,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "prettier": "^3.6.2",
+    "tsx": "^4.19.2",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.36.0"
   },
