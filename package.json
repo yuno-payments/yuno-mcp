@@ -41,7 +41,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@rstest/core": "^0.0.7",
+    "@rstest/core": "^0.8.5",
+    "@rstest/coverage-istanbul": "^0.2.1",
     "@types/node": "22.15.3",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",

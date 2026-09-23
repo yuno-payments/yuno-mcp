@@ -2,6 +2,7 @@ kind: template
 load: typescript_test.yaml
 
 data:
+  testing: true
   push_image : true
   test:
     vars: 
