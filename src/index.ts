@@ -4,7 +4,6 @@ import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
-import { normalizeParamKeys, withTwinKeys } from "./tools/aliases";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
@@ -16,6 +15,19 @@ type CreateOptions = {
   mode?: ServerMode;
 };
 
+const toSnakeCase = (key: string) => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+// Names the spelling a model should have used, so the retry is one step away. No
+// quotes: the SDK embeds this message in a JSON dump, which would escape them.
+function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
+  if (issue.code !== "unrecognized_keys") return undefined;
+  const hints = issue.keys.map((key) => {
+    const snake = toSnakeCase(key);
+    return snake === key ? key : `${key} (did you mean ${snake}?)`;
+  });
+  return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
+}
+
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
     {
@@ -23,7 +35,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "0.7.0",
+      version: "1.0.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
@@ -51,9 +63,13 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     const registeredOutputSchema = tool.outputSchema
       ? compactSchema(tool.outputSchema, { maxDepth: 2, heavyKeys: HEAVY_KEYS, partialTopLevel: true })
       : undefined;
+    // Every parameter is snake_case, matching the Yuno API. camelCase aliases used
+    // to be advertised beside each key, but buying that tolerance meant marking the
+    // canonical key optional, which emptied `required[]` on 25 of the 38 tools.
+    // A schema a model can trust is worth more than one that forgives a guess.
     const inputSchemaShape = requiresConfirmation
       ? {
-          ...withTwinKeys(registeredInputSchema.shape),
+          ...registeredInputSchema.shape,
           confirm_token: z
             .string()
             .optional()
@@ -61,14 +77,18 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
               "Production safety gate: call once without this to receive a preview and a confirm_token, then call again with identical arguments plus the token to execute.",
             ),
         }
-      : withTwinKeys(registeredInputSchema.shape);
+      : registeredInputSchema.shape;
+    // Strict at the top level: a raw shape registers in strip mode, and the SDK would
+    // drop an unknown key before the handler ran. A mistyped optional parameter must
+    // fail loudly — a dropped `idempotencyKey` means a retry charges or refunds twice.
+    const registeredInput = z.strictObject(inputSchemaShape, { error: unknownParameterError });
 
     server.registerTool(
       tool.method,
       {
         title: tool.annotations.title,
         description: tool.description,
-        inputSchema: inputSchemaShape,
+        inputSchema: registeredInput,
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
@@ -77,7 +97,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
           const { confirm_token: confirmToken, ...strippedParams } = (rawParams ?? {}) as Record<string, unknown>;
-          const params = normalizeParamKeys(tool.schema, requiresConfirmation ? strippedParams : rawParams);
+          const params: unknown = requiresConfirmation ? strippedParams : rawParams;
 
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
@@ -131,7 +151,10 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           const content: { type: "text"; text: string }[] = handlerResult.content.map((entry) => {
             if (entry.type === "object") {
-              return { type: "text" as const, text: JSON.stringify(entry.object, null, 4) };
+              // A no-content response (e.g. recipientDelete) has no body to print, and
+              // JSON.stringify(undefined) returns undefined despite its declared type.
+              const body = JSON.stringify(entry.object, null, 4) as string | undefined;
+              return { type: "text" as const, text: body ?? "(empty response body)" };
             }
             return { type: "text" as const, text: (entry as unknown as { type: "text"; text: string }).text };
           });
@@ -166,7 +189,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             return { content: enrichedContent };
           }
 
-          const structuredContent = primary?.type === "object" ? (primary.object as Record<string, unknown>) : {};
+          // An empty body still owes the SDK a structuredContent; the partial top level
+          // of every output schema accepts {}.
+          const structuredContent = (primaryBody ?? {}) as Record<string, unknown>;
 
           return { content: enrichedContent, structuredContent };
         } catch (error) {
