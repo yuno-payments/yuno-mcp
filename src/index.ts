@@ -181,7 +181,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const guidance = findGuidance(primaryBody);
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
 
-          if (upstreamStatus >= 400) {
+          // A handler can fail without an upstream response to read a status from
+          // (describeTool on an unknown name); this used to drop its isError on the floor.
+          if (upstreamStatus >= 400 || handlerResult.isError === true) {
             return { content: enrichedContent, isError: true };
           }
 

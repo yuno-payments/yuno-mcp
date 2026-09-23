@@ -33,11 +33,27 @@ const documentSchema = z
   .passthrough()
   .nullish();
 
+/**
+ * Mirrors public-api's card_year validator (validations/validations.go:244-259):
+ * a 2-digit year (1-99) or a 4-digit one (1000-9999), never 100-999.
+ *
+ * checkoutSessionCreateOtt used to override this with YY-only while paymentCreate
+ * took anything up to 9999, so a model that learned the format from one tool was
+ * rejected by the other. Every card input now shares this one definition.
+ */
+const cardExpirationYearSchema = z
+  .number()
+  .int()
+  .min(1)
+  .max(9999)
+  .refine((year) => year <= 99 || year >= 1000, { message: "Expiration year must be 2 digits (29) or 4 digits (2029)" })
+  .describe("Card expiration year, as YY (29) or YYYY (2029)");
+
 const cardDataSchema = z
   .object({
     number: z.string().min(8).max(19),
     expiration_month: z.number().min(1).max(12),
-    expiration_year: z.number().min(1).max(9999),
+    expiration_year: cardExpirationYearSchema,
     security_code: z.string().min(3).max(4).nullish(),
     holder_name: z.string().min(3).max(26).nullish(),
     type: z.string().nullish(),

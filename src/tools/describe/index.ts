@@ -44,8 +44,11 @@ export const describeTool = {
 
       if (!target) {
         const available = [...tools.map((tool) => tool.method), "describeTool"].join(", ");
+        // isError so a client can tell a miss from a description: without it this read
+        // as a successful call, and the only tool on the server that never set the flag.
         return Promise.resolve({
           content: [{ type: "text" as const, text: `Unknown tool "${method}". Available tools: ${available}` }],
+          isError: true,
         } as Output<TType>);
       }
 

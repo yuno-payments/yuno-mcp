@@ -61,7 +61,11 @@ export const paymentMethodRetrieveTool = {
   annotations: { openWorldHint: true, title: "Retrieve Payment Method", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
+    payment_method_id: z
+      .string()
+      .min(36)
+      .max(64)
+      .describe("The payment method's vaulted_token, as returned by paymentMethodEnroll and paymentMethodRetrieveEnrolled (MIN 36, MAX 64)."),
   }),
   outputSchema: yunoPaymentMethodOutputSchema,
   handler:
@@ -124,7 +128,11 @@ export const paymentMethodUnenrollTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Unenroll Payment Method", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    payment_method_id: z.string().min(36).max(64).describe("The unique identifier of the payment method (MIN 36, MAX 64)."),
+    payment_method_id: z
+      .string()
+      .min(36)
+      .max(64)
+      .describe("The payment method's vaulted_token, as returned by paymentMethodEnroll and paymentMethodRetrieveEnrolled (MIN 36, MAX 64)."),
   }),
   outputSchema: yunoPaymentMethodOutputSchema,
   handler:
