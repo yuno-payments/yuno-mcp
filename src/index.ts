@@ -53,7 +53,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
   // tools array itself — exporting it from there would be an import cycle.
   const enabledTools: readonly Tool[] =
     options.mode === "read-only"
-      ? [...tools.filter((tool) => tool.annotations.readOnlyHint === true), describeTool]
+      ? [...tools.filter((tool) => tool.annotations.readOnlyHint), describeTool]
       : [...tools, describeTool];
 
   for (const tool of enabledTools) {
@@ -102,7 +102,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
         outputSchema: registeredOutputSchema,
         annotations: tool.annotations,
       },
-      async (rawParams: any) => {
+      async (rawParams: unknown) => {
         try {
           // confirm_token is a transport-level field — strip it before validation so
           // it can never leak into a Yuno API request body.
@@ -111,7 +111,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           const validation = tool.schema.safeParse(params);
           if (!validation.success) {
-            const errors = validation.error.issues.map((issue: z.ZodIssue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+            const errors = validation.error.issues.map((issue: z.core.$ZodIssue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
             return {
               content: [
                 {
@@ -157,24 +157,29 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             }
           }
 
-          const handlerResult = await tool.handler({ yunoClient, type: "object" })(validation.data as any);
+          const handlerResult = await tool.handler({ yunoClient, type: "object" })(validation.data as never);
 
-          const content: { type: "text"; text: string }[] = handlerResult.content.map((entry) => {
+          // A handler invoked with type "object" is typed to return object entries, but a
+          // handler whose endpoint yields a bare array (e.g. checkoutSessionRetrievePaymentMethods)
+          // mixes in text entries too. The declared type is narrower than the runtime shape, so
+          // widen it once here and let each branch narrow honestly.
+          const mixedContent = handlerResult.content as Array<
+            { type: "text"; text: string } | { type: "object"; object: unknown }
+          >;
+
+          const content: { type: "text"; text: string }[] = mixedContent.map((entry) => {
             if (entry.type === "object") {
               // A no-content response (e.g. recipientDelete) has no body to print, and
               // JSON.stringify(undefined) returns undefined despite its declared type.
               const body = JSON.stringify(entry.object, null, 4) as string | undefined;
               return { type: "text" as const, text: body ?? "(empty response body)" };
             }
-            return { type: "text" as const, text: (entry as unknown as { type: "text"; text: string }).text };
+            return { type: "text" as const, text: entry.text };
           });
 
           // Flag upstream failures before anything else. Tools without an outputSchema
           // used to return here first, so their 4xx/5xx responses reached the caller with
           // no isError and read as successful calls.
-          const mixedContent = handlerResult.content as Array<
-            { type: "text"; text: string } | { type: "object"; object: unknown }
-          >;
           const headersText = mixedContent.find(
             (entry): entry is { type: "text"; text: string } =>
               entry.type === "text" && /^Response Headers \(HTTP \d+\)/.test(entry.text),
@@ -182,7 +187,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const statusMatch = headersText?.text.match(/^Response Headers \(HTTP (\d+)\)/);
           const upstreamStatus = statusMatch ? parseInt(statusMatch[1], 10) : 200;
 
-          const primary = handlerResult.content.find((entry) => entry.type === "object");
+          const primary = mixedContent.find((entry) => entry.type === "object");
           const primaryBody = primary?.type === "object" ? primary.object : undefined;
 
           // Known decline/error codes get an appended guidance entry (declines arrive
@@ -239,7 +244,7 @@ function applyLeanToolsList(server: McpServer): void {
   handlers.set("tools/list", async (request, extra) => leanToolsListResult(await registered(request, extra)));
 }
 
-async function initializeYunoMCP({
+function initializeYunoMCP({
   accountCode,
   publicApiKey,
   privateSecretKey,
@@ -252,7 +257,7 @@ async function initializeYunoMCP({
   mode?: ServerMode;
 }) {
   try {
-    const yunoClient = await YunoClient.initialize({
+    const yunoClient = YunoClient.initialize({
       accountCode,
       publicApiKey,
       privateSecretKey,

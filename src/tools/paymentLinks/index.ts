@@ -22,7 +22,7 @@ export const paymentLinkCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(paymentLink, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
@@ -30,7 +30,7 @@ export const paymentLinkCreateTool = {
       return {
         content: [
           { type: "object" as const, object: paymentLink },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },
@@ -53,7 +53,7 @@ export const paymentLinkRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(paymentLink, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
@@ -61,7 +61,7 @@ export const paymentLinkRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: paymentLink },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },
@@ -82,7 +82,7 @@ export const paymentLinkCancelTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(cancelResponse, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentLink>;
       }
@@ -90,7 +90,7 @@ export const paymentLinkCancelTool = {
       return {
         content: [
           { type: "object" as const, object: cancelResponse },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentLink>;
     },

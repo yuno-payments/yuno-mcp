@@ -21,11 +21,11 @@ const installmentConfigSchema = z
             installment: z.number().int(),
             rate: z.number(),
           })
-          .passthrough(),
+          .loose(),
       )
       .nullish(),
   })
-  .passthrough();
+  .loose();
 
 const thirdPartyDataSchema = z
   .object({
@@ -38,11 +38,11 @@ const thirdPartyDataSchema = z
         directory_server_transaction_id: z.string().nullish(),
         acs_transaction_id: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("3DS payer authentication data"),
   })
-  .passthrough()
+  .loose()
   .describe("Third-party data (e.g., external 3DS results). Shape is not formally documented; passthrough allows provider-specific fields.");
 
 const yunoCheckoutSessionOutputSchema = z
@@ -65,14 +65,14 @@ const yunoCheckoutSessionOutputSchema = z
                 installment: z.number().int(),
                 rate: z.number(),
               })
-              .passthrough(),
+              .loose(),
           )
           .nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
   })
-  .passthrough();
+  .loose();
 
 // Raw API response: a bare array of payment methods. The array root means it
 // cannot be used as an MCP outputSchema (structuredContent requires an object
@@ -96,15 +96,15 @@ const yunoCheckoutPaymentMethodsOutputSchema = z.array(
           conditions: z
             .object({
               enabled: z.boolean().nullish(),
-              rules: z.array(z.object({}).passthrough()).nullish(),
+              rules: z.array(z.object({}).loose()).nullish(),
             })
-            .passthrough()
+            .loose()
             .nullish(),
         })
-        .passthrough()
+        .loose()
         .nullish(),
     })
-    .passthrough(),
+    .loose(),
 );
 
 const yunoOttOutputSchema = z
@@ -129,12 +129,12 @@ const yunoOttOutputSchema = z
         nationality: z.string().nullish(),
         device_fingerprint: z.any().nullish(),
       })
-      .passthrough(),
+      .loose(),
     installment: z.any().nullish(),
     country: z.string(),
     customer_session: z.any().nullish(),
   })
-  .passthrough();
+  .loose();
 
 const checkoutSessionCreateSchema = z
   .object({
@@ -150,7 +150,7 @@ const checkoutSessionCreateSchema = z
         currency: z.string().min(3).max(3).nullish(),
         value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Alternative currency representation"),
     workflow: z.enum(["SDK_CHECKOUT", "CHECKOUT", "SDK_SEAMLESS"]).nullish().describe("Checkout workflow type"),
@@ -165,16 +165,16 @@ const checkoutSessionCreateSchema = z
                 installment: z.number().int().describe("The number of monthly installments"),
                 rate: z.number().describe("The rate applied to the final amount (percentage)"),
               })
-              .passthrough(),
+              .loose(),
           )
           .nullish()
           .describe("Installments to show the customer"),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("The installment plan configuration"),
   })
-  .passthrough();
+  .loose();
 
 const ottCreateSchema = z
   .object({
@@ -202,7 +202,7 @@ const ottCreateSchema = z
             browser_info: browserInfoSchema,
             first_name: z.string().nullish(),
             last_name: z.string().nullish(),
-            email: z.string().email().nullish(),
+            email: z.email().nullish(),
             gender: z.string().nullish(),
             date_of_birth: z.string().nullish(),
             document: documentSchema.nullish(),
@@ -210,20 +210,20 @@ const ottCreateSchema = z
             billing_address: addressSchema.nullish(),
             shipping_address: addressSchema.nullish(),
           })
-          .passthrough(),
+          .loose(),
         vaulted_token: z.string().nullish(),
       })
-      .passthrough(),
+      .loose(),
     three_d_secure: z
       .object({
         three_d_secure_setup_id: z.string().nullish().describe("3DS setup ID"),
       })
-      .passthrough(),
+      .loose(),
     installment: installmentConfigSchema.nullish().describe("Installment configuration (plan_id or explicit plan)"),
     third_party_data: thirdPartyDataSchema.nullish(),
     device_fingerprints: deviceFingerprintsSchema.nullish().describe("Device fingerprints from fraud screening providers"),
   })
-  .passthrough();
+  .loose();
 
 export {
   checkoutSessionCreateSchema,

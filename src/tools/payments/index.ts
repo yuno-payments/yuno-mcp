@@ -45,7 +45,7 @@ export const paymentCreateTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -59,7 +59,7 @@ export const paymentCreateTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -88,7 +88,7 @@ export const paymentRetrieveTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -102,7 +102,7 @@ export const paymentRetrieveTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -131,7 +131,7 @@ export const paymentRetrieveByMerchantOrderIdTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, { items: YunoPayment[] }>;
@@ -145,7 +145,7 @@ export const paymentRetrieveByMerchantOrderIdTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, { items: YunoPayment[] }>;
@@ -160,7 +160,7 @@ export const paymentRefundTool = {
     payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -188,7 +188,7 @@ export const paymentRefundTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -202,7 +202,7 @@ export const paymentRefundTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -216,7 +216,7 @@ export const paymentCancelOrRefundTool = {
   schema: z.object({
     payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     body: paymentCancelOrRefundSchema,
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -242,7 +242,7 @@ export const paymentCancelOrRefundTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -256,7 +256,7 @@ export const paymentCancelOrRefundTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -271,7 +271,7 @@ export const paymentCancelOrRefundWithTransactionTool = {
     payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentRefundSchema,
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate refunds. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -299,7 +299,7 @@ export const paymentCancelOrRefundWithTransactionTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -313,7 +313,7 @@ export const paymentCancelOrRefundWithTransactionTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -328,7 +328,7 @@ export const paymentCancelTool = {
     payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCancelSchema,
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate cancellations. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate cancellations. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -356,7 +356,7 @@ export const paymentCancelTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -370,7 +370,7 @@ export const paymentCancelTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -408,7 +408,7 @@ export const paymentAuthorizeTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -422,7 +422,7 @@ export const paymentAuthorizeTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
@@ -437,7 +437,7 @@ export const paymentCaptureAuthorizationTool = {
     payment_id: z.string().min(36).max(64).describe("The unique identifier of the payment (MIN 36, MAX 64 characters)"),
     transaction_id: z.string().min(36).max(64).describe("The unique identifier of the transaction (MIN 36, MAX 64 characters)"),
     body: paymentCaptureAuthorizationSchema,
-    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate captures. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate captures. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentOutputSchema,
   handler:
@@ -465,7 +465,7 @@ export const paymentCaptureAuthorizationTool = {
             },
             {
               type: "text" as const,
-              text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+              text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
             },
           ],
         } as Output<TType, YunoPayment>;
@@ -479,7 +479,7 @@ export const paymentCaptureAuthorizationTool = {
           },
           {
             type: "text" as const,
-            text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+            text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
           },
         ],
       } as Output<TType, YunoPayment>;
