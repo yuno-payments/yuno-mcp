@@ -16,7 +16,7 @@ const yunoCustomerOutputSchema = z
     metadata: metadataSchema,
     merchant_customer_created_at: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const customerCreateSchema = z
   .object({
@@ -35,7 +35,7 @@ const customerCreateSchema = z
     shipping_address: addressSchema,
     metadata: metadataSchema,
   })
-  .loose();
+  .passthrough();
 
 const customerUpdateSchema = z
   .object({
@@ -55,6 +55,6 @@ const customerUpdateSchema = z
     metadata: metadataSchema,
     merchant_customer_created_at: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 export { customerCreateSchema, customerUpdateSchema, yunoCustomerOutputSchema };

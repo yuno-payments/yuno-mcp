@@ -1,5 +1,6 @@
 import z from "zod";
 import { subscriptionCreateSchema, subscriptionUpdateSchema, yunoSubscriptionOutputSchema } from "../../schemas";
+import { YunoClient } from "../../client";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { SubscriptionCreateSchema, SubscriptionUpdateSchema, YunoSubscription } from "./types";
 
@@ -22,7 +23,7 @@ export const subscriptionCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -30,7 +31,7 @@ export const subscriptionCreateTool = {
       return {
         content: [
           { type: "object" as const, object: subscription },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -53,7 +54,7 @@ export const subscriptionRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -61,7 +62,7 @@ export const subscriptionRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: subscription },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -84,7 +85,7 @@ export const subscriptionPauseTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -92,7 +93,7 @@ export const subscriptionPauseTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -115,7 +116,7 @@ export const subscriptionResumeTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -123,7 +124,7 @@ export const subscriptionResumeTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -144,7 +145,7 @@ export const subscriptionUpdateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(subscription, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -152,7 +153,7 @@ export const subscriptionUpdateTool = {
       return {
         content: [
           { type: "object" as const, object: subscription },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },
@@ -175,7 +176,7 @@ export const subscriptionCancelTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoSubscription>;
       }
@@ -183,7 +184,7 @@ export const subscriptionCancelTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoSubscription>;
     },

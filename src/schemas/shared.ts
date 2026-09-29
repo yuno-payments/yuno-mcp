@@ -12,7 +12,7 @@ const addressSchema = z
     zip_code: z.string().nullish(),
     neighborhood: z.string().nullish(),
   })
-  .loose()
+  .passthrough()
   .nullish();
 
 const metadataSchema = z.array(z.object({ key: z.string(), value: z.string() })).nullish();
@@ -22,7 +22,7 @@ const phoneSchema = z
     number: z.string(),
     country_code: z.string(),
   })
-  .loose()
+  .passthrough()
   .nullish();
 
 const documentSchema = z
@@ -30,7 +30,7 @@ const documentSchema = z
     document_type: z.string(),
     document_number: z.string(),
   })
-  .loose()
+  .passthrough()
   .nullish();
 
 /**
@@ -59,7 +59,7 @@ const cardDataSchema = z
     type: z.string().nullish(),
     brand: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 // Responses carry masked card data — no PAN, no expiry. Requests still require both.
 const cardDataResponseSchema = cardDataSchema.extend({
@@ -74,7 +74,7 @@ const amountResponseSchema = z
     currency: z.string().describe("Currency (ISO 4217), or empty when not applicable"),
     value: z.number().nullish().describe("The amount"),
   })
-  .loose();
+  .passthrough();
 
 const browserInfoSchema = z
   .object({
@@ -90,14 +90,14 @@ const browserInfoSchema = z
     accept_content: z.string().describe("Content accept header"),
     accept_header: z.string().describe("Accept header"),
   })
-  .loose();
+  .passthrough();
 
 const amountSchema = z
   .object({
     currency: z.string().min(3).max(3).describe("The currency used to make the payment (ISO 4217)"),
     value: z.number().min(0).describe("The payment amount"),
   })
-  .loose();
+  .passthrough();
 
 const orderItemSchema = z
   .object({
@@ -111,7 +111,7 @@ const orderItemSchema = z
     manufacture_part_number: z.string().nullish(),
     url: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const orderTaxSchema = z
   .object({
@@ -122,7 +122,7 @@ const orderTaxSchema = z
     value: z.number().nullish(),
     percentage: z.number().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const orderShippingSchema = z
   .object({
@@ -131,7 +131,7 @@ const orderShippingSchema = z
     carrier: z.string().nullish().describe("Carrier code (UPS, USPS, FEDEX, DHL, ...)"),
     deliver_at: z.string().nullish().describe("Delivery date (ISO 8601)"),
   })
-  .loose();
+  .passthrough();
 
 const accountFundingPartySchema = z
   .object({
@@ -146,7 +146,7 @@ const accountFundingPartySchema = z
     phone: phoneSchema,
     address: addressSchema,
   })
-  .loose();
+  .passthrough();
 
 const airlineLegSchema = z
   .object({
@@ -171,7 +171,7 @@ const airlineLegSchema = z
     route_order: z.number().nullish(),
     order: z.number().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const airlinePassengerSchema = z
   .object({
@@ -187,7 +187,7 @@ const airlinePassengerSchema = z
     loyalty_number: z.string().nullish(),
     loyalty_tier: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const airlineTicketSchema = z
   .object({
@@ -210,10 +210,10 @@ const airlineTicketSchema = z
         city: z.string().nullish(),
         country: z.string().nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
   })
-  .loose();
+  .passthrough();
 
 const airlineSchema = z
   .object({
@@ -223,7 +223,7 @@ const airlineSchema = z
     passengers: z.array(airlinePassengerSchema).nullish(),
     tickets: z.array(airlineTicketSchema).nullish(),
   })
-  .loose();
+  .passthrough();
 
 const sellerDetailsSchema = z
   .object({
@@ -238,7 +238,7 @@ const sellerDetailsSchema = z
     phone: phoneSchema,
     address: addressSchema,
   })
-  .loose();
+  .passthrough();
 
 const paymentAdditionalDataSchema = z
   .object({
@@ -268,10 +268,10 @@ const paymentAdditionalDataSchema = z
                     date: z.string().nullish(),
                     address: addressSchema,
                   })
-                  .loose()
+                  .passthrough()
                   .nullish(),
               })
-              .loose(),
+              .passthrough(),
           )
           .nullish(),
         account_funding: z
@@ -279,7 +279,7 @@ const paymentAdditionalDataSchema = z
             sender: accountFundingPartySchema.nullish(),
             beneficiary: accountFundingPartySchema.nullish(),
           })
-          .loose()
+          .passthrough()
           .nullish(),
         discounts: z
           .array(
@@ -289,12 +289,12 @@ const paymentAdditionalDataSchema = z
                 name: z.string().nullish(),
                 unit_amount: z.number().nullish(),
               })
-              .loose(),
+              .passthrough(),
           )
           .nullish(),
         sales_channel: z.string().nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
     airline: airlineSchema.nullish(),
     transportations: z
@@ -308,12 +308,12 @@ const paymentAdditionalDataSchema = z
             passengers: z.array(airlinePassengerSchema).nullish(),
             tickets: z.array(airlineTicketSchema).nullish(),
           })
-          .loose(),
+          .passthrough(),
       )
       .nullish(),
     seller_details: sellerDetailsSchema.nullish(),
   })
-  .loose();
+  .passthrough();
 
 const subscriptionAdditionalDataSchema = z
   .object({
@@ -321,10 +321,10 @@ const subscriptionAdditionalDataSchema = z
       .object({
         items: z.array(orderItemSchema).nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
   })
-  .loose();
+  .passthrough();
 
 const fraudScreeningRequestSchema = z
   .object({
@@ -333,7 +333,7 @@ const fraudScreeningRequestSchema = z
       .nullish()
       .describe("If true, fraud screening runs without executing the payment afterward"),
   })
-  .loose();
+  .passthrough();
 
 const splitMarketplaceRequestSchema = z.array(
   z
@@ -350,10 +350,10 @@ const splitMarketplaceRequestSchema = z.array(
           processing_fee: z.enum(["MERCHANT", "RECIPIENT", "SHARED"]).nullish(),
           chargebacks: z.boolean().nullish(),
         })
-        .loose()
+        .passthrough()
         .nullish(),
     })
-    .loose(),
+    .passthrough(),
 );
 
 const deviceFingerprintsSchema = z
@@ -363,7 +363,7 @@ const deviceFingerprintsSchema = z
         provider_id: z.string().nullish().describe("Fraud screening provider id"),
         id: z.string().nullish().describe("Device fingerprint associated to the provider"),
       })
-      .loose(),
+      .passthrough(),
   )
   .describe("Device fingerprints from fraud screening providers");
 

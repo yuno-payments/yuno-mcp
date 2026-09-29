@@ -16,14 +16,14 @@ const paymentLinkPaymentMethodSchema = z
             soft_descriptor: z.string().nullish(),
             verify: z.boolean().nullish(),
           })
-          .loose()
+          .passthrough()
           .nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
     vault_on_success: z.boolean().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const installmentsPlanSchema = z
   .object({
@@ -35,12 +35,12 @@ const installmentsPlanSchema = z
             installment: z.number().int().describe("Number of monthly installments"),
             rate: z.number().describe("Rate applied to the final amount (percentage)"),
           })
-          .loose(),
+          .passthrough(),
       )
       .nullish()
       .describe("Installment options to show the customer"),
   })
-  .loose();
+  .passthrough();
 
 const yunoPaymentLinkOutputSchema = z
   .object({
@@ -56,12 +56,12 @@ const yunoPaymentLinkOutputSchema = z
         currency: z.string(),
         value: z.number(),
       })
-      .loose(),
+      .passthrough(),
     payment_method_types: z.array(z.string()),
     metadata: metadataSchema,
     cancelled_at: z.string().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const customerPayerSchema = z
   .object({
@@ -79,7 +79,7 @@ const customerPayerSchema = z
     phone: phoneSchema.nullish(),
     ip_address: z.string().min(1).max(45).nullish().describe("The customer's IP address"),
   })
-  .loose();
+  .passthrough();
 
 const paymentLinkCreateSchema = z
   .object({
@@ -104,7 +104,7 @@ const paymentLinkCreateSchema = z
             tax_base: z.number().nullish(),
             percentage: z.number().nullish(),
           })
-          .loose(),
+          .passthrough(),
       )
       .nullish(),
     customer_payer: customerPayerSchema.nullish(),
@@ -116,19 +116,19 @@ const paymentLinkCreateSchema = z
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
     payment_method_types: z.array(z.string()),
     metadata: metadataSchema,
     vault_on_success: z.boolean().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const paymentLinkCancelSchema = z
   .object({
     payment_link_id: z.string().describe("The code of the payment link to cancel"),
   })
-  .loose()
+  .passthrough()
   .describe("Parameters for payment link cancellation");
 
 export { paymentLinkCreateSchema, paymentLinkCancelSchema, yunoPaymentLinkOutputSchema };

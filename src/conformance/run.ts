@@ -2,83 +2,81 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ConfigError, resolveConfig, type ConformanceConfig } from "./config";
 import { runConformance, type Finding, type McpProbe } from "./checks";
+import { checkAuthorizeNeverCaptures } from "./authorize";
 
 /**
- * Repeatable MCP conformance runner (see docs/conformance.md).
- *
- * Connects to a deployed MCP endpoint as a real SDK Client over StreamableHTTP,
- * reads the live tools/list, and asserts the contract that the conformance review
- * of 2026-09-20 found no automated check could catch. Read-only: it never invokes
- * a destructive tool with arguments that could execute. Exits non-zero on any
- * violation; each printed line names the tool and the finding it corresponds to.
+ * Repeatable MCP conformance runner (see docs/conformance.md). Connects to a
+ * deployed endpoint as an SDK Client over StreamableHTTP and asserts the live
+ * contract. Exit codes: 0 conformant, 1 findings, 2 configuration or connection
+ * error. A run that checked nothing is reported as a finding, never as a pass.
  */
 
-/** TLS 1.2+ only for cardholder-data transport (PCI-DSS req 4.1): plain http is refused. */
-function assertSecureEndpoint(endpoint: string): void {
-  if (!/^https:\/\//i.test(endpoint)) {
-    throw new ConfigError(`Refusing insecure endpoint ${endpoint}: MCP conformance must run over HTTPS (PCI-DSS req 4.1).`);
-  }
+export type ConnectedProbe = { probe: McpProbe; close(): Promise<void> };
+export type Connector = (config: ConformanceConfig) => Promise<ConnectedProbe>;
+export type RunnerDeps = {
+  connect: Connector;
+  authorizeCheck: () => Promise<Finding[]>;
+  log: (line: string) => void;
+  error: (line: string) => void;
+};
+
+export function authHeaders(config: ConformanceConfig): Record<string, string> {
+  return {
+    "public-api-key": config.publicApiKey,
+    "private-secret-key": config.privateSecretKey,
+    "x-account-code": config.accountCode,
+  };
 }
 
-export function buildClientAndTransport(config: ConformanceConfig): {
-  client: Client;
-  transport: StreamableHTTPClientTransport;
-} {
-  const transport = new StreamableHTTPClientTransport(new URL(config.endpoint), {
-    requestInit: {
-      headers: {
-        "public-api-key": config.publicApiKey,
-        "private-secret-key": config.privateSecretKey,
-        "x-account-code": config.accountCode,
-      },
-    },
-  });
+export const connectStreamableHttp: Connector = async (config) => {
+  const transport = new StreamableHTTPClientTransport(new URL(config.endpoint), { requestInit: { headers: authHeaders(config) } });
   const client = new Client({ name: "yuno-mcp-conformance", version: "1.0.0" });
-  return { client, transport };
-}
+  await client.connect(transport);
+  return { probe: client as unknown as McpProbe, close: () => client.close() };
+};
+
+const defaultDeps: RunnerDeps = {
+  connect: connectStreamableHttp,
+  authorizeCheck: () => checkAuthorizeNeverCaptures(),
+  log: (line) => {
+    console.log(line);
+  },
+  error: (line) => {
+    console.error(line);
+  },
+};
 
 const formatFinding = (finding: Finding): string => `  ✗ [${finding.tool}] ${finding.finding}: ${finding.message}`;
+const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-export async function main(env: NodeJS.ProcessEnv = process.env): Promise<number> {
+export async function main(env: NodeJS.ProcessEnv = process.env, overrides: Partial<RunnerDeps> = {}): Promise<number> {
+  const deps = { ...defaultDeps, ...overrides };
   let config: ConformanceConfig;
   try {
     config = resolveConfig(env);
-    assertSecureEndpoint(config.endpoint);
   } catch (error) {
-    console.error(error instanceof ConfigError ? error.message : String(error));
+    deps.error(error instanceof ConfigError ? error.message : String(error));
     return 2;
   }
 
-  console.error(`Running MCP conformance against ${config.endpoint} ...`);
-  const { client, transport } = buildClientAndTransport(config);
-
+  deps.error(`Running MCP conformance against ${config.endpoint} ...`);
   let findings: Finding[];
+  let connected: ConnectedProbe | undefined;
   try {
-    await client.connect(transport);
-    findings = await runConformance(client as unknown as McpProbe);
+    connected = await deps.connect(config);
+    findings = [...(await runConformance(connected.probe)), ...(await deps.authorizeCheck())];
   } catch (error) {
-    console.error(`Conformance run failed to complete: ${error instanceof Error ? error.message : String(error)}`);
-    await client.close().catch(() => undefined);
+    deps.error(`Conformance run failed to complete: ${messageOf(error)}`);
     return 2;
+  } finally {
+    await connected?.close().catch(() => undefined);
   }
-  await client.close().catch(() => undefined);
 
   if (findings.length === 0) {
-    console.log(`✓ MCP conformance passed against ${config.endpoint}: 0 findings.`);
+    deps.log(`✓ MCP conformance passed against ${config.endpoint}: 0 findings.`);
     return 0;
   }
-
-  console.error(`✗ MCP conformance failed against ${config.endpoint}: ${String(findings.length)} finding(s).`);
-  for (const finding of findings) console.error(formatFinding(finding));
+  deps.error(`✗ MCP conformance failed against ${config.endpoint}: ${String(findings.length)} finding(s).`);
+  for (const finding of findings) deps.error(formatFinding(finding));
   return 1;
-}
-
-const invokedDirectly = import.meta.url === `file://${process.argv[1]}`;
-if (invokedDirectly) {
-  main()
-    .then((code) => process.exit(code))
-    .catch((error: unknown) => {
-      console.error(String(error));
-      process.exit(2);
-    });
 }

@@ -5,6 +5,7 @@ import {
   yunoPaymentMethodListOutputSchema,
 } from "../../schemas";
 import { randomUUID } from "node:crypto";
+import type { YunoClient } from "../../client";
 import type { HandlerContext, Output, Tool } from "../../types";
 import type { PaymentMethodEnrollSchema, YunoPaymentMethod } from "./types";
 
@@ -15,7 +16,7 @@ export const paymentMethodEnrollTool = {
   schema: z.object({
     body: paymentMethodEnrollSchema,
     customer_id: z.string().min(36).max(64).describe("The unique identifier of the customer (MIN 36, MAX 64)."),
-    idempotency_key: z.uuid().optional().describe("Unique key to prevent duplicate payment methods. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentMethodOutputSchema,
   handler:
@@ -40,7 +41,7 @@ export const paymentMethodEnrollTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(responseBody, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
@@ -48,7 +49,7 @@ export const paymentMethodEnrollTool = {
       return {
         content: [
           { type: "object" as const, object: responseBody },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },
@@ -76,7 +77,7 @@ export const paymentMethodRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
@@ -84,7 +85,7 @@ export const paymentMethodRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },
@@ -107,7 +108,7 @@ export const paymentMethodRetrieveEnrolledTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, { payment_methods?: YunoPaymentMethod[] | null }>;
       }
@@ -115,7 +116,7 @@ export const paymentMethodRetrieveEnrolledTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, { payment_methods?: YunoPaymentMethod[] | null }>;
     },
@@ -143,7 +144,7 @@ export const paymentMethodUnenrollTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(body, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoPaymentMethod>;
       }
@@ -151,7 +152,7 @@ export const paymentMethodUnenrollTool = {
       return {
         content: [
           { type: "object" as const, object: body },
-          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoPaymentMethod>;
     },

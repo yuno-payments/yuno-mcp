@@ -42,7 +42,7 @@ export interface YunoCheckoutPaymentMethod {
       rules?: Record<string, unknown>[] | null;
     } | null;
   } | null;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 // Raw API response: the endpoint returns a bare array of payment methods.
@@ -92,7 +92,7 @@ export interface YunoOttThirdPartyData {
     directory_server_transaction_id?: string | null;
     acs_transaction_id?: string | null;
   } | null;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 export interface YunoOttRequest {
@@ -110,12 +110,12 @@ export interface YunoOttResponseCustomer {
   gender: string;
   phone?: string | null;
   date_of_birth?: string | null;
-  billing_address?: unknown;
-  shipping_address?: unknown;
-  document?: unknown;
+  billing_address?: any | null;
+  shipping_address?: any | null;
+  document?: any | null;
   browser_info: YunoBrowserInfo;
   nationality?: string | null;
-  device_fingerprint?: unknown;
+  device_fingerprint?: any | null;
 }
 
 export interface YunoOttResponse {
@@ -125,9 +125,9 @@ export interface YunoOttResponse {
   type: string;
   card_data?: YunoCardData;
   customer: YunoOttResponseCustomer;
-  installment?: unknown;
+  installment?: any | null;
   country: string;
-  customer_session?: unknown;
+  customer_session?: any | null;
 }
 
 export type YunoOttCreateSchema = z.infer<typeof ottCreateSchema>;

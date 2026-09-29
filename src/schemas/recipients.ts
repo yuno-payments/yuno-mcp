@@ -14,7 +14,7 @@ const legalRepresentativeSchema = z
     publicly_exposed_person: z.boolean().nullish(),
     ultimate_beneficial_owner: z.boolean().nullish(),
   })
-  .loose();
+  .passthrough();
 
 const withdrawalMethodsBankSchema = z
   .object({
@@ -29,7 +29,7 @@ const withdrawalMethodsBankSchema = z
     currency: z.string().min(3).max(3),
     payout_schedule: z.enum(["DAY", "WEEK", "MONTH", "HOLD"]).nullish(),
   })
-  .loose();
+  .passthrough();
 
 const documentationItemSchema = z
   .object({
@@ -38,7 +38,7 @@ const documentationItemSchema = z
     content_category: z.string().describe("Document category (e.g., IDENTIFICATION_DOCUMENT, BANK_STATEMENT)"),
     content: z.string().describe("Base64-encoded content (max 2MB)"),
   })
-  .loose();
+  .passthrough();
 
 const onboardingSchema = z
   .object({
@@ -54,16 +54,16 @@ const onboardingSchema = z
         recipient_id: z.string().nullish(),
         recipient_type: z.enum(["MEAL", "FOOD", "MULTI_BENEFITS", "FLEET"]).nullish(),
       })
-      .loose(),
+      .passthrough(),
     documentation: z.array(documentationItemSchema).nullish(),
     withdrawal_methods: z
       .object({
         bank: withdrawalMethodsBankSchema.nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
   })
-  .loose();
+  .passthrough();
 
 const recipientCreateSchema = z
   .object({
@@ -78,7 +78,7 @@ const recipientCreateSchema = z
     last_name: z.string().nullish().describe("Last name of the recipient"),
     date_of_birth: z.string().nullish().describe("Date of birth of the recipient (YYYY-MM-DD)"),
     legal_name: z.string().nullish().describe("Legal name of the recipient (required for ENTITY)"),
-    email: z.email().nullish().describe("Email of the recipient"),
+    email: z.string().email().nullish().describe("Email of the recipient"),
     country: z.string().min(2).max(2).describe("Country code (ISO 3166-1)"),
     website: z.string().nullish().describe("Seller website URL"),
     industry: z.string().nullish().describe("Industry category"),
@@ -91,7 +91,7 @@ const recipientCreateSchema = z
       .object({
         bank: withdrawalMethodsBankSchema.nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish()
       .describe("Withdrawal methods for the recipient"),
     documentation: z.array(documentationItemSchema).nullish().describe("Supporting documentation"),
@@ -102,11 +102,11 @@ const recipientCreateSchema = z
         date: z.string(),
         ip: z.string().nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish()
       .describe("Terms of service acceptance"),
   })
-  .loose();
+  .passthrough();
 
 const recipientUpdateSchema = z
   .object({
@@ -131,7 +131,7 @@ const recipientUpdateSchema = z
       .object({
         bank: withdrawalMethodsBankSchema.nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
     documentation: z.array(documentationItemSchema).nullish(),
     onboardings: z.array(onboardingSchema).nullish(),
@@ -141,10 +141,10 @@ const recipientUpdateSchema = z
         date: z.string().nullish(),
         ip: z.string().nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
   })
-  .loose();
+  .passthrough();
 
 const yunoRecipientOutputSchema = z
   .object({
@@ -181,10 +181,10 @@ const yunoRecipientOutputSchema = z
             currency: z.string().nullish(),
             payout_schedule: z.string().nullish(),
           })
-          .loose()
+          .passthrough()
           .nullish(),
       })
-      .loose()
+      .passthrough()
       .nullish(),
     legal_representatives: z
       .array(
@@ -201,10 +201,10 @@ const yunoRecipientOutputSchema = z
             publicly_exposed_person: z.boolean().nullish(),
             ultimate_beneficial_owner: z.boolean().nullish(),
           })
-          .loose(),
+          .passthrough(),
       )
       .nullish(),
   })
-  .loose();
+  .passthrough();
 
 export { recipientCreateSchema, recipientUpdateSchema, yunoRecipientOutputSchema };

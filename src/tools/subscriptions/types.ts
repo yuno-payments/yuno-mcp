@@ -35,7 +35,7 @@ export interface YunoSubscription {
         holder_name: string;
       };
     };
-    [key: string]: unknown;
+    [key: string]: any;
   };
   trial_period?: {
     billing_cycles?: number;
