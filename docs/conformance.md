@@ -41,7 +41,9 @@ deployed.
 ## Safety
 
 - **No mutating tool is ever called.** `tools/call` goes only to tools the server
-  itself marks `readOnlyHint: true`, and to `describeTool`. Mutating and
+  itself marks `readOnlyHint: true` and does not mark `destructiveHint: true`,
+  and to `describeTool`. The unknown-parameter and missing-argument probes both
+  follow this rule. Mutating and
   destructive tools are checked statically from their advertised schemas, so
   safety never depends on the validation being tested.
   `tests/conformance-runner.test.ts` checks this against the real server, and

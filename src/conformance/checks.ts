@@ -63,7 +63,8 @@ const topLevelProperties = (schema: JsonSchemaNode | undefined): Record<string, 
 const requiredOf = (schema: JsonSchemaNode | undefined): string[] =>
   Array.isArray(schema?.required) ? (schema.required as string[]) : [];
 
-export const isReadOnly = (tool: ListedTool): boolean => tool.annotations?.readOnlyHint === true;
+export const isSafeToProbe = (tool: ListedTool): boolean =>
+  tool.annotations?.readOnlyHint === true && tool.annotations.destructiveHint !== true && tool.name !== "describeTool";
 
 function probeKeyFor(tool: ListedTool): { sent: string; canonical: string } {
   const snakeProp = Object.keys(topLevelProperties(tool.inputSchema)).find((key) => key.includes("_"));
@@ -131,7 +132,7 @@ export async function collectSurface(probe: McpProbe): Promise<LiveSurface> {
   };
 
   for (const tool of tools) {
-    if (isReadOnly(tool) && tool.name !== "describeTool") await probeReadOnlyTool(probe, tool, surface);
+    if (isSafeToProbe(tool)) await probeReadOnlyTool(probe, tool, surface);
   }
 
   if (surface.toolsByName.has("describeTool")) {

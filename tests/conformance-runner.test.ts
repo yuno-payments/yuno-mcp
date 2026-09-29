@@ -148,6 +148,25 @@ describe("paymentAuthorize never captures", () => {
     }
   });
 
+  it("refuses a payment with no payment_method before anything is sent", async () => {
+    const harness = await inProcessAuthorizeHarness();
+    try {
+      const result = await harness.callAuthorize({
+        payment: {
+          description: "d",
+          country: "CO",
+          merchant_order_id: "o",
+          amount: { currency: "COP", value: 1 },
+          workflow: "DIRECT",
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(harness.sent).toEqual([]);
+    } finally {
+      await harness.close();
+    }
+  });
+
   const fakeHarness = (transform: (payment: Record<string, unknown>) => Record<string, unknown> | undefined): (() => Promise<AuthorizeHarness>) => {
     return () => {
       const sent: AuthorizeHarness["sent"] = [];
@@ -220,9 +239,33 @@ describe("probes never call a mutating tool", () => {
     };
     const surface = await collectSurface(stripping);
     expect(called).toEqual(["paymentRetrieve", "paymentRetrieve"]);
+    expect(surface.unknownParamProbe.has("paymentRefund")).toBe(false);
+    expect(surface.missingArgProbe.has("paymentRefund")).toBe(false);
+    expect(surface.unknownParamProbe.has("customerCreate")).toBe(false);
     const findings = runChecks(surface);
     expect(findings.some((f) => f.tool === "paymentRefund" && f.finding === "unknown-parameter-not-forbidden")).toBe(true);
     expect(findings.some((f) => f.tool === "paymentRetrieve" && f.finding === "unknown-parameter-silently-accepted")).toBe(true);
+  });
+
+  it("never sends the unknown-parameter or missing-argument probe to a tool marked destructive, even if it also claims read-only", async () => {
+    const called: Array<{ name: string; arguments?: Record<string, unknown> }> = [];
+    const tools: ListedTool[] = [
+      { name: "paymentCancel", annotations: { readOnlyHint: true, destructiveHint: true }, inputSchema: { type: "object", properties: { payment_id: {} }, required: [] } },
+      { name: "paymentRetrieve", annotations: { readOnlyHint: true }, inputSchema: { type: "object", properties: { payment_id: {} }, required: ["payment_id"] } },
+    ];
+    const recording: McpProbe = {
+      listTools: () => Promise.resolve({ tools }),
+      callTool: (args) => {
+        called.push(args);
+        return Promise.resolve({ isError: false, content: [] });
+      },
+    };
+    const surface = await collectSurface(recording);
+    expect(called.map((call) => call.name)).toEqual(["paymentRetrieve", "paymentRetrieve"]);
+    expect(called[0]?.arguments).toEqual({ paymentId: "conformance-probe" });
+    expect(called[1]?.arguments).toEqual({});
+    expect(surface.unknownParamProbe.has("paymentCancel")).toBe(false);
+    expect(surface.missingArgProbe.has("paymentCancel")).toBe(false);
   });
 });
 
