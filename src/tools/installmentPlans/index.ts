@@ -27,7 +27,7 @@ export const installmentPlanCreateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(plan, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
@@ -35,7 +35,7 @@ export const installmentPlanCreateTool = {
       return {
         content: [
           { type: "object" as const, object: plan },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -58,7 +58,7 @@ export const installmentPlanRetrieveTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(plan, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
@@ -66,7 +66,7 @@ export const installmentPlanRetrieveTool = {
       return {
         content: [
           { type: "object" as const, object: plan },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -89,7 +89,7 @@ export const installmentPlanRetrieveAllTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(plans, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, { items: YunoInstallmentPlan[] }>;
       }
@@ -97,7 +97,7 @@ export const installmentPlanRetrieveAllTool = {
       return {
         content: [
           { type: "object" as const, object: { items: plans ?? [] } },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, { items: YunoInstallmentPlan[] }>;
     },
@@ -118,7 +118,7 @@ export const installmentPlanUpdateTool = {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(plan, null, 4) },
-            { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
           ],
         } as Output<TType, YunoInstallmentPlan>;
       }
@@ -126,7 +126,7 @@ export const installmentPlanUpdateTool = {
       return {
         content: [
           { type: "object" as const, object: plan },
-          { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          { type: "text" as const, text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}` },
         ],
       } as Output<TType, YunoInstallmentPlan>;
     },
@@ -148,7 +148,7 @@ export const installmentPlanDeleteTool = {
       const { body, status, headers } = await yunoClient.installmentPlans.delete(planId);
       const headerBlock = {
         type: "text" as const,
-        text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}`,
+        text: `Response Headers (HTTP ${String(status)}):\n${JSON.stringify(headers, null, 4)}`,
       };
 
       // A no-content response is the expected success path here. Report it as-is rather
@@ -156,7 +156,7 @@ export const installmentPlanDeleteTool = {
       if (body === undefined) {
         return {
           content: [
-            { type: "text" as const, text: `Installment plan ${planId} deleted (HTTP ${status}, empty response body).` },
+            { type: "text" as const, text: `Installment plan ${planId} deleted (HTTP ${String(status)}, empty response body).` },
             headerBlock,
           ],
         } as Output<TType, YunoInstallmentPlan>;

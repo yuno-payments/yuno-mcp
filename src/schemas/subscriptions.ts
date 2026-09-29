@@ -15,13 +15,13 @@ const yunoSubscriptionOutputSchema = z
         type: z.enum(["DAY", "WEEK", "MONTH"]).nullish(),
         value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     billing_cycles: z
       .object({
         total: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     payment_method: z
       .object({
@@ -41,31 +41,31 @@ const yunoSubscriptionOutputSchema = z
                 security_code: z.union([z.string(), z.number()]).nullish(),
                 holder_name: z.string().nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
           })
-          .passthrough()
+          .loose()
           .nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     trial_period: z
       .object({
         billing_cycles: z.number().nullish(),
         amount: amountResponseSchema.nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     availability: z
       .object({
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     metadata: metadataSchema,
   })
-  .passthrough();
+  .loose();
 
 const subscriptionCreateSchema = z
   .object({
@@ -81,21 +81,21 @@ const subscriptionCreateSchema = z
         type: z.enum(["DAY", "WEEK", "MONTH"]),
         value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Frequency of the subscription"),
     billing_cycles: z
       .object({
         total: z.number(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Total billing cycles"),
     customer_payer: z
       .object({
         id: z.string().describe("The unique identifier of the customer"),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     payment_method: z
       .object({
@@ -106,17 +106,17 @@ const subscriptionCreateSchema = z
             installments: z.number().int().min(1).max(50).nullish().describe("Number of installments"),
             network_transaction_id: z.string().nullish().describe("Visa/Mastercard ID from initial payment"),
           })
-          .passthrough()
+          .loose()
           .nullish(),
       })
-      .passthrough()
+      .loose()
       .describe("Payment method for the subscription"),
     trial_period: z
       .object({
         billing_cycles: z.number().int().min(1).nullish().describe("Trial duration in billing cycles"),
         amount: amountSchema.nullish().describe("Discounted amount during trial"),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Trial period for the subscription"),
     availability: z
@@ -124,7 +124,7 @@ const subscriptionCreateSchema = z
         start_at: z.string().nullish().describe("Start date (ISO 8601)"),
         finish_at: z.string().nullish().describe("End date (ISO 8601)"),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Availability for the subscription"),
     metadata: metadataSchema,
@@ -140,13 +140,13 @@ const subscriptionCreateSchema = z
                 attempt: z.number().nullish(),
                 delay_seconds: z.number().nullish(),
               })
-              .passthrough(),
+              .loose(),
           )
           .nullish()
           .describe("Per-attempt schedule"),
         stop_on_hard_decline: z.boolean().nullish().describe("Halt retries after hard decline"),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Retries for the subscription"),
     initial_payment_validation: z.boolean().nullish().describe("Initial payment validation flag"),
@@ -155,11 +155,11 @@ const subscriptionCreateSchema = z
         type: z.enum(["PREPAID", "POSTDATE", "DAY"]).nullish().describe("Billing date type"),
         day: z.number().int().min(1).max(31).nullish().describe("Day of month for DAY type"),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Billing date for the subscription"),
   })
-  .passthrough();
+  .loose();
 
 const subscriptionUpdateSchema = z
   .object({
@@ -174,7 +174,7 @@ const subscriptionUpdateSchema = z
         currency: z.string(),
         value: z.number(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     frequency: z
       .object({
@@ -182,19 +182,19 @@ const subscriptionUpdateSchema = z
         value: z.number().nullish(),
         monthly_billing_day: z.number().int().min(1).max(31).nullish().describe("Monthly billing day"),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     billing_cycles: z
       .object({
         total: z.number(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     customer_payer: z
       .object({
         id: z.string(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     payment_method: z
       .object({
@@ -205,27 +205,27 @@ const subscriptionUpdateSchema = z
             verify: z.boolean().nullish(),
             card_data: cardDataSchema.nullish(),
           })
-          .passthrough()
+          .loose()
           .nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     availability: z
       .object({
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     retries: z
       .object({
         retry_on_decline: z.boolean().nullish(),
         amount: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     metadata: metadataSchema,
   })
-  .passthrough();
+  .loose();
 
 export { subscriptionCreateSchema, subscriptionUpdateSchema, yunoSubscriptionOutputSchema };
