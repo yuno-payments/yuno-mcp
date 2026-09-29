@@ -13,7 +13,6 @@ import {
 } from "../tools/payments/types";
 import { RecipientCreateSchema, RecipientUpdateBody, YunoRecipient } from "../tools/recipients/types";
 import { SubscriptionUpdateBody, YunoSubscription } from "../tools/subscriptions/types";
-import type { PublicApiKey } from "../types/shared";
 import type { ApiKeyPrefix, ApiKeyPrefixToEnvironmentSuffix, EnvironmentSuffix, YunoApiResponse, YunoClientConfig } from "./types";
 
 const apiKeyPrefixToEnvironmentSuffix = {
@@ -85,7 +84,6 @@ const WALLET_TYPES: ReadonlySet<string> = new Set(["GOOGLE_PAY", "APPLE_PAY"]);
 
 export function withCaptureDisabled(payment: PaymentCreateSchema["payment"]): PaymentCreateSchema["payment"] {
   const paymentMethod = payment.payment_method;
-  if (!paymentMethod) return payment;
   const type = paymentMethod.type.toUpperCase();
   const detail: Record<string, unknown> = { ...paymentMethod.detail };
   const holdsFunds = (key: "card" | "wallet") => {
@@ -135,7 +133,10 @@ export class YunoClient {
     return `yuno-mcp-confirm-v1:${this.privateSecretKey}`;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<YunoApiResponse<T>> {
+  private async request<T>(
+    endpoint: string,
+    options: Omit<RequestInit, "headers"> & { headers?: Record<string, string> } = {},
+  ): Promise<YunoApiResponse<T>> {
     // Fails per call rather than at construction: a thrown tool error reaches the
     // client verbatim, while an initialization failure becomes a generic 500 in
     // remote-yuno-mcp — which would hide the very message this exists to show.
@@ -268,7 +269,7 @@ export class YunoClient {
     },
 
     retrieveByMerchantOrderId: async (merchant_order_id: string) => {
-      return this.request<YunoPayment[]>(`/payments?merchant_order_id=${encodeURIComponent(merchant_order_id)}`, {
+      return this.request<YunoPayment[] | undefined>(`/payments?merchant_order_id=${encodeURIComponent(merchant_order_id)}`, {
         method: "GET",
       });
     },
@@ -276,7 +277,7 @@ export class YunoClient {
     refund: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/refund`, {
+      return this.request<unknown>(`/payments/${paymentId}/transactions/${transactionId}/refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -286,7 +287,7 @@ export class YunoClient {
     cancelOrRefund: async (paymentId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/cancel-or-refund`, {
+      return this.request<unknown>(`/payments/${paymentId}/cancel-or-refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -296,7 +297,7 @@ export class YunoClient {
     cancelOrRefundWithTransaction: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel-or-refund`, {
+      return this.request<unknown>(`/payments/${paymentId}/transactions/${transactionId}/cancel-or-refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -306,7 +307,7 @@ export class YunoClient {
     cancel: async (paymentId: string, transactionId: string, body: PaymentCancelSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel`, {
+      return this.request<unknown>(`/payments/${paymentId}/transactions/${transactionId}/cancel`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -326,7 +327,7 @@ export class YunoClient {
     captureAuthorization: async (paymentId: string, transactionId: string, body: PaymentCaptureAuthorizationSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/capture`, {
+      return this.request<unknown>(`/payments/${paymentId}/transactions/${transactionId}/capture`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -450,7 +451,7 @@ export class YunoClient {
     },
 
     retrieveAll: async (accountId: string) => {
-      return this.request<YunoInstallmentPlan[]>(`/installments-plans?account_id=${encodeURIComponent(accountId)}`, {
+      return this.request<YunoInstallmentPlan[] | undefined>(`/installments-plans?account_id=${encodeURIComponent(accountId)}`, {
         method: "GET",
       });
     },
@@ -463,7 +464,7 @@ export class YunoClient {
     },
 
     delete: async (planId: string) => {
-      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+      return this.request<YunoInstallmentPlan | undefined>(`/installments-plans/${planId}`, {
         method: "DELETE",
       });
     },

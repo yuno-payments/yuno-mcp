@@ -17,7 +17,7 @@ const paymentMethodEnrollSchema = z
         id: z.string(),
         payment_method_token: z.string(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Provider data for token migration, only if agreed with Yuno."),
     card_data: cardDataSchema.nullish().describe("Card details for DIRECT workflow (PCI merchants only)."),
@@ -27,11 +27,11 @@ const paymentMethodEnrollSchema = z
         vault_on_success: z.boolean(),
         currency: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Indicates whether to verify the payment with a verify transaction or not. null if not specified."),
   })
-  .passthrough();
+  .loose();
 
 const yunoPaymentMethodOutputSchema = z
   .object({
@@ -49,12 +49,12 @@ const yunoPaymentMethodOutputSchema = z
       .nullish()
       .describe("Identifies this payment method. Pass it as payment_method_id to paymentMethodRetrieve and paymentMethodUnenroll."),
   })
-  .passthrough();
+  .loose();
 
 const yunoPaymentMethodListOutputSchema = z
   .object({
     payment_methods: z.array(yunoPaymentMethodOutputSchema).nullish(),
   })
-  .passthrough();
+  .loose();
 
 export { paymentMethodEnrollSchema, yunoPaymentMethodOutputSchema, yunoPaymentMethodListOutputSchema };

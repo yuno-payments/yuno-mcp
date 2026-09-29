@@ -43,11 +43,11 @@ type ToolMethod =
   | RecipientToolMethod
   | SubscriptionToolMethod;
 
-type Content<TType extends "text" | "object" = "object" | "text", TResult extends any = any> = TType extends "text"
+type Content<TType extends "text" | "object" = "object" | "text", TResult = unknown> = TType extends "text"
   ? { type: "text"; text: string }
   : { type: "object"; object: TResult };
 
-type Output<TType extends "text" | "object" = "object" | "text", TResult extends any = any> = {
+type Output<TType extends "text" | "object" = "object" | "text", TResult = unknown> = {
   content: Content<TType, TResult>[];
   /**
    * Set by a handler that failed without an upstream call to point at — describeTool
@@ -66,9 +66,9 @@ type Tool = {
   method: ToolMethod;
   description: string;
   annotations: ToolAnnotations;
-  schema: z.ZodObject<any>;
-  outputSchema?: z.ZodObject<any>;
-  handler: <TType extends "object" | "text">(context: HandlerContext<TType>) => (input: any) => Promise<Output<TType>>;
+  schema: z.ZodObject<z.ZodRawShape>;
+  outputSchema?: z.ZodObject<z.ZodRawShape>;
+  handler: <TType extends "object" | "text">(context: HandlerContext<TType>) => (input: never) => Promise<Output<TType>>;
 };
 
 export type { Tool, Output, Content, HandlerContext };

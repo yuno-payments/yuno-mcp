@@ -35,7 +35,7 @@ const customerPayerSchema = z
             provider_id: z.string().describe("The fraud screening provider id").nullish(),
             id: z.string().describe("The device fingerprint associated to the provider").nullish(),
           })
-          .passthrough(),
+          .loose(),
       )
       .max(4000)
       .nullish(),
@@ -54,7 +54,7 @@ const customerPayerSchema = z
         java_enabled: z.boolean().nullish(),
         browser_time_difference: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     document: documentSchema.nullish(),
     billing_address: addressSchema.nullish(),
@@ -65,10 +65,10 @@ const customerPayerSchema = z
         latitude: z.string().min(1).max(11).nullish(),
         longitude: z.string().min(1).max(11).nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
   })
-  .passthrough();
+  .loose();
 
 const paymentCreateSchema = z
   .object({
@@ -86,7 +86,7 @@ const paymentCreateSchema = z
           .object({
             session: z.string().describe("The checkout session ID"),
           })
-          .passthrough()
+          .loose()
           .nullish()
           .describe("Checkout session information"),
         workflow: z.enum(["SDK_CHECKOUT", "DIRECT", "REDIRECT"]).describe("Payment workflow type"),
@@ -112,41 +112,41 @@ const paymentCreateSchema = z
                         subscription_agreement_id: z.string().nullish(),
                         network_transaction_id: z.string().nullish(),
                       })
-                      .passthrough()
+                      .loose()
                       .nullish(),
                   })
-                  .passthrough()
+                  .loose()
                   .nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
             vault_on_success: z.boolean().nullish(),
           })
-          .passthrough()
+          .loose()
           .describe("Payment method details"),
         callback_url: z.string().nullish(),
         fraud_screening: fraudScreeningRequestSchema.nullish().describe("Fraud screening configuration"),
         split_marketplace: splitMarketplaceRequestSchema.nullish().describe("Marketplace split configuration"),
         metadata: metadataSchema,
       })
-      .passthrough()
+      .loose()
       .refine(
-        (payment) => payment.workflow !== "SDK_CHECKOUT" || (payment.checkout != null && payment.checkout.session != null),
+        (payment) => payment.workflow !== "SDK_CHECKOUT" || payment.checkout != null,
         {
           message: "checkout.session is required when workflow is SDK_CHECKOUT",
           path: ["checkout", "session"],
         },
       ),
-    idempotency_key: z.string().uuid().nullish().describe("Unique key to prevent duplicate payments. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
+    idempotency_key: z.uuid().nullish().describe("Unique key to prevent duplicate payments. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   })
-  .passthrough();
+  .loose();
 
 const operationPaymentResponseAdditionalDataSchema = z
   .object({
     receipt: z.boolean().nullish(),
     receipt_language: z.enum(["ES", "EN", "PT"]).nullish(),
   })
-  .passthrough()
+  .loose()
   .nullish();
 
 const paymentRefundSchema = z
@@ -162,7 +162,7 @@ const paymentRefundSchema = z
         currency: z.string().min(3).max(3).nullish(),
         value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     simplified_mode: z.boolean().nullish(),
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
@@ -179,7 +179,7 @@ const paymentRefundSchema = z
         billing_address: addressSchema.nullish(),
         shipping_address: addressSchema.nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Customer payer info"),
     payment_method: z
@@ -197,17 +197,17 @@ const paymentRefundSchema = z
                 beneficiary_document: z.string().nullish(),
                 reference: z.string().nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
           })
-          .passthrough()
+          .loose()
           .nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Payment method details for the refund"),
   })
-  .passthrough();
+  .loose();
 
 // Cancel-or-refund is the one endpoint where the API requires the reason.
 const paymentCancelOrRefundSchema = paymentRefundSchema.extend({
@@ -221,7 +221,7 @@ const paymentCancelSchema = z
     merchant_reference: z.string().min(3).max(255),
     response_additional_data: operationPaymentResponseAdditionalDataSchema,
   })
-  .passthrough();
+  .loose();
 
 const paymentCaptureAuthorizationSchema = z
   .object({
@@ -231,11 +231,11 @@ const paymentCaptureAuthorizationSchema = z
         currency: z.string().min(3).max(3),
         value: z.number(),
       })
-      .passthrough(),
+      .loose(),
     reason: z.string().min(3).max(255),
     simplified_mode: z.boolean().nullish(),
   })
-  .passthrough();
+  .loose();
 
 const yunoPaymentOutputSchema = z
   .object({
@@ -253,7 +253,7 @@ const yunoPaymentOutputSchema = z
         last_name: z.string().nullish(),
         email: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     workflow: z.string().nullish(),
     payment_method: z
@@ -278,7 +278,7 @@ const yunoPaymentOutputSchema = z
                     holder_name: z.string().nullish(),
                     type: z.string().nullish(),
                   })
-                  .passthrough()
+                  .loose()
                   .nullish(),
                 verify: z.boolean().nullish(),
                 stored_credentials: z
@@ -288,22 +288,22 @@ const yunoPaymentOutputSchema = z
                     subscription_agreement_id: z.string().nullish(),
                     network_transaction_id: z.string().nullish(),
                   })
-                  .passthrough()
+                  .loose()
                   .nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
           })
-          .passthrough()
+          .loose()
           .nullish(),
         vault_on_success: z.boolean().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     callback_url: z.string().nullish(),
     fraud_screening: z
       .object({ stand_alone: z.boolean().nullish() })
-      .passthrough()
+      .loose()
       .nullish(),
     split_marketplace: z
       .array(
@@ -318,28 +318,28 @@ const yunoPaymentOutputSchema = z
                 value: z.number().nullish(),
                 currency: z.string().nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
             liability: z
               .object({
                 processing_fee: z.string().nullish(),
                 chargebacks: z.boolean().nullish(),
               })
-              .passthrough()
+              .loose()
               .nullish(),
           })
-          .passthrough(),
+          .loose(),
       )
       .nullish(),
     metadata: metadataSchema,
   })
-  .passthrough();
+  .loose();
 
 const yunoPaymentListOutputSchema = z
   .object({
     items: z.array(yunoPaymentOutputSchema),
   })
-  .passthrough();
+  .loose();
 
 export {
   paymentCreateSchema,

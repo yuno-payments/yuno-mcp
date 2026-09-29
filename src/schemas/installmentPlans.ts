@@ -5,7 +5,7 @@ const financialCostSchema = z
     type: z.string().min(3).max(255).describe("Financial cost type (e.g., CFT, TEA, CET, CAT)"),
     rate: z.number().min(0).max(100000).describe("Financial cost rate as decimal"),
   })
-  .passthrough();
+  .loose();
 
 const installmentPlanCreateSchema = z
   .object({
@@ -21,7 +21,7 @@ const installmentPlanCreateSchema = z
             financial_costs: z.array(financialCostSchema).nullish().describe("Financial costs for this installment option"),
             type: z.enum(["MERCHANT_INSTALLMENTS", "ISSUER_INSTALLMENTS"]).nullish().describe("Type of installment plan"),
           })
-          .passthrough(),
+          .loose(),
       )
       .describe("Installments to show the customer"),
     country_code: z.string().min(2).max(2).describe("Country code (ISO 3166-1 alpha-2)"),
@@ -35,18 +35,18 @@ const installmentPlanCreateSchema = z
         min_value: z.number().nullish(),
         max_value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .describe("Amount limits for the plan"),
     availability: z
       .object({
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish()
       .describe("Availability period for the plan"),
   })
-  .passthrough();
+  .loose();
 
 const installmentPlanUpdateSchema = z
   .object({
@@ -63,7 +63,7 @@ const installmentPlanUpdateSchema = z
             financial_costs: z.array(financialCostSchema).nullish(),
             type: z.enum(["MERCHANT_INSTALLMENTS", "ISSUER_INSTALLMENTS"]).nullish(),
           })
-          .passthrough(),
+          .loose(),
       )
       .nullish(),
     country_code: z.string().min(2).max(2).nullish(),
@@ -78,17 +78,17 @@ const installmentPlanUpdateSchema = z
         min_value: z.number().nullish(),
         max_value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     availability: z
       .object({
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
   })
-  .passthrough();
+  .loose();
 
 const yunoInstallmentPlanOutputSchema = z
   .object({
@@ -108,12 +108,12 @@ const yunoInstallmentPlanOutputSchema = z
                     type: z.string(),
                     rate: z.number(),
                   })
-                  .passthrough(),
+                  .loose(),
               )
               .nullish(),
             type: z.string().nullish(),
           })
-          .passthrough(),
+          .loose(),
       )
       .nullish(),
     country_code: z.string().nullish(),
@@ -127,23 +127,23 @@ const yunoInstallmentPlanOutputSchema = z
         min_value: z.number().nullish(),
         max_value: z.number().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
     availability: z
       .object({
         start_at: z.string().nullish(),
         finish_at: z.string().nullish(),
       })
-      .passthrough()
+      .loose()
       .nullish(),
   })
-  .passthrough();
+  .loose();
 
 const yunoInstallmentPlanListOutputSchema = z
   .object({
     items: z.array(yunoInstallmentPlanOutputSchema).nullish(),
   })
-  .passthrough();
+  .loose();
 
 export {
   installmentPlanCreateSchema,
