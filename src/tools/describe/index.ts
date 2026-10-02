@@ -4,9 +4,7 @@ import type { HandlerContext, Output, Tool } from "../../types";
 import { EXAMPLES } from "./examples";
 
 const describeToolSchema = z.object({
-  method: z
-    .string()
-    .describe("Name of the tool to describe, e.g. paymentCreate. A gateway prefix such as pay__paymentCreate is accepted too."),
+  method: z.string().describe("Name of the tool to describe, e.g. paymentCreate. A gateway prefix such as pay__paymentCreate is accepted too."),
   include_output_schema: z
     .boolean()
     .nullish()
@@ -29,44 +27,48 @@ export const bareToolName = (name: string): string => {
  * Registered tool schemas are compacted (src/schemas/compact.ts); this tool serves
  * the complete input/output JSON Schema plus a worked example on demand, so deep
  * structures like paymentCreate's additional_data stay discoverable without paying
- * their context cost on every tools/list.
+ * their context cost on every tools/list. `describable` is what the server registers
+ * for its mode (src/index.ts), so it never describes or offers a tool it does not serve.
  */
-export const describeTool = {
-  method: "describeTool",
-  description:
-    "Return the complete input/output JSON Schema and a worked example for any tool on this server. Registered schemas are compacted; call this before building complex payloads (e.g. paymentCreate).",
-  annotations: { openWorldHint: false, title: "Describe Tool", readOnlyHint: true, destructiveHint: false },
-  schema: describeToolSchema,
-  handler:
-    <TType extends "object" | "text">({ type }: HandlerContext<TType>) =>
-    ({ method, include_output_schema }: DescribeToolSchema): Promise<Output<TType>> => {
-      const target: Tool | undefined = tools.find((tool) => tool.method === bareToolName(method));
+export const createDescribeTool = (describable: readonly Tool[]) =>
+  ({
+    method: "describeTool",
+    description:
+      "Return the complete input/output JSON Schema and a worked example for any tool on this server. Registered schemas are compacted; call this before building complex payloads (e.g. paymentCreate).",
+    annotations: { openWorldHint: false, title: "Describe Tool", readOnlyHint: true, destructiveHint: false },
+    schema: describeToolSchema,
+    handler:
+      <TType extends "object" | "text">({ type }: HandlerContext<TType>) =>
+      ({ method, include_output_schema }: DescribeToolSchema): Promise<Output<TType>> => {
+        const target: Tool | undefined = describable.find((tool) => tool.method === bareToolName(method));
 
-      if (!target) {
-        const available = [...tools.map((tool) => tool.method), "describeTool"].join(", ");
-        // isError so a client can tell a miss from a description: without it this read
-        // as a successful call, and the only tool on the server that never set the flag.
+        if (!target) {
+          const available = [...describable.map((tool) => tool.method), "describeTool"].join(", ");
+          // isError so a client can tell a miss from a description: without it this read
+          // as a successful call, and the only tool on the server that never set the flag.
+          return Promise.resolve({
+            content: [{ type: "text" as const, text: `Unknown tool "${method}". Available tools: ${available}` }],
+            isError: true,
+          } as Output<TType>);
+        }
+
+        const details = {
+          method: target.method,
+          description: target.description,
+          inputSchema: z.toJSONSchema(target.schema, { unrepresentable: "any" }),
+          outputSchema: include_output_schema && target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
+          example: EXAMPLES[target.method],
+        };
+
+        // Always a compact-JSON text entry, never an object entry: the server wrapper
+        // pretty-prints objects at 4-space indent, which triples an already large
+        // schema payload (~100KB → ~300KB for paymentCreate).
+        void type;
         return Promise.resolve({
-          content: [{ type: "text" as const, text: `Unknown tool "${method}". Available tools: ${available}` }],
-          isError: true,
+          content: [{ type: "text" as const, text: JSON.stringify(details) }],
         } as Output<TType>);
-      }
+      },
+  }) as const satisfies Tool;
 
-      const details = {
-        method: target.method,
-        description: target.description,
-        inputSchema: z.toJSONSchema(target.schema, { unrepresentable: "any" }),
-        outputSchema:
-          include_output_schema && target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
-        example: EXAMPLES[target.method],
-      };
-
-      // Always a compact-JSON text entry, never an object entry: the server wrapper
-      // pretty-prints objects at 4-space indent, which triples an already large
-      // schema payload (~100KB → ~300KB for paymentCreate).
-      void type;
-      return Promise.resolve({
-        content: [{ type: "text" as const, text: JSON.stringify(details) }],
-      } as Output<TType>);
-    },
-} as const satisfies Tool;
+/** Over every API tool; the server composes its own per mode. */
+export const describeTool = createDescribeTool(tools);

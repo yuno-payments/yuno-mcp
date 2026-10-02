@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
-import { describeTool } from "./tools/describe";
+import { createDescribeTool } from "./tools/describe";
 import { accountIdPath, createAccountContextTool, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
@@ -89,7 +89,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
   // tools array itself — exporting it from there would be an import cycle.
   // accountContext is composed here so it lists only the tools this mode registers.
   const apiTools: readonly Tool[] = options.mode === "read-only" ? tools.filter((tool) => tool.annotations.readOnlyHint === true) : tools;
-  const enabledTools: readonly Tool[] = [...apiTools, createAccountContextTool(apiTools), describeTool];
+  const describable: readonly Tool[] = [...apiTools, createAccountContextTool(apiTools)];
+  const describeTool = createDescribeTool(describable);
+  const enabledTools: readonly Tool[] = [...describable, describeTool];
 
   for (const tool of enabledTools) {
     // Destructive operations against production require a two-phase confirm

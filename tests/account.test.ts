@@ -105,6 +105,36 @@ describe("accountContext", () => {
   });
 });
 
+describe("describeTool on this server", () => {
+  it.each(["full", "read-only"] as const)("describes accountContext in %s mode", async (mode) => {
+    stubFetch();
+    const result = await (await connect(mode)).callTool({ name: "describeTool", arguments: { method: "pay__accountContext" } });
+    expect(result.isError).toBeFalsy();
+    expect(JSON.parse(texts(result)[0])).toMatchObject({ method: "accountContext", inputSchema: { type: "object" } });
+  });
+
+  it("offers in read-only mode only the tools that mode registers", async () => {
+    stubFetch();
+    const client = await connect("read-only");
+    const registered = (await client.listTools()).tools.map((tool) => tool.name).sort();
+    const miss = await client.callTool({ name: "describeTool", arguments: { method: "nope" } });
+    const offered = texts(miss)[0].split("Available tools: ")[1].split(", ").sort();
+    expect(miss.isError).toBe(true);
+    expect(offered).toEqual(registered);
+
+    const write = await client.callTool({ name: "describeTool", arguments: { method: "paymentCreate" } });
+    expect(write.isError).toBe(true);
+  });
+
+  it("offers every registered tool in full mode", async () => {
+    stubFetch();
+    const client = await connect();
+    const registered = (await client.listTools()).tools.map((tool) => tool.name).sort();
+    const miss = await client.callTool({ name: "describeTool", arguments: { method: "nope" } });
+    expect(texts(miss)[0].split("Available tools: ")[1].split(", ").sort()).toEqual(registered);
+  });
+});
+
 describe("server instructions", () => {
   it("name the default account and environment and point at accountContext", async () => {
     stubFetch();
