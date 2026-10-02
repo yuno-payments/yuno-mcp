@@ -44,7 +44,10 @@ export function canonicalJson(value: unknown): string {
  */
 type AccountBinding = { account: unknown };
 
-function signature(secret: string, method: string, params: unknown, expiresAt: number, binding?: AccountBinding): string {
+/** What a token is issued for: the tool, its validated arguments and, for account-scoped tools, the account. */
+type TokenSubject = { method: string; params: unknown; binding?: AccountBinding };
+
+function signature(secret: string, { method, params, binding }: TokenSubject, expiresAt: number): string {
   const accountLine = binding ? `\n${canonicalJson(binding.account)}` : "";
   return createHmac("sha256", secret)
     .update(`${method}\n${String(expiresAt)}\n${canonicalJson(params)}${accountLine}`)
@@ -59,24 +62,24 @@ function accountTag(secret: string, binding: AccountBinding): string {
     .slice(0, 16);
 }
 
-export function issueConfirmToken(secret: string, method: string, params: unknown, ttlMs: number = DEFAULT_TTL_MS, binding?: AccountBinding): string {
+export function issueConfirmToken(secret: string, subject: TokenSubject, ttlMs: number = DEFAULT_TTL_MS): string {
   const expiresAt = Date.now() + ttlMs;
-  const token = `${String(expiresAt)}.${signature(secret, method, params, expiresAt, binding)}`;
-  return binding ? `${token}.${accountTag(secret, binding)}` : token;
+  const token = `${String(expiresAt)}.${signature(secret, subject, expiresAt)}`;
+  return subject.binding ? `${token}.${accountTag(secret, subject.binding)}` : token;
 }
 
-export function verifyConfirmToken(secret: string, method: string, params: unknown, token: string, binding?: AccountBinding): boolean {
+export function verifyConfirmToken(secret: string, subject: TokenSubject, token: string): boolean {
   // expiry.mac, plus .tag when the token is bound to an account.
   const parts = token.split(".");
   const [expiry, mac] = parts;
-  if (parts.length !== (binding ? 3 : 2) || !expiry || !mac) {
+  if (parts.length !== (subject.binding ? 3 : 2) || !expiry || !mac) {
     return false;
   }
   const expiresAt = Number(expiry);
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) {
     return false;
   }
-  const expected = Buffer.from(signature(secret, method, params, expiresAt, binding), "hex");
+  const expected = Buffer.from(signature(secret, subject, expiresAt), "hex");
   const given = Buffer.from(mac, "hex");
   return given.length === expected.length && timingSafeEqual(given, expected);
 }

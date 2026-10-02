@@ -172,8 +172,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
             // arguments alone do not say which account a confirmation would hit.
             const sent = accountPath ? sentAccount(tool, accountPath, validation.data, yunoClient.accountCode) : undefined;
             const binding = sent && { account: sent.account };
+            const subject = { method: tool.method, params: validation.data, binding };
             if (typeof confirmToken !== "string" || confirmToken.length === 0) {
-              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, undefined, binding);
+              const token = issueConfirmToken(yunoClient.confirmSecret, subject);
               const account = sent?.phrase;
               const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed.${account ? ` It will be sent with ${account}.` : ""} Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
               const preview = {
@@ -205,7 +206,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
                 isError: true,
               };
             }
-            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken, binding)) {
+            if (!verifyConfirmToken(yunoClient.confirmSecret, subject, confirmToken)) {
               return {
                 content: [
                   {

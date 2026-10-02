@@ -1,4 +1,4 @@
-import { expect, it, describe, afterEach } from "@rstest/core";
+import { expect, it, describe, afterEach, rstest } from "@rstest/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { canonicalJson, confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "../src/confirm";
@@ -20,40 +20,71 @@ describe("canonicalJson", () => {
 
 describe("confirm tokens", () => {
   it("round-trips for identical method and params", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(true);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } });
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(true);
   });
 
   it("rejects expired tokens", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, -1);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, -1);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(false);
   });
 
   it("rejects tampered params, other methods, other secrets, and garbage", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p2" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentCancel", { payment_id: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken("other-secret", "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "junk")).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "123.abc")).toBe(false);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } });
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p2" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentCancel", params: { payment_id: "p1" } }, token)).toBe(false);
+    expect(verifyConfirmToken("other-secret", { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, "junk")).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, "123.abc")).toBe(false);
   });
 
   it("binds an account when given one, and tells a changed account apart", () => {
     const params = { recipient_id: "r1" };
-    const token = issueConfirmToken(SECRET, "recipientDelete", params, undefined, { account: "acct-a" });
-    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: "acct-a" })).toBe(true);
-    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: "acct-b" })).toBe(false);
-    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: null })).toBe(false);
+    const token = issueConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } });
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } }, token)).toBe(true);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-b" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: null } }, token)).toBe(false);
     expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-a" })).toBe(false);
     expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-b" })).toBe(true);
   });
 
+  /**
+   * Token values issued by 6ee2240, before the signatures were grouped into a subject.
+   * A token in flight across a deploy has to keep verifying, so the signed string and
+   * the token format are pinned, not only round-tripped.
+   */
+  it("still issues and verifies tokens byte-identical to the previous release", () => {
+    const now = rstest.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+    try {
+      const pinned = [
+        [
+          { method: "subscriptionCancel", params: { subscription_id: "s1" } },
+          "1800000300000.010df987af9be1c0af88ec2d8a858aab43b3337b5d79dc0be574ac30cc547345",
+        ],
+        [
+          { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } },
+          "1800000300000.af5e6ba15d94ef5c0fe5e4cff9a7af2f1a02e39265ab13b8909e67f4eec6b885.4ff474af4b030567",
+        ],
+        [
+          { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: null } },
+          "1800000300000.0a4c8adb3c2ae38c69ef560d0267e173b7d77bbeff6d8aade775eaede863bded.282b78f2598ddc28",
+        ],
+      ] as const;
+      for (const [subject, token] of pinned) {
+        expect(issueConfirmToken("pin-secret", subject)).toBe(token);
+        expect(verifyConfirmToken("pin-secret", subject, token)).toBe(true);
+      }
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it("never accepts a bound token without a binding, or an unbound one with", () => {
     const params = { recipient_id: "r1" };
-    const bound = issueConfirmToken(SECRET, "recipientDelete", params, undefined, { account: "acct-a" });
-    const unbound = issueConfirmToken(SECRET, "recipientDelete", params);
-    expect(verifyConfirmToken(SECRET, "recipientDelete", params, bound)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "recipientDelete", params, unbound, { account: "acct-a" })).toBe(false);
+    const bound = issueConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } });
+    const unbound = issueConfirmToken(SECRET, { method: "recipientDelete", params });
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params }, bound)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } }, unbound)).toBe(false);
     expect(confirmTokenAccountChanged(SECRET, unbound, { account: "acct-a" })).toBe(false);
   });
 });
