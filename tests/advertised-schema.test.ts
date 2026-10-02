@@ -3,7 +3,8 @@ import z from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { tools } from "../src/tools";
-import { describeTool } from "../src/tools/describe";
+import { createDescribeTool } from "../src/tools/describe";
+import { createAccountContextTool } from "../src/tools/account";
 import { initializeYunoMCP } from "../src/index";
 import type { Tool } from "../src/types";
 
@@ -16,7 +17,8 @@ import type { Tool } from "../src/types";
  * from a live tools/list, never from a reconstruction of it.
  */
 
-const ALL_TOOLS: Tool[] = [...tools, describeTool];
+const describeTool = createDescribeTool([...tools, createAccountContextTool(tools)]);
+const ALL_TOOLS: Tool[] = [...tools, createAccountContextTool(tools), describeTool];
 const PAYMENT_ID = "p".repeat(36);
 const originalFetch = globalThis.fetch;
 

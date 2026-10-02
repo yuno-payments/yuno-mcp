@@ -102,6 +102,35 @@ describe("checkoutSessionCreateTool", () => {
   });
 });
 
+describe("checkoutSessionCreateTool account note", () => {
+  const DEFAULT_ACCOUNT = "d".repeat(36);
+  const input = { merchant_order_id: "ord_1", payment_description: "desc", country: "CO", amount: { currency: "COP", value: 1000 } };
+  const clientReturning = (status: number) => ({
+    accountCode: DEFAULT_ACCOUNT,
+    checkoutSessions: { create: rstest.fn().mockResolvedValue({ body: { checkout_session: "sess_1" }, status, headers: {} }) },
+  });
+
+  it("names the default account the session was created under, leaving the body untouched", async () => {
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: clientReturning(200) as any, type: "object" })(input);
+    expect(result.content[0]).toEqual({ type: "object", object: { checkout_session: "sess_1" } });
+    expect(result.content.at(-1)).toEqual({
+      type: "text",
+      text: `Checkout session created under account_id ${DEFAULT_ACCOUNT} (the default account; none was passed in the call).`,
+    });
+  });
+
+  it("names an account passed in the call", async () => {
+    const other = "o".repeat(36);
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: clientReturning(201) as any, type: "text" })({ ...input, account_id: other });
+    expect(result.content.at(-1)?.text).toBe(`Checkout session created under account_id ${other} (passed in the call).`);
+  });
+
+  it("adds no note when the session was not created", async () => {
+    const result = await checkoutSessionCreateTool.handler({ yunoClient: clientReturning(400) as any, type: "text" })(input);
+    expect(result.content.map((entry) => entry.text).join("\n")).not.toContain("created under");
+  });
+});
+
 describe("checkoutSessionRetrievePaymentMethodsTool", () => {
   const retrieveSchema = z.object({ session_id: z.string() });
 
@@ -148,6 +177,28 @@ describe("checkoutSessionRetrievePaymentMethodsTool", () => {
     expect(primary.type).toBe("object");
     expect(primary.object).toEqual(apiResponse);
     expect(() => yunoCheckoutPaymentMethodsOutputSchema.parse(primary.object)).not.toThrow();
+  });
+
+  it("explains an empty payment method list", async () => {
+    const mockYunoClient = {
+      checkoutSessions: { retrievePaymentMethods: rstest.fn().mockResolvedValue({ body: [], status: 200, headers: {} }) },
+    };
+    const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "object" })({ session_id: "sess_123" });
+    expect(result.content[0]).toEqual({ type: "object", object: [] });
+    expect(result.content.at(-1)).toEqual({
+      type: "text",
+      text: "No payment methods are available for this checkout session. The session's account may have no published checkout, or no payment method enabled for this country and currency.",
+    });
+  });
+
+  it("adds nothing to a non-empty list or a failed call", async () => {
+    for (const [body, status] of [[[{ type: "CARD" }], 200], [{ code: "NOT_FOUND" }, 404], [[], 404]] as const) {
+      const mockYunoClient = {
+        checkoutSessions: { retrievePaymentMethods: rstest.fn().mockResolvedValue({ body, status, headers: {} }) },
+      };
+      const result = await checkoutSessionRetrievePaymentMethodsTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({ session_id: "s" });
+      expect(result.content).toHaveLength(2);
+    }
   });
 
   it("should fail validation for missing or invalid fields", () => {

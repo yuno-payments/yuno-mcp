@@ -1,7 +1,7 @@
-import { expect, it, describe, afterEach } from "@rstest/core";
+import { expect, it, describe, afterEach, rstest } from "@rstest/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { canonicalJson, issueConfirmToken, verifyConfirmToken } from "../src/confirm";
+import { canonicalJson, confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "../src/confirm";
 import { initializeYunoMCP } from "../src/index";
 import { tools } from "../src/tools";
 
@@ -20,22 +20,89 @@ describe("canonicalJson", () => {
 
 describe("confirm tokens", () => {
   it("round-trips for identical method and params", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(true);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } });
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(true);
   });
 
   it("rejects expired tokens", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, -1);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, -1);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(false);
   });
 
   it("rejects tampered params, other methods, other secrets, and garbage", () => {
-    const token = issueConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" });
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p2" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentCancel", { payment_id: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken("other-secret", "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "junk")).toBe(false);
-    expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "123.abc")).toBe(false);
+    const token = issueConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } });
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p2" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentCancel", params: { payment_id: "p1" } }, token)).toBe(false);
+    expect(verifyConfirmToken("other-secret", { method: "paymentRefund", params: { payment_id: "p1" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, "junk")).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "paymentRefund", params: { payment_id: "p1" } }, "123.abc")).toBe(false);
+  });
+
+  it("binds an account when given one, and tells a changed account apart", () => {
+    const params = { recipient_id: "r1" };
+    const token = issueConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } });
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } }, token)).toBe(true);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-b" } }, token)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: null } }, token)).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-a" })).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-b" })).toBe(true);
+  });
+
+  /**
+   * Token values issued by 6ee2240, before the signatures were grouped into a subject.
+   * A token in flight across a deploy has to keep verifying, so the signed string and
+   * the token format are pinned, not only round-tripped.
+   */
+  it("still issues and verifies tokens byte-identical to the previous release", () => {
+    const now = rstest.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+    try {
+      const pinned = [
+        [
+          { method: "subscriptionCancel", params: { subscription_id: "s1" } },
+          "1800000300000.010df987af9be1c0af88ec2d8a858aab43b3337b5d79dc0be574ac30cc547345",
+        ],
+        [
+          { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } },
+          "1800000300000.af5e6ba15d94ef5c0fe5e4cff9a7af2f1a02e39265ab13b8909e67f4eec6b885.4ff474af4b030567",
+        ],
+        [
+          { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: null } },
+          "1800000300000.0a4c8adb3c2ae38c69ef560d0267e173b7d77bbeff6d8aade775eaede863bded.282b78f2598ddc28",
+        ],
+      ] as const;
+      for (const [subject, token] of pinned) {
+        expect(issueConfirmToken("pin-secret", subject)).toBe(token);
+        expect(verifyConfirmToken("pin-secret", subject, token)).toBe(true);
+      }
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  it("rejects a bound token whose account tag was tampered with", () => {
+    const subject = { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } };
+    const token = issueConfirmToken(SECRET, subject);
+    const tag = token.slice(-16);
+    const tampered = `${token.slice(0, -16)}${tag[0] === "0" ? "1" : "0"}${tag.slice(1)}`;
+    expect(verifyConfirmToken(SECRET, subject, tampered)).toBe(false);
+  });
+
+  it("calls only a well-formed bound token a changed account", () => {
+    const binding = { account: "acct-b" };
+    const other = issueConfirmToken(SECRET, { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } });
+    expect(confirmTokenAccountChanged(SECRET, other, binding)).toBe(true);
+    for (const malformed of ["a.b.c", "1.2.3", `${other}.extra`, other.toUpperCase(), `x${other}`]) {
+      expect(confirmTokenAccountChanged(SECRET, malformed, binding)).toBe(false);
+    }
+  });
+
+  it("never accepts a bound token without a binding, or an unbound one with", () => {
+    const params = { recipient_id: "r1" };
+    const bound = issueConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } });
+    const unbound = issueConfirmToken(SECRET, { method: "recipientDelete", params });
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params }, bound)).toBe(false);
+    expect(verifyConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } }, unbound)).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, unbound, { account: "acct-a" })).toBe(false);
   });
 });
 
@@ -71,20 +138,20 @@ async function connectedClient(publicApiKey: string, mode?: "read-only" | "full"
 }
 
 describe("server mode", () => {
-  it("read-only registers only retrieval tools plus describeTool", async () => {
+  it("read-only registers only retrieval tools plus accountContext and describeTool", async () => {
     const client = await connectedClient("staging_key", "read-only");
     const listed = await client.listTools();
     const readOnlyCount = tools.filter((tool) => tool.annotations.readOnlyHint === true).length;
 
-    expect(listed.tools.length).toBe(readOnlyCount + 1);
+    expect(listed.tools.length).toBe(readOnlyCount + 2);
     expect(listed.tools.some((tool) => tool.name === "describeTool")).toBe(true);
     expect(listed.tools.some((tool) => tool.name === "paymentRefund")).toBe(false);
   });
 
-  it("full mode registers every tool plus describeTool", async () => {
+  it("full mode registers every tool plus accountContext and describeTool", async () => {
     const client = await connectedClient("staging_key");
     const listed = await client.listTools();
-    expect(listed.tools.length).toBe(tools.length + 1);
+    expect(listed.tools.length).toBe(tools.length + 2);
   });
 });
 

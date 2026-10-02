@@ -1,8 +1,10 @@
 import { expect, it, describe } from "@rstest/core";
-import { describeTool } from "../src/tools/describe";
+import { createDescribeTool } from "../src/tools/describe";
 import { EXAMPLES } from "../src/tools/describe/examples";
 import { tools } from "../src/tools";
 import type { YunoClient } from "../src/client";
+
+const describeTool = createDescribeTool(tools);
 
 const context = { yunoClient: {} as YunoClient, type: "object" as const };
 
@@ -44,6 +46,12 @@ describe("describeTool", () => {
     expect(text).toContain('Unknown tool "nope"');
     expect(text).toContain("paymentCreate");
     expect(text).toContain("describeTool");
+  });
+
+  it("describes itself, since it lists itself", async () => {
+    const output = await describeTool.handler(context)({ method: "describeTool" });
+    expect(output.isError).toBeFalsy();
+    expect(firstObject(output).method).toBe("describeTool");
   });
 
   it("never emits a Response Headers entry (would be misread as an upstream status)", async () => {

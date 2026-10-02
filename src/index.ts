@@ -2,10 +2,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
-import { describeTool } from "./tools/describe";
+import { createDescribeTool } from "./tools/describe";
+import { accountIdPath, createAccountContextTool, SAFE_ACCOUNT_ID, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
-import { issueConfirmToken, verifyConfirmToken } from "./confirm";
+import { confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
@@ -15,7 +16,7 @@ type ServerMode = "read-only" | "full";
 const COMPACTED_SCHEMA_HINT = "Deep fields are abbreviated here; call describeTool for the full schema.";
 
 type CreateOptions = {
-  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  /** "read-only" registers only retrieval tools, plus accountContext and describeTool. Default "full". */
   mode?: ServerMode;
 };
 
@@ -32,6 +33,41 @@ function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
   return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
 }
 
+// The default account is applied silently by the tools, so a client has to be told
+// it exists before it creates anything under it (YSHUB-7252).
+function serverInstructions(yunoClient: YunoClient, mode: ServerMode | undefined): string {
+  const environment = yunoClient.environment ?? "unrecognized";
+  // The code arrives in a client header and this text reaches the model verbatim, so
+  // a value that is not id-shaped is left to accountContext, which returns it as JSON.
+  const account = SAFE_ACCOUNT_ID.test(yunoClient.accountCode)
+    ? `This connection uses Yuno account_id ${yunoClient.accountCode} (environment: ${environment}) by default.`
+    : `This connection uses a default Yuno account (environment: ${environment}); call accountContext to see its account_id.`;
+  if (mode === "read-only") {
+    return [
+      account,
+      "This connection is read-only. Most lookups are organization-wide and do not use that account.",
+      "Only the tools listed by accountContext take an account_id, and they accept another account of the same organization.",
+    ].join(" ");
+  }
+  return [
+    account,
+    "The tools listed by accountContext accept account_id to run under another account of the same organization.",
+    "When the user may have several accounts, call accountContext to confirm the active account before creating payments, payment links, checkout sessions, subscriptions or recipients.",
+  ].join(" ");
+}
+
+/**
+ * The account a call is sent with, rebuilt from its validated arguments with the
+ * handler's own fallback: `account` (null when none is sent) binds the confirm
+ * token, `phrase` is what the preview and error notes say. One resolution for both,
+ * so a preview and its token cannot disagree.
+ */
+function sentAccount(tool: Tool, accountPath: string[], args: unknown, defaultAccountId: string): { account: unknown; phrase: string } {
+  const passed = accountPath.reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], args);
+  const fallback = tool.appliesDefaultAccountId ? defaultAccountId : undefined;
+  return { account: passed || fallback || null, phrase: sentAccountPhrase(passed, fallback) };
+}
+
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
     {
@@ -39,22 +75,24 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "1.0.0",
+      version: "1.1.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
     },
     {
       capabilities: {},
+      instructions: serverInstructions(yunoClient, options.mode),
     },
   );
 
   // describeTool is composed here (not in src/tools/index.ts) because it reads the
   // tools array itself — exporting it from there would be an import cycle.
-  const enabledTools: readonly Tool[] =
-    options.mode === "read-only"
-      ? [...tools.filter((tool) => tool.annotations.readOnlyHint === true), describeTool]
-      : [...tools, describeTool];
+  // accountContext is composed here so it lists only the tools this mode registers.
+  const apiTools: readonly Tool[] = options.mode === "read-only" ? tools.filter((tool) => tool.annotations.readOnlyHint === true) : tools;
+  const describable: readonly Tool[] = [...apiTools, createAccountContextTool(apiTools)];
+  const describeTool = createDescribeTool(describable);
+  const enabledTools: readonly Tool[] = [...describable, describeTool];
 
   for (const tool of enabledTools) {
     // Destructive operations against production require a two-phase confirm
@@ -92,6 +130,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     // drop an unknown key before the handler ran. A mistyped optional parameter must
     // fail loudly — a dropped `idempotencyKey` means a retry charges or refunds twice.
     const registeredInput = z.strictObject(inputSchemaShape, { error: unknownParameterError });
+    const accountPath = accountIdPath(tool.schema);
 
     server.registerTool(
       tool.method,
@@ -124,14 +163,21 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           }
 
           if (requiresConfirmation) {
+            // The default account is resolved only when the call executes, so the
+            // arguments alone do not say which account a confirmation would hit.
+            const sent = accountPath ? sentAccount(tool, accountPath, validation.data, yunoClient.accountCode) : undefined;
+            const binding = sent && { account: sent.account };
+            const subject = { method: tool.method, params: validation.data, binding };
             if (typeof confirmToken !== "string" || confirmToken.length === 0) {
-              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
-              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed. Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
+              const token = issueConfirmToken(yunoClient.confirmSecret, subject);
+              const account = sent?.phrase;
+              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed.${account ? ` It will be sent with ${account}.` : ""} Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
               const preview = {
                 confirmation_required: true,
                 summary,
                 confirm_token: token,
                 arguments: validation.data,
+                ...(account ? { account } : {}),
               };
               return {
                 content: [
@@ -144,7 +190,18 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
                 ...(tool.outputSchema ? { structuredContent: preview as Record<string, unknown> } : {}),
               };
             }
-            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken)) {
+            if (!verifyConfirmToken(yunoClient.confirmSecret, subject, confirmToken)) {
+              if (binding && confirmTokenAccountChanged(yunoClient.confirmSecret, confirmToken, binding)) {
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: `Nothing was executed: this confirm_token was issued for a different account than the one this call would now be sent with (${sent.phrase}). Call ${tool.method} again without confirm_token to get a new preview for this account.`,
+                    },
+                  ],
+                  isError: true,
+                };
+              }
               return {
                 content: [
                   {
@@ -190,6 +247,14 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // response entry is never modified.
           const guidance = findGuidance(primaryBody);
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
+
+          // Only where the account can be the reason: not on 5xx, an invalid key (401) or a rate limit (429).
+          const accountMayExplain = upstreamStatus >= 400 && upstreamStatus < 500 && upstreamStatus !== 401 && upstreamStatus !== 429;
+          if (accountMayExplain && accountPath) {
+            // Names what was sent without the API echoing it. The API body is untouched.
+            const note = `Request sent with ${sentAccount(tool, accountPath, validation.data, yunoClient.accountCode).phrase}.`;
+            return { content: [...enrichedContent, { type: "text" as const, text: note }], isError: true };
+          }
 
           // A handler can fail without an upstream response to read a status from
           // (describeTool on an unknown name); this used to drop its isError on the floor.
@@ -248,7 +313,7 @@ async function initializeYunoMCP({
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
-  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  /** "read-only" registers only retrieval tools, plus accountContext and describeTool. Default "full". */
   mode?: ServerMode;
 }) {
   try {
