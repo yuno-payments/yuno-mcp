@@ -177,6 +177,69 @@ describe("server instructions", () => {
   });
 });
 
+describe("the production confirm token", () => {
+  const RECIPIENT = "r".repeat(36);
+  const prod = (accountCode = DEFAULT_ACCOUNT) => connect("full", accountCode, "prod_key");
+  const tokenOf = (result: unknown) => (result as { structuredContent: { confirm_token: string } }).structuredContent.confirm_token;
+
+  it("executes when confirmed under the account it was previewed for", async () => {
+    const sent = stubFetch();
+    const client = await prod();
+    const token = tokenOf(await client.callTool({ name: "recipientDelete", arguments: { recipient_id: RECIPIENT } }));
+    const confirmed = await client.callTool({ name: "recipientDelete", arguments: { recipient_id: RECIPIENT, confirm_token: token } });
+
+    expect(confirmed.isError).toBeFalsy();
+    expect(sent).toHaveLength(1);
+    expect(new URL(sent[0].url).searchParams.get("account_id")).toBe(DEFAULT_ACCOUNT);
+  });
+
+  it("refuses a confirmation under a different default account and sends nothing", async () => {
+    const sent = stubFetch();
+    const token = tokenOf(await (await prod()).callTool({ name: "recipientDelete", arguments: { recipient_id: RECIPIENT } }));
+    const confirmed = await (
+      await prod(OTHER_ACCOUNT)
+    ).callTool({
+      name: "recipientDelete",
+      arguments: { recipient_id: RECIPIENT, confirm_token: token },
+    });
+
+    expect(confirmed.isError).toBe(true);
+    expect(texts(confirmed)[0]).toBe(
+      `Nothing was executed: this confirm_token was issued for a different account than the one this call would now be sent with (account_id ${OTHER_ACCOUNT} (the default account; none was passed in the call)). Call recipientDelete again without confirm_token to get a new preview for this account.`,
+    );
+    expect(sent).toEqual([]);
+  });
+
+  it("refuses a confirmation with an explicit account_id other than the previewed one", async () => {
+    const sent = stubFetch();
+    const client = await prod();
+    const token = tokenOf(await client.callTool({ name: "recipientDelete", arguments: { recipient_id: RECIPIENT, account_id: OTHER_ACCOUNT } }));
+    const confirmed = await client.callTool({
+      name: "recipientDelete",
+      arguments: { recipient_id: RECIPIENT, account_id: "x".repeat(36), confirm_token: token },
+    });
+
+    expect(confirmed.isError).toBe(true);
+    expect(texts(confirmed)[0]).toContain("issued for a different account");
+    expect(sent).toEqual([]);
+  });
+
+  it("leaves a tool that is not account-scoped unbound, as before", async () => {
+    const sent = stubFetch();
+    const token = tokenOf(await (await prod()).callTool({ name: "subscriptionCancel", arguments: { subscription_id: "s".repeat(36) } }));
+    expect(token.split(".")).toHaveLength(2);
+
+    const confirmed = await (
+      await prod(OTHER_ACCOUNT)
+    ).callTool({
+      name: "subscriptionCancel",
+      arguments: { subscription_id: "s".repeat(36), confirm_token: token },
+    });
+    expect(confirmed.isError).toBeFalsy();
+    expect(sent).toHaveLength(1);
+  });
+});
+
 describe("the production confirm preview", () => {
   async function preview(args: Record<string, unknown>) {
     const sent = stubFetch();

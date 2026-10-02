@@ -1,7 +1,7 @@
 import { expect, it, describe, afterEach } from "@rstest/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { canonicalJson, issueConfirmToken, verifyConfirmToken } from "../src/confirm";
+import { canonicalJson, confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "../src/confirm";
 import { initializeYunoMCP } from "../src/index";
 import { tools } from "../src/tools";
 
@@ -36,6 +36,25 @@ describe("confirm tokens", () => {
     expect(verifyConfirmToken("other-secret", "paymentRefund", { payment_id: "p1" }, token)).toBe(false);
     expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "junk")).toBe(false);
     expect(verifyConfirmToken(SECRET, "paymentRefund", { payment_id: "p1" }, "123.abc")).toBe(false);
+  });
+
+  it("binds an account when given one, and tells a changed account apart", () => {
+    const params = { recipient_id: "r1" };
+    const token = issueConfirmToken(SECRET, "recipientDelete", params, undefined, { account: "acct-a" });
+    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: "acct-a" })).toBe(true);
+    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: "acct-b" })).toBe(false);
+    expect(verifyConfirmToken(SECRET, "recipientDelete", params, token, { account: null })).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-a" })).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, token, { account: "acct-b" })).toBe(true);
+  });
+
+  it("never accepts a bound token without a binding, or an unbound one with", () => {
+    const params = { recipient_id: "r1" };
+    const bound = issueConfirmToken(SECRET, "recipientDelete", params, undefined, { account: "acct-a" });
+    const unbound = issueConfirmToken(SECRET, "recipientDelete", params);
+    expect(verifyConfirmToken(SECRET, "recipientDelete", params, bound)).toBe(false);
+    expect(verifyConfirmToken(SECRET, "recipientDelete", params, unbound, { account: "acct-a" })).toBe(false);
+    expect(confirmTokenAccountChanged(SECRET, unbound, { account: "acct-a" })).toBe(false);
   });
 });
 

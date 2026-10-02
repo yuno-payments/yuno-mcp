@@ -6,7 +6,7 @@ import { createDescribeTool } from "./tools/describe";
 import { accountIdPath, createAccountContextTool, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
-import { issueConfirmToken, verifyConfirmToken } from "./confirm";
+import { confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "./confirm";
 import { findGuidance, formatGuidance } from "./knowledge/decline-codes";
 import { Tool } from "./types";
 
@@ -61,10 +61,16 @@ function serverInstructions(yunoClient: YunoClient, mode: ServerMode | undefined
   ].join(" ");
 }
 
-/** The account a call is sent with, rebuilt from its validated arguments with the handler's own fallback. */
-function sentAccount(tool: Tool, accountPath: string[], args: unknown, defaultAccountId: string): string {
+/**
+ * The account a call is sent with, rebuilt from its validated arguments with the
+ * handler's own fallback: `account` (null when none is sent) binds the confirm
+ * token, `phrase` is what the preview and error notes say. One resolution for both,
+ * so a preview and its token cannot disagree.
+ */
+function sentAccount(tool: Tool, accountPath: string[], args: unknown, defaultAccountId: string): { account: unknown; phrase: string } {
   const passed = accountPath.reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], args);
-  return sentAccountPhrase(passed, tool.appliesDefaultAccountId ? defaultAccountId : undefined);
+  const fallback = tool.appliesDefaultAccountId ? defaultAccountId : undefined;
+  return { account: passed || fallback || null, phrase: sentAccountPhrase(passed, fallback) };
 }
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
@@ -162,11 +168,13 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           }
 
           if (requiresConfirmation) {
+            // The default account is resolved only when the call executes, so the
+            // arguments alone do not say which account a confirmation would hit.
+            const sent = accountPath ? sentAccount(tool, accountPath, validation.data, yunoClient.accountCode) : undefined;
+            const binding = sent && { account: sent.account };
             if (typeof confirmToken !== "string" || confirmToken.length === 0) {
-              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
-              // The default account is resolved only when the call executes, so the
-              // arguments alone do not say which account a confirmation would hit.
-              const account = accountPath ? sentAccount(tool, accountPath, validation.data, yunoClient.accountCode) : undefined;
+              const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, undefined, binding);
+              const account = sent?.phrase;
               const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed.${account ? ` It will be sent with ${account}.` : ""} Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
               const preview = {
                 confirmation_required: true,
@@ -186,7 +194,18 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
                 ...(tool.outputSchema ? { structuredContent: preview as Record<string, unknown> } : {}),
               };
             }
-            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken)) {
+            if (binding && confirmTokenAccountChanged(yunoClient.confirmSecret, confirmToken, binding)) {
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `Nothing was executed: this confirm_token was issued for a different account than the one this call would now be sent with (${sent.phrase}). Call ${tool.method} again without confirm_token to get a new preview for this account.`,
+                  },
+                ],
+                isError: true,
+              };
+            }
+            if (!verifyConfirmToken(yunoClient.confirmSecret, tool.method, validation.data, confirmToken, binding)) {
               return {
                 content: [
                   {
@@ -235,7 +254,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
 
           if (upstreamStatus >= 400 && accountPath) {
             // Names what was sent without the API echoing it. The API body is untouched.
-            const note = `Request sent with ${sentAccount(tool, accountPath, validation.data, yunoClient.accountCode)}.`;
+            const note = `Request sent with ${sentAccount(tool, accountPath, validation.data, yunoClient.accountCode).phrase}.`;
             return { content: [...enrichedContent, { type: "text" as const, text: note }], isError: true };
           }
 

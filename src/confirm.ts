@@ -3,7 +3,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 /**
  * Stateless two-phase confirmation for destructive tools on production keys.
  *
- * First call returns a preview plus an HMAC token over (method, params, expiry);
+ * First call returns a preview plus an HMAC token over (method, params, expiry) and,
+ * for account-scoped tools, the account the call will be sent with;
  * echoing the token executes. The token is self-verifying — keyed off the merchant's
  * private secret, so it works across replicas of the stateless remote server with
  * no stored state, and a token issued for one merchant/method/arguments never
@@ -35,26 +36,56 @@ export function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function signature(secret: string, method: string, params: unknown, expiresAt: number): string {
-  return createHmac("sha256", secret).update(`${method}\n${String(expiresAt)}\n${canonicalJson(params)}`).digest("hex");
+/**
+ * The account an account-scoped call will be sent with. The default account is
+ * resolved per connection, so the arguments alone do not fix it: binding it means a
+ * preview taken under one account cannot be confirmed under another. `account` is
+ * null when no account_id will be sent.
+ */
+type AccountBinding = { account: unknown };
+
+function signature(secret: string, method: string, params: unknown, expiresAt: number, binding?: AccountBinding): string {
+  const accountLine = binding ? `\n${canonicalJson(binding.account)}` : "";
+  return createHmac("sha256", secret)
+    .update(`${method}\n${String(expiresAt)}\n${canonicalJson(params)}${accountLine}`)
+    .digest("hex");
 }
 
-export function issueConfirmToken(secret: string, method: string, params: unknown, ttlMs: number = DEFAULT_TTL_MS): string {
+/** Lets a refusal say the account changed, without putting the account id in the token. */
+function accountTag(secret: string, binding: AccountBinding): string {
+  return createHmac("sha256", secret)
+    .update(`account\n${canonicalJson(binding.account)}`)
+    .digest("hex")
+    .slice(0, 16);
+}
+
+export function issueConfirmToken(secret: string, method: string, params: unknown, ttlMs: number = DEFAULT_TTL_MS, binding?: AccountBinding): string {
   const expiresAt = Date.now() + ttlMs;
-  return `${String(expiresAt)}.${signature(secret, method, params, expiresAt)}`;
+  const token = `${String(expiresAt)}.${signature(secret, method, params, expiresAt, binding)}`;
+  return binding ? `${token}.${accountTag(secret, binding)}` : token;
 }
 
-export function verifyConfirmToken(secret: string, method: string, params: unknown, token: string): boolean {
-  const separator = token.indexOf(".");
-  if (separator < 1) {
+export function verifyConfirmToken(secret: string, method: string, params: unknown, token: string, binding?: AccountBinding): boolean {
+  // expiry.mac, plus .tag when the token is bound to an account.
+  const parts = token.split(".");
+  const [expiry, mac] = parts;
+  if (parts.length !== (binding ? 3 : 2) || !expiry || !mac) {
     return false;
   }
-  const expiresAt = Number(token.slice(0, separator));
-  const mac = token.slice(separator + 1);
-  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt || mac.length === 0) {
+  const expiresAt = Number(expiry);
+  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) {
     return false;
   }
-  const expected = Buffer.from(signature(secret, method, params, expiresAt), "hex");
+  const expected = Buffer.from(signature(secret, method, params, expiresAt, binding), "hex");
   const given = Buffer.from(mac, "hex");
   return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+/**
+ * True when an account-bound token was issued for a different account than
+ * `binding`. Only picks the refusal message; verifyConfirmToken decides.
+ */
+export function confirmTokenAccountChanged(secret: string, token: string, binding: AccountBinding): boolean {
+  const parts = token.split(".");
+  return parts.length === 3 && parts[2] !== accountTag(secret, binding);
 }
