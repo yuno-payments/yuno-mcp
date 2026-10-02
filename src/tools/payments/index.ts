@@ -26,6 +26,7 @@ export const paymentCreateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Payment", destructiveHint: false, idempotentHint: false },
   schema: paymentCreateSchema,
   outputSchema: yunoPaymentOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ payment, idempotency_key: idempotencyKey }: PaymentCreateSchema): Promise<Output<TType, YunoPayment>> => {
@@ -383,6 +384,7 @@ export const paymentAuthorizeTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Authorize Payment", destructiveHint: false, idempotentHint: false },
   schema: paymentCreateSchema,
   outputSchema: yunoPaymentOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({

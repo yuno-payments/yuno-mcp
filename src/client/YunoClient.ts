@@ -415,21 +415,21 @@ export class YunoClient {
       });
     },
 
-    retrieve: async (recipientId: string) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+    retrieve: async (recipientId: string, accountId?: string | null) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
         method: "GET",
       });
     },
 
-    update: async (recipientId: string, updateFields: RecipientUpdateBody) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+    update: async (recipientId: string, updateFields: RecipientUpdateBody, accountId?: string | null) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
     },
 
-    delete: async (recipientId: string) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+    delete: async (recipientId: string, accountId?: string | null) => {
+      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
         method: "DELETE",
       });
     },

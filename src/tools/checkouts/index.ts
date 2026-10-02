@@ -6,6 +6,7 @@ import {
   yunoOttOutputSchema,
 } from "../../schemas";
 import type { HandlerContext, Output, Tool } from "../../types";
+import { sentAccountPhrase } from "../account";
 import type { YunoCheckoutPaymentMethodsResponse, YunoCheckoutSession, YunoOttCreateSchema, YunoOttRequest, YunoOttResponse } from "./types";
 
 /**
@@ -26,12 +27,16 @@ export function toTwoDigitExpirationYear<T extends { payment_method: { card?: { 
   return { ...request, payment_method: { ...request.payment_method, card: { ...card, expiration_year: card.expiration_year - 2000 } } };
 }
 
+const EMPTY_PAYMENT_METHODS_NOTE =
+  "No payment methods are available for this checkout session. The session's account may have no published checkout, or no payment method enabled for this country and currency.";
+
 export const checkoutSessionCreateTool = {
   method: "checkoutSessionCreate",
   description: "Create a new checkout session in Yuno.",
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Checkout Session", destructiveHint: false, idempotentHint: false },
   schema: checkoutSessionCreateSchema,
   outputSchema: yunoCheckoutSessionOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: YunoCheckoutSession): Promise<Output<TType, YunoCheckoutSession>> => {
@@ -40,12 +45,17 @@ export const checkoutSessionCreateTool = {
         account_id: data.account_id || yunoClient.accountCode,
       };
       const { body: checkoutSession, status, headers } = await yunoClient.checkoutSessions.create(checkoutSessionWithAccount);
+      // The response body has no account_id, and the session's account decides which
+      // payment methods it offers. A failure is named by the registration wrapper instead.
+      const accountNote =
+        status < 400 ? [{ type: "text" as const, text: `Checkout session created under ${sentAccountPhrase(data.account_id, yunoClient.accountCode)}.` }] : [];
 
       if (type === "text") {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(checkoutSession, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            ...accountNote,
           ],
         } as Output<TType, YunoCheckoutSession>;
       }
@@ -54,6 +64,7 @@ export const checkoutSessionCreateTool = {
         content: [
           { type: "object" as const, object: checkoutSession },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          ...accountNote,
         ],
       } as Output<TType, YunoCheckoutSession>;
     },
@@ -73,12 +84,18 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({ session_id: sessionId }: { session_id: string }): Promise<Output<TType, YunoCheckoutPaymentMethodsResponse>> => {
       const { body: paymentMethods, status, headers } = await yunoClient.checkoutSessions.retrievePaymentMethods(sessionId);
+      // An empty list is a successful response, and nothing else in it says why.
+      const emptyNote =
+        status < 400 && Array.isArray(paymentMethods) && paymentMethods.length === 0
+          ? [{ type: "text" as const, text: EMPTY_PAYMENT_METHODS_NOTE }]
+          : [];
 
       if (type === "text") {
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(paymentMethods, null, 4) },
             { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+            ...emptyNote,
           ],
         } as Output<TType>;
       }
@@ -87,6 +104,7 @@ export const checkoutSessionRetrievePaymentMethodsTool = {
         content: [
           { type: "object" as const, object: paymentMethods },
           { type: "text" as const, text: `Response Headers (HTTP ${status}):\n${JSON.stringify(headers, null, 4)}` },
+          ...emptyNote,
         ],
       } as Output<TType, YunoCheckoutPaymentMethodsResponse>;
     },

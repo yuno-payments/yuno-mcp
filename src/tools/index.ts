@@ -1,4 +1,5 @@
 import type { Tool } from "../types";
+import { createAccountContextTool } from "./account";
 import { checkoutTools } from "./checkouts";
 import { customerTools } from "./customers";
 import { installmentPlanTools } from "./installmentPlans";
@@ -8,7 +9,7 @@ import { paymentTools } from "./payments";
 import { recipientTools } from "./recipients";
 import { subscriptionTools } from "./subscriptions";
 
-export const tools = [
+const apiTools = [
   ...customerTools,
   ...paymentMethodTools,
   ...checkoutTools,
@@ -18,3 +19,5 @@ export const tools = [
   ...recipientTools,
   ...installmentPlanTools,
 ] as const satisfies Tool[];
+
+export const tools = [...apiTools, createAccountContextTool(apiTools)] as const satisfies Tool[];

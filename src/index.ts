@@ -3,6 +3,7 @@ import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
+import { accountIdPath, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
@@ -32,6 +33,16 @@ function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
   return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
 }
 
+// The default account is applied silently by the tools, so a client has to be told
+// it exists before it creates anything under it (YSHUB-7252).
+function serverInstructions(yunoClient: YunoClient): string {
+  return [
+    `This connection uses Yuno account_id ${yunoClient.accountCode} (environment: ${yunoClient.environment ?? "unrecognized"}) by default.`,
+    "The tools listed by accountContext accept account_id to run under another account of the same organization.",
+    "When the user may have several accounts, call accountContext to confirm the active account before creating payments, payment links, checkout sessions, subscriptions or recipients.",
+  ].join(" ");
+}
+
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
   const server = new McpServer(
     {
@@ -39,13 +50,14 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
       title: "Yuno",
       // Must match package.json — this is the version MCP clients see during initialize.
       // tests/version.test.ts fails the build if the two drift apart.
-      version: "1.0.0",
+      version: "1.1.0",
       description:
         "Yuno MCP server: create and manage payments, subscriptions, customers, payment methods, checkouts, recipients, installment plans, and payment links on the Yuno payments platform.",
       websiteUrl: "https://docs.y.uno/mcp",
     },
     {
       capabilities: {},
+      instructions: serverInstructions(yunoClient),
     },
   );
 
@@ -92,6 +104,7 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     // drop an unknown key before the handler ran. A mistyped optional parameter must
     // fail loudly — a dropped `idempotencyKey` means a retry charges or refunds twice.
     const registeredInput = z.strictObject(inputSchemaShape, { error: unknownParameterError });
+    const accountPath = accountIdPath(tool.schema);
 
     server.registerTool(
       tool.method,
@@ -190,6 +203,15 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           // response entry is never modified.
           const guidance = findGuidance(primaryBody);
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
+
+          if (upstreamStatus >= 400 && accountPath) {
+            // Rebuilt from the validated arguments with the handler's own fallback, so it
+            // names what was sent without the API echoing it. The API body is untouched.
+            const passed = accountPath.reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], validation.data);
+            const defaultAccountId = tool.appliesDefaultAccountId ? yunoClient.accountCode : undefined;
+            const note = `Request sent with ${sentAccountPhrase(passed, defaultAccountId)}.`;
+            return { content: [...enrichedContent, { type: "text" as const, text: note }], isError: true };
+          }
 
           // A handler can fail without an upstream response to read a status from
           // (describeTool on an unknown name); this used to drop its isError on the floor.

@@ -10,6 +10,7 @@ export const subscriptionCreateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Subscription", destructiveHint: false, idempotentHint: false },
   schema: subscriptionCreateSchema,
   outputSchema: yunoSubscriptionOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: SubscriptionCreateSchema): Promise<Output<TType, YunoSubscription>> => {

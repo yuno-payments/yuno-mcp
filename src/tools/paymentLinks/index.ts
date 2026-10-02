@@ -9,6 +9,7 @@ export const paymentLinkCreateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Payment Link", destructiveHint: false, idempotentHint: false },
   schema: paymentLinkCreateSchema,
   outputSchema: yunoPaymentLinkOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: PaymentLinkCreateSchema): Promise<Output<TType, YunoPaymentLink>> => {

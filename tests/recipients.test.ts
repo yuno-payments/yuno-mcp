@@ -1,6 +1,7 @@
-import { expect, it, describe, rstest } from "@rstest/core";
+import { expect, it, describe, rstest, afterEach } from "@rstest/core";
 import { recipientCreateSchema, recipientUpdateSchema } from "../src/schemas";
 import { recipientCreateTool, recipientRetrieveTool, recipientUpdateTool, recipientDeleteTool } from "../src/tools/recipients";
+import { YunoClient } from "../src/client";
 
 const RECIPIENT_ID = "r".repeat(36);
 
@@ -77,7 +78,7 @@ describe("recipientRetrieveTool", () => {
     const result = await recipientRetrieveTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({
       recipient_id: RECIPIENT_ID,
     });
-    expect(mockYunoClient.recipients.retrieve).toHaveBeenCalledWith(RECIPIENT_ID);
+    expect(mockYunoClient.recipients.retrieve).toHaveBeenCalledWith(RECIPIENT_ID, undefined);
     expect(result.content[0].text).toContain(RECIPIENT_ID);
   });
 
@@ -100,7 +101,7 @@ describe("recipientUpdateTool", () => {
       recipient_id: RECIPIENT_ID,
       first_name: "Ada",
     });
-    expect(mockYunoClient.recipients.update).toHaveBeenCalledWith(RECIPIENT_ID, { first_name: "Ada" });
+    expect(mockYunoClient.recipients.update).toHaveBeenCalledWith(RECIPIENT_ID, { first_name: "Ada" }, undefined);
   });
 
   it("should validate an update with only recipient_id", () => {
@@ -120,7 +121,7 @@ describe("recipientDeleteTool", () => {
     const result = await recipientDeleteTool.handler({ yunoClient: mockYunoClient as any, type: "text" })({
       recipient_id: RECIPIENT_ID,
     });
-    expect(mockYunoClient.recipients.delete).toHaveBeenCalledWith(RECIPIENT_ID);
+    expect(mockYunoClient.recipients.delete).toHaveBeenCalledWith(RECIPIENT_ID, undefined);
     expect(result.content[0].text).toContain("DELETED");
   });
 
@@ -137,5 +138,59 @@ describe("recipientDeleteTool", () => {
 
   it("should be flagged destructive so production calls hit the confirm gate", () => {
     expect(recipientDeleteTool.annotations.destructiveHint).toBe(true);
+  });
+});
+
+describe("recipient account override", () => {
+  const OTHER_ACCOUNT = "o".repeat(36);
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  function recordedRequests(): { url: string; body?: string }[] {
+    const requests: { url: string; body?: string }[] = [];
+    globalThis.fetch = ((url: string, init?: { body?: string }) => {
+      requests.push({ url, body: init?.body });
+      return Promise.resolve(new Response(JSON.stringify({ id: RECIPIENT_ID }), { status: 200 }));
+    }) as unknown as typeof fetch;
+    return requests;
+  }
+
+  const yunoClient = () => YunoClient.initialize({ accountCode: "acct-default", publicApiKey: "sandbox_key", privateSecretKey: "s" });
+
+  it("sends the passed account_id in the query of retrieve, update and delete", async () => {
+    const requests = recordedRequests();
+    const client = yunoClient();
+    await recipientRetrieveTool.handler({ yunoClient: client, type: "object" })({ recipient_id: RECIPIENT_ID, account_id: OTHER_ACCOUNT });
+    await recipientUpdateTool.handler({ yunoClient: client, type: "object" })({
+      recipient_id: RECIPIENT_ID,
+      account_id: OTHER_ACCOUNT,
+      first_name: "Ada",
+    });
+    await recipientDeleteTool.handler({ yunoClient: client, type: "object" })({ recipient_id: RECIPIENT_ID, account_id: OTHER_ACCOUNT });
+
+    expect(requests.map((request) => new URL(request.url).searchParams.get("account_id"))).toEqual([OTHER_ACCOUNT, OTHER_ACCOUNT, OTHER_ACCOUNT]);
+    // A selector, not a field to update.
+    expect(JSON.parse(requests[1].body ?? "{}")).toEqual({ first_name: "Ada" });
+  });
+
+  it("falls back to the client's account when none is passed", async () => {
+    const requests = recordedRequests();
+    await recipientRetrieveTool.handler({ yunoClient: yunoClient(), type: "object" })({ recipient_id: RECIPIENT_ID });
+    expect(new URL(requests[0].url).searchParams.get("account_id")).toBe("acct-default");
+  });
+
+  it("URL-encodes the account_id", async () => {
+    const requests = recordedRequests();
+    await yunoClient().recipients.retrieve(RECIPIENT_ID, "a&b=c/d");
+    expect(requests[0].url).toContain("account_id=a%26b%3Dc%2Fd");
+  });
+
+  it("accepts account_id in the three schemas", () => {
+    for (const tool of [recipientRetrieveTool, recipientUpdateTool, recipientDeleteTool]) {
+      expect(() => tool.schema.parse({ recipient_id: RECIPIENT_ID, account_id: OTHER_ACCOUNT })).not.toThrow();
+    }
   });
 });

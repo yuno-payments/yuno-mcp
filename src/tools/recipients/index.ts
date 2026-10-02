@@ -10,6 +10,7 @@ export const recipientCreateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Recipient", destructiveHint: false, idempotentHint: false },
   schema: recipientCreateSchema,
   outputSchema: yunoRecipientOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: RecipientCreateSchema): Promise<Output<TType, YunoRecipient>> => {
@@ -43,12 +44,20 @@ export const recipientRetrieveTool = {
   annotations: { openWorldHint: true, title: "Retrieve Recipient", readOnlyHint: true, destructiveHint: false },
   schema: z.object({
     recipient_id: z.string().describe("The unique identifier of the recipient to retrieve"),
+    account_id: z.string().min(36).max(64).nullish().describe("Account ID of the recipient; defaults to the connection's account"),
   }),
   outputSchema: yunoRecipientOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipient_id: recipientId }: { recipient_id: string }): Promise<Output<TType, YunoRecipient>> => {
-      const { body: recipient, status, headers } = await yunoClient.recipients.retrieve(recipientId);
+    async ({
+      recipient_id: recipientId,
+      account_id: accountId,
+    }: {
+      recipient_id: string;
+      account_id?: string | null;
+    }): Promise<Output<TType, YunoRecipient>> => {
+      const { body: recipient, status, headers } = await yunoClient.recipients.retrieve(recipientId, accountId);
 
       if (type === "text") {
         return {
@@ -74,10 +83,12 @@ export const recipientUpdateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Update Recipient", destructiveHint: false, idempotentHint: true },
   schema: recipientUpdateSchema,
   outputSchema: yunoRecipientOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipient_id: recipientId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
-      const { body: recipient, status, headers } = await yunoClient.recipients.update(recipientId, updateFields);
+    async ({ recipient_id: recipientId, account_id: accountId, ...updateFields }: RecipientUpdateSchema): Promise<Output<TType, YunoRecipient>> => {
+      // account_id selects the recipient in the query string; it is not a field to update.
+      const { body: recipient, status, headers } = await yunoClient.recipients.update(recipientId, updateFields, accountId);
 
       if (type === "text") {
         return {
@@ -103,12 +114,20 @@ export const recipientDeleteTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Delete Recipient", destructiveHint: true, idempotentHint: true },
   schema: z.object({
     recipient_id: z.string().describe("The unique identifier of the recipient to delete"),
+    account_id: z.string().min(36).max(64).nullish().describe("Account ID of the recipient; defaults to the connection's account"),
   }),
   outputSchema: yunoRecipientOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
-    async ({ recipient_id: recipientId }: { recipient_id: string }): Promise<Output<TType, YunoRecipient>> => {
-      const { body, status, headers } = await yunoClient.recipients.delete(recipientId);
+    async ({
+      recipient_id: recipientId,
+      account_id: accountId,
+    }: {
+      recipient_id: string;
+      account_id?: string | null;
+    }): Promise<Output<TType, YunoRecipient>> => {
+      const { body, status, headers } = await yunoClient.recipients.delete(recipientId, accountId);
 
       if (type === "text") {
         return {

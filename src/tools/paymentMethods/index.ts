@@ -19,6 +19,7 @@ export const paymentMethodEnrollTool = {
     idempotency_key: z.string().uuid().optional().describe("Unique key to prevent duplicate payment methods. Must be a UUID (e.g. 550e8400-e29b-41d4-a716-446655440000); omit it and one is generated."),
   }),
   outputSchema: yunoPaymentMethodOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async ({

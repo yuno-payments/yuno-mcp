@@ -30,7 +30,7 @@ type SubscriptionToolMethod =
   | "subscriptionResume"
   | "subscriptionUpdate"
   | "subscriptionCancel";
-type MetaToolMethod = "describeTool";
+type MetaToolMethod = "describeTool" | "accountContext";
 
 type ToolMethod =
   | MetaToolMethod
@@ -68,6 +68,11 @@ type Tool = {
   annotations: ToolAnnotations;
   schema: z.ZodObject<any>;
   outputSchema?: z.ZodObject<any>;
+  /**
+   * Set on tools whose handler sends yunoClient.accountCode when account_id is not
+   * passed, so an API error can name the account the request actually used.
+   */
+  appliesDefaultAccountId?: true;
   handler: <TType extends "object" | "text">(context: HandlerContext<TType>) => (input: any) => Promise<Output<TType>>;
 };
 

@@ -14,6 +14,7 @@ export const installmentPlanCreateTool = {
   annotations: { openWorldHint: true, readOnlyHint: false, title: "Create Installment Plan", destructiveHint: false, idempotentHint: false },
   schema: installmentPlanCreateSchema,
   outputSchema: yunoInstallmentPlanOutputSchema,
+  appliesDefaultAccountId: true,
   handler:
     <TType extends "object" | "text">({ yunoClient, type }: HandlerContext<TType>) =>
     async (data: InstallmentPlanCreateSchema): Promise<Output<TType, YunoInstallmentPlan>> => {
