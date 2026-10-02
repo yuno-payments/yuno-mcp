@@ -1,10 +1,11 @@
 import z from "zod";
-import { tools } from "../index";
 import type { HandlerContext, Output, Tool } from "../../types";
 import { EXAMPLES } from "./examples";
 
 const describeToolSchema = z.object({
-  method: z.string().describe("Name of the tool to describe, e.g. paymentCreate. A gateway prefix such as pay__paymentCreate is accepted too."),
+  method: z
+    .string()
+    .describe("Name of the tool to describe, e.g. paymentCreate. A gateway prefix such as pay__paymentCreate is accepted too."),
   include_output_schema: z
     .boolean()
     .nullish()
@@ -30,8 +31,10 @@ export const bareToolName = (name: string): string => {
  * their context cost on every tools/list. `describable` is what the server registers
  * for its mode (src/index.ts), so it never describes or offers a tool it does not serve.
  */
-export const createDescribeTool = (describable: readonly Tool[]) =>
-  ({
+export function createDescribeTool(describable: readonly Tool[]) {
+  // Itself included, so the list it offers and the names it answers agree.
+  const all: Tool[] = [...describable];
+  const describeTool = {
     method: "describeTool",
     description:
       "Return the complete input/output JSON Schema and a worked example for any tool on this server. Registered schemas are compacted; call this before building complex payloads (e.g. paymentCreate).",
@@ -40,10 +43,10 @@ export const createDescribeTool = (describable: readonly Tool[]) =>
     handler:
       <TType extends "object" | "text">({ type }: HandlerContext<TType>) =>
       ({ method, include_output_schema }: DescribeToolSchema): Promise<Output<TType>> => {
-        const target: Tool | undefined = describable.find((tool) => tool.method === bareToolName(method));
+        const target: Tool | undefined = all.find((tool) => tool.method === bareToolName(method));
 
         if (!target) {
-          const available = [...describable.map((tool) => tool.method), "describeTool"].join(", ");
+          const available = all.map((tool) => tool.method).join(", ");
           // isError so a client can tell a miss from a description: without it this read
           // as a successful call, and the only tool on the server that never set the flag.
           return Promise.resolve({
@@ -56,7 +59,8 @@ export const createDescribeTool = (describable: readonly Tool[]) =>
           method: target.method,
           description: target.description,
           inputSchema: z.toJSONSchema(target.schema, { unrepresentable: "any" }),
-          outputSchema: include_output_schema && target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
+          outputSchema:
+            include_output_schema && target.outputSchema ? z.toJSONSchema(target.outputSchema, { unrepresentable: "any" }) : undefined,
           example: EXAMPLES[target.method],
         };
 
@@ -68,7 +72,7 @@ export const createDescribeTool = (describable: readonly Tool[]) =>
           content: [{ type: "text" as const, text: JSON.stringify(details) }],
         } as Output<TType>);
       },
-  }) as const satisfies Tool;
-
-/** Over every API tool; the server composes its own per mode. */
-export const describeTool = createDescribeTool(tools);
+  } as const satisfies Tool;
+  all.push(describeTool);
+  return describeTool;
+}

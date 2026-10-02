@@ -7,8 +7,10 @@ import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv
 import { leanJsonSchema, leanToolsListResult } from "../src/schemas/lean-json-schema";
 import { compactSchema, HEAVY_KEYS } from "../src/schemas/compact";
 import { tools } from "../src/tools";
-import { describeTool } from "../src/tools/describe";
+import { createDescribeTool } from "../src/tools/describe";
 import { initializeYunoMCP } from "../src/index";
+
+const describeTool = createDescribeTool(tools);
 
 describe("leanJsonSchema", () => {
   it("keeps a nullable union in its long form, which every client can read", () => {
