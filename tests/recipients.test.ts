@@ -182,6 +182,20 @@ describe("recipient account override", () => {
     expect(new URL(requests[0].url).searchParams.get("account_id")).toBe("acct-default");
   });
 
+  it("encodes a recipient_id that carries its own query, so only the intended account_id is sent", async () => {
+    const requests = recordedRequests();
+    const client = yunoClient();
+    const recipientId = "x?account_id=O&z=";
+    await recipientRetrieveTool.handler({ yunoClient: client, type: "object" })({ recipient_id: recipientId });
+    await recipientUpdateTool.handler({ yunoClient: client, type: "object" })({ recipient_id: recipientId, first_name: "Ada" });
+    await recipientDeleteTool.handler({ yunoClient: client, type: "object" })({ recipient_id: recipientId, account_id: OTHER_ACCOUNT });
+
+    const urls = requests.map((request) => new URL(request.url));
+    expect(urls.map((url) => url.pathname.endsWith("/recipients/x%3Faccount_id%3DO%26z%3D"))).toEqual([true, true, true]);
+    expect(urls.map((url) => url.searchParams.getAll("account_id"))).toEqual([["acct-default"], ["acct-default"], [OTHER_ACCOUNT]]);
+    expect(urls.map((url) => [...url.searchParams.keys()])).toEqual([["account_id"], ["account_id"], ["account_id"]]);
+  });
+
   it("URL-encodes the account_id", async () => {
     const requests = recordedRequests();
     await yunoClient().recipients.retrieve(RECIPIENT_ID, "a&b=c/d");

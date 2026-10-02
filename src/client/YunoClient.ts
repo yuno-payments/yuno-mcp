@@ -403,6 +403,12 @@ export class YunoClient {
     },
   };
 
+  // Both parts are encoded: a raw id such as "x?account_id=O&z=" would otherwise
+  // add its own account_id to the query, ahead of the one previewed and confirmed.
+  private recipientUrl(recipientId: string, accountId: string | null | undefined): string {
+    return `/recipients/${encodeURIComponent(recipientId)}?account_id=${encodeURIComponent(accountId || this.accountCode)}`;
+  }
+
   recipients = {
     create: async (recipient: RecipientCreateSchema) => {
       const recipientWithAccount = {
@@ -416,20 +422,20 @@ export class YunoClient {
     },
 
     retrieve: async (recipientId: string, accountId?: string | null) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
+      return this.request<YunoRecipient>(this.recipientUrl(recipientId, accountId), {
         method: "GET",
       });
     },
 
     update: async (recipientId: string, updateFields: RecipientUpdateBody, accountId?: string | null) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
+      return this.request<YunoRecipient>(this.recipientUrl(recipientId, accountId), {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
     },
 
     delete: async (recipientId: string, accountId?: string | null) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${encodeURIComponent(accountId || this.accountCode)}`, {
+      return this.request<YunoRecipient>(this.recipientUrl(recipientId, accountId), {
         method: "DELETE",
       });
     },
