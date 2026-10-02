@@ -224,6 +224,15 @@ describe("the production confirm token", () => {
     expect(sent).toEqual([]);
   });
 
+  it("gives a malformed three-part token the generic refusal, not the account one", async () => {
+    const sent = stubFetch();
+    const confirmed = await (await prod()).callTool({ name: "recipientDelete", arguments: { recipient_id: RECIPIENT, confirm_token: "a.b.c" } });
+
+    expect(confirmed.isError).toBe(true);
+    expect(texts(confirmed)[0]).toMatch(/^confirm_token is invalid or expired/);
+    expect(sent).toEqual([]);
+  });
+
   it("leaves a tool that is not account-scoped unbound, as before", async () => {
     const sent = stubFetch();
     const token = tokenOf(await (await prod()).callTool({ name: "subscriptionCancel", arguments: { subscription_id: "s".repeat(36) } }));

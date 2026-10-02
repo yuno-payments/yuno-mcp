@@ -68,27 +68,32 @@ export function issueConfirmToken(secret: string, subject: TokenSubject, ttlMs: 
   return subject.binding ? `${token}.${accountTag(secret, subject.binding)}` : token;
 }
 
+const sameHex = (a: string, b: string): boolean => a.length === b.length && timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
+
+/** expiry.mac, plus .tag when the token is bound to an account; undefined when malformed. */
+function parseToken(token: string): { expiresAt: number; mac: string; tag?: string } | undefined {
+  const match = /^(\d{1,16})\.([0-9a-f]{64})(?:\.([0-9a-f]{16}))?$/.exec(token);
+  return match ? { expiresAt: Number(match[1]), mac: match[2], tag: match[3] } : undefined;
+}
+
 export function verifyConfirmToken(secret: string, subject: TokenSubject, token: string): boolean {
-  // expiry.mac, plus .tag when the token is bound to an account.
-  const parts = token.split(".");
-  const [expiry, mac] = parts;
-  if (parts.length !== (subject.binding ? 3 : 2) || !expiry || !mac) {
+  const parsed = parseToken(token);
+  if (!parsed || Date.now() > parsed.expiresAt) {
     return false;
   }
-  const expiresAt = Number(expiry);
-  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) {
+  const { binding } = subject;
+  // A bound token never verifies without its binding, nor an unbound one with one.
+  if (binding ? parsed.tag === undefined || !sameHex(parsed.tag, accountTag(secret, binding)) : parsed.tag !== undefined) {
     return false;
   }
-  const expected = Buffer.from(signature(secret, subject, expiresAt), "hex");
-  const given = Buffer.from(mac, "hex");
-  return given.length === expected.length && timingSafeEqual(given, expected);
+  return sameHex(parsed.mac, signature(secret, subject, parsed.expiresAt));
 }
 
 /**
- * True when an account-bound token was issued for a different account than
- * `binding`. Only picks the refusal message; verifyConfirmToken decides.
+ * True only for a well-formed account-bound token whose account differs from
+ * `binding`. It picks the refusal message after verifyConfirmToken has refused.
  */
 export function confirmTokenAccountChanged(secret: string, token: string, binding: AccountBinding): boolean {
-  const parts = token.split(".");
-  return parts.length === 3 && parts[2] !== accountTag(secret, binding);
+  const tag = parseToken(token)?.tag;
+  return tag !== undefined && !sameHex(tag, accountTag(secret, binding));
 }

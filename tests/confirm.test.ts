@@ -79,6 +79,23 @@ describe("confirm tokens", () => {
     }
   });
 
+  it("rejects a bound token whose account tag was tampered with", () => {
+    const subject = { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } };
+    const token = issueConfirmToken(SECRET, subject);
+    const tag = token.slice(-16);
+    const tampered = `${token.slice(0, -16)}${tag[0] === "0" ? "1" : "0"}${tag.slice(1)}`;
+    expect(verifyConfirmToken(SECRET, subject, tampered)).toBe(false);
+  });
+
+  it("calls only a well-formed bound token a changed account", () => {
+    const binding = { account: "acct-b" };
+    const other = issueConfirmToken(SECRET, { method: "recipientDelete", params: { recipient_id: "r1" }, binding: { account: "acct-a" } });
+    expect(confirmTokenAccountChanged(SECRET, other, binding)).toBe(true);
+    for (const malformed of ["a.b.c", "1.2.3", `${other}.extra`, other.toUpperCase(), `x${other}`]) {
+      expect(confirmTokenAccountChanged(SECRET, malformed, binding)).toBe(false);
+    }
+  });
+
   it("never accepts a bound token without a binding, or an unbound one with", () => {
     const params = { recipient_id: "r1" };
     const bound = issueConfirmToken(SECRET, { method: "recipientDelete", params, binding: { account: "acct-a" } });

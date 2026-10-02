@@ -195,18 +195,18 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
                 ...(tool.outputSchema ? { structuredContent: preview as Record<string, unknown> } : {}),
               };
             }
-            if (binding && confirmTokenAccountChanged(yunoClient.confirmSecret, confirmToken, binding)) {
-              return {
-                content: [
-                  {
-                    type: "text" as const,
-                    text: `Nothing was executed: this confirm_token was issued for a different account than the one this call would now be sent with (${sent.phrase}). Call ${tool.method} again without confirm_token to get a new preview for this account.`,
-                  },
-                ],
-                isError: true,
-              };
-            }
             if (!verifyConfirmToken(yunoClient.confirmSecret, subject, confirmToken)) {
+              if (binding && confirmTokenAccountChanged(yunoClient.confirmSecret, confirmToken, binding)) {
+                return {
+                  content: [
+                    {
+                      type: "text" as const,
+                      text: `Nothing was executed: this confirm_token was issued for a different account than the one this call would now be sent with (${sent.phrase}). Call ${tool.method} again without confirm_token to get a new preview for this account.`,
+                    },
+                  ],
+                  isError: true,
+                };
+              }
               return {
                 content: [
                   {
