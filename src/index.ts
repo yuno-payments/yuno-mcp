@@ -3,7 +3,7 @@ import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { describeTool } from "./tools/describe";
-import { accountIdPath, sentAccountPhrase } from "./tools/account";
+import { accountIdPath, createAccountContextTool, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
 import { issueConfirmToken, verifyConfirmToken } from "./confirm";
@@ -33,14 +33,38 @@ function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
   return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
 }
 
+/**
+ * The account code arrives in a client header and these instructions reach the
+ * model verbatim, so only an id-shaped value is quoted; anything else is left to
+ * accountContext, which returns it as JSON.
+ */
+const SAFE_ACCOUNT_ID = /^[A-Za-z0-9-]{1,64}$/;
+
 // The default account is applied silently by the tools, so a client has to be told
 // it exists before it creates anything under it (YSHUB-7252).
-function serverInstructions(yunoClient: YunoClient): string {
+function serverInstructions(yunoClient: YunoClient, mode: ServerMode | undefined): string {
+  const environment = yunoClient.environment ?? "unrecognized";
+  const account = SAFE_ACCOUNT_ID.test(yunoClient.accountCode)
+    ? `This connection uses Yuno account_id ${yunoClient.accountCode} (environment: ${environment}) by default.`
+    : `This connection uses a default Yuno account (environment: ${environment}); call accountContext to see its account_id.`;
+  if (mode === "read-only") {
+    return [
+      account,
+      "This connection is read-only. The tools listed by accountContext accept account_id to read another account of the same organization.",
+      "When the user may have several accounts, call accountContext to confirm which account the results come from.",
+    ].join(" ");
+  }
   return [
-    `This connection uses Yuno account_id ${yunoClient.accountCode} (environment: ${yunoClient.environment ?? "unrecognized"}) by default.`,
+    account,
     "The tools listed by accountContext accept account_id to run under another account of the same organization.",
     "When the user may have several accounts, call accountContext to confirm the active account before creating payments, payment links, checkout sessions, subscriptions or recipients.",
   ].join(" ");
+}
+
+/** The account a call is sent with, rebuilt from its validated arguments with the handler's own fallback. */
+function sentAccount(tool: Tool, accountPath: string[], args: unknown, defaultAccountId: string): string {
+  const passed = accountPath.reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], args);
+  return sentAccountPhrase(passed, tool.appliesDefaultAccountId ? defaultAccountId : undefined);
 }
 
 function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}) {
@@ -57,16 +81,15 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
     },
     {
       capabilities: {},
-      instructions: serverInstructions(yunoClient),
+      instructions: serverInstructions(yunoClient, options.mode),
     },
   );
 
   // describeTool is composed here (not in src/tools/index.ts) because it reads the
   // tools array itself — exporting it from there would be an import cycle.
-  const enabledTools: readonly Tool[] =
-    options.mode === "read-only"
-      ? [...tools.filter((tool) => tool.annotations.readOnlyHint === true), describeTool]
-      : [...tools, describeTool];
+  // accountContext is composed here so it lists only the tools this mode registers.
+  const apiTools: readonly Tool[] = options.mode === "read-only" ? tools.filter((tool) => tool.annotations.readOnlyHint === true) : tools;
+  const enabledTools: readonly Tool[] = [...apiTools, createAccountContextTool(apiTools), describeTool];
 
   for (const tool of enabledTools) {
     // Destructive operations against production require a two-phase confirm
@@ -139,12 +162,16 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           if (requiresConfirmation) {
             if (typeof confirmToken !== "string" || confirmToken.length === 0) {
               const token = issueConfirmToken(yunoClient.confirmSecret, tool.method, validation.data);
-              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed. Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
+              // The default account is resolved only when the call executes, so the
+              // arguments alone do not say which account a confirmation would hit.
+              const account = accountPath ? sentAccount(tool, accountPath, validation.data, yunoClient.accountCode) : undefined;
+              const summary = `${tool.method} is a destructive operation against the PRODUCTION environment. Nothing was executed.${account ? ` It will be sent with ${account}.` : ""} Review the arguments below, then call ${tool.method} again with identical arguments plus this confirm_token to execute.`;
               const preview = {
                 confirmation_required: true,
                 summary,
                 confirm_token: token,
                 arguments: validation.data,
+                ...(account ? { account } : {}),
               };
               return {
                 content: [
@@ -205,11 +232,8 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
 
           if (upstreamStatus >= 400 && accountPath) {
-            // Rebuilt from the validated arguments with the handler's own fallback, so it
-            // names what was sent without the API echoing it. The API body is untouched.
-            const passed = accountPath.reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], validation.data);
-            const defaultAccountId = tool.appliesDefaultAccountId ? yunoClient.accountCode : undefined;
-            const note = `Request sent with ${sentAccountPhrase(passed, defaultAccountId)}.`;
+            // Names what was sent without the API echoing it. The API body is untouched.
+            const note = `Request sent with ${sentAccount(tool, accountPath, validation.data, yunoClient.accountCode)}.`;
             return { content: [...enrichedContent, { type: "text" as const, text: note }], isError: true };
           }
 

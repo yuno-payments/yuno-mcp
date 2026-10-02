@@ -30,8 +30,9 @@ export function sentAccountPhrase(passed: unknown, defaultAccountId: string | un
 }
 
 /**
- * The default account is otherwise silent: no API response names it. Composed from
- * the API tools in src/tools/index.ts, since importing that list here would be a cycle.
+ * The default account is otherwise silent: no API response names it. Composed in
+ * src/index.ts from the tools registered for the connection's mode, so read-only
+ * mode never lists a tool it does not serve.
  */
 export function createAccountContextTool(apiTools: readonly Tool[]) {
   const toolsAcceptingAccountId = apiTools.filter((tool) => accountIdPath(tool.schema)).map((tool) => tool.method);

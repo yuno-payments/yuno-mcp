@@ -71,20 +71,20 @@ async function connectedClient(publicApiKey: string, mode?: "read-only" | "full"
 }
 
 describe("server mode", () => {
-  it("read-only registers only retrieval tools plus describeTool", async () => {
+  it("read-only registers only retrieval tools plus accountContext and describeTool", async () => {
     const client = await connectedClient("staging_key", "read-only");
     const listed = await client.listTools();
     const readOnlyCount = tools.filter((tool) => tool.annotations.readOnlyHint === true).length;
 
-    expect(listed.tools.length).toBe(readOnlyCount + 1);
+    expect(listed.tools.length).toBe(readOnlyCount + 2);
     expect(listed.tools.some((tool) => tool.name === "describeTool")).toBe(true);
     expect(listed.tools.some((tool) => tool.name === "paymentRefund")).toBe(false);
   });
 
-  it("full mode registers every tool plus describeTool", async () => {
+  it("full mode registers every tool plus accountContext and describeTool", async () => {
     const client = await connectedClient("staging_key");
     const listed = await client.listTools();
-    expect(listed.tools.length).toBe(tools.length + 1);
+    expect(listed.tools.length).toBe(tools.length + 2);
   });
 });
 
