@@ -3,7 +3,7 @@ import { z } from "zod";
 import { YunoClient } from "./client";
 import { tools } from "./tools";
 import { createDescribeTool } from "./tools/describe";
-import { accountIdPath, createAccountContextTool, sentAccountPhrase } from "./tools/account";
+import { accountIdPath, createAccountContextTool, SAFE_ACCOUNT_ID, sentAccountPhrase } from "./tools/account";
 import { compactSchema, HEAVY_KEYS } from "./schemas/compact";
 import { leanToolsListResult } from "./schemas/lean-json-schema";
 import { confirmTokenAccountChanged, issueConfirmToken, verifyConfirmToken } from "./confirm";
@@ -16,7 +16,7 @@ type ServerMode = "read-only" | "full";
 const COMPACTED_SCHEMA_HINT = "Deep fields are abbreviated here; call describeTool for the full schema.";
 
 type CreateOptions = {
-  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  /** "read-only" registers only retrieval tools, plus accountContext and describeTool. Default "full". */
   mode?: ServerMode;
 };
 
@@ -33,25 +33,20 @@ function unknownParameterError(issue: z.core.$ZodRawIssue): string | undefined {
   return `Unknown parameter ${hints.join(", ")}. Parameters are snake_case; nothing was sent to the API.`;
 }
 
-/**
- * The account code arrives in a client header and these instructions reach the
- * model verbatim, so only an id-shaped value is quoted; anything else is left to
- * accountContext, which returns it as JSON.
- */
-const SAFE_ACCOUNT_ID = /^[A-Za-z0-9-]{1,64}$/;
-
 // The default account is applied silently by the tools, so a client has to be told
 // it exists before it creates anything under it (YSHUB-7252).
 function serverInstructions(yunoClient: YunoClient, mode: ServerMode | undefined): string {
   const environment = yunoClient.environment ?? "unrecognized";
+  // The code arrives in a client header and this text reaches the model verbatim, so
+  // a value that is not id-shaped is left to accountContext, which returns it as JSON.
   const account = SAFE_ACCOUNT_ID.test(yunoClient.accountCode)
     ? `This connection uses Yuno account_id ${yunoClient.accountCode} (environment: ${environment}) by default.`
     : `This connection uses a default Yuno account (environment: ${environment}); call accountContext to see its account_id.`;
   if (mode === "read-only") {
     return [
       account,
-      "This connection is read-only. The tools listed by accountContext accept account_id to read another account of the same organization.",
-      "When the user may have several accounts, call accountContext to confirm which account the results come from.",
+      "This connection is read-only. Most lookups are organization-wide and do not use that account.",
+      "Only the tools listed by accountContext take an account_id, and they accept another account of the same organization.",
     ].join(" ");
   }
   return [
@@ -253,7 +248,9 @@ function createYunoMCPServer(yunoClient: YunoClient, options: CreateOptions = {}
           const guidance = findGuidance(primaryBody);
           const enrichedContent = guidance ? [...content, { type: "text" as const, text: formatGuidance(guidance) }] : content;
 
-          if (upstreamStatus >= 400 && accountPath) {
+          // Only where the account can be the reason: not on 5xx, an invalid key (401) or a rate limit (429).
+          const accountMayExplain = upstreamStatus >= 400 && upstreamStatus < 500 && upstreamStatus !== 401 && upstreamStatus !== 429;
+          if (accountMayExplain && accountPath) {
             // Names what was sent without the API echoing it. The API body is untouched.
             const note = `Request sent with ${sentAccount(tool, accountPath, validation.data, yunoClient.accountCode).phrase}.`;
             return { content: [...enrichedContent, { type: "text" as const, text: note }], isError: true };
@@ -316,7 +313,7 @@ async function initializeYunoMCP({
   accountCode: string;
   publicApiKey: string;
   privateSecretKey: string;
-  /** "read-only" registers only retrieval tools (plus describeTool). Default "full". */
+  /** "read-only" registers only retrieval tools, plus accountContext and describeTool. Default "full". */
   mode?: ServerMode;
 }) {
   try {
