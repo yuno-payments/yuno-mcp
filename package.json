@@ -62,7 +62,7 @@
     "qs": "^6.15.2",
     "minimatch": "^10.2.1",
     "rollup": "^4.59.0",
-    "fast-uri": "^3.1.4",
+    "fast-uri": "^3.1.7",
     "ip-address": "^10.3.1",
     "body-parser": "^2.3.0",
     "js-yaml": "^4.3.0",
