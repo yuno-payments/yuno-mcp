@@ -103,6 +103,25 @@ export function withCaptureDisabled(payment: PaymentCreateSchema["payment"]): Pa
 }
 
 /**
+ * Encode an id for use as a single path segment.
+ *
+ * Ids reach these paths straight from tool arguments. Interpolated as-is, an id
+ * containing "/", "?" or "#" changes the request: fetch normalizes "..", so
+ * `subscription_id: "../payments/<id>/cancel-or-refund?x="` turned subscriptionResume
+ * (not destructive, so never behind the production confirm_token gate) into
+ * POST /v1/payments/<id>/cancel-or-refund, and "#" silently dropped the
+ * `account_id` query on recipient calls. encodeURIComponent covers all of that
+ * except an id that is itself "." or "..", which the URL parser still treats as a
+ * dot segment, so those are refused.
+ */
+export function pathSegment(id: string): string {
+  if (id === "" || id === "." || id === "..") {
+    throw new Error(`INVALID_ID: ${JSON.stringify(id)} is not a valid id.`);
+  }
+  return encodeURIComponent(id);
+}
+
+/**
  * Deliberately echoes nothing from the key: with no underscore in it, the
  * "prefix" is the whole credential.
  */
@@ -182,7 +201,7 @@ export class YunoClient {
     },
 
     retrieve: async (customerId: string) => {
-      return this.request<YunoCustomer>(`/customers/${customerId}`, {
+      return this.request<YunoCustomer>(`/customers/${pathSegment(customerId)}`, {
         method: "GET",
       });
     },
@@ -194,7 +213,7 @@ export class YunoClient {
     },
 
     update: async (customerId: string, updateFields: Partial<YunoCustomer>) => {
-      return this.request<YunoCustomer>(`/customers/${customerId}`, {
+      return this.request<YunoCustomer>(`/customers/${pathSegment(customerId)}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
@@ -205,24 +224,24 @@ export class YunoClient {
     enroll: async (customerId: string, body: PaymentMethodEnrollSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods`, {
+      return this.request<YunoPaymentMethod>(`/customers/${pathSegment(customerId)}/payment-methods`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
       });
     },
     retrieve: async (customerId: string, paymentMethodId: string) => {
-      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods/${paymentMethodId}`, {
+      return this.request<YunoPaymentMethod>(`/customers/${pathSegment(customerId)}/payment-methods/${pathSegment(paymentMethodId)}`, {
         method: "GET",
       });
     },
     retrieveEnrolled: async (customerId: string) => {
-      return this.request<{ payment_methods?: YunoPaymentMethod[] | null }>(`/customers/${customerId}/payment-methods`, {
+      return this.request<{ payment_methods?: YunoPaymentMethod[] | null }>(`/customers/${pathSegment(customerId)}/payment-methods`, {
         method: "GET",
       });
     },
     unenroll: async (customerId: string, paymentMethodId: string) => {
-      return this.request<YunoPaymentMethod>(`/customers/${customerId}/payment-methods/${paymentMethodId}/unenroll`, {
+      return this.request<YunoPaymentMethod>(`/customers/${pathSegment(customerId)}/payment-methods/${pathSegment(paymentMethodId)}/unenroll`, {
         method: "POST",
       });
     },
@@ -237,13 +256,13 @@ export class YunoClient {
     },
 
     retrievePaymentMethods: async (sessionId: string) => {
-      return this.request<YunoCheckoutPaymentMethod[]>(`/checkout/sessions/${sessionId}/payment-methods`, {
+      return this.request<YunoCheckoutPaymentMethod[]>(`/checkout/sessions/${pathSegment(sessionId)}/payment-methods`, {
         method: "GET",
       });
     },
 
     createOtt: async (sessionId: string, ottRequest: YunoOttRequest) => {
-      return this.request<YunoOttResponse>(`/checkout/sessions/${sessionId}/token`, {
+      return this.request<YunoOttResponse>(`/checkout/sessions/${pathSegment(sessionId)}/token`, {
         method: "POST",
         body: JSON.stringify(ottRequest),
       });
@@ -262,7 +281,7 @@ export class YunoClient {
     },
 
     retrieve: async (paymentId: string) => {
-      return this.request<YunoPayment>(`/payments/${paymentId}`, {
+      return this.request<YunoPayment>(`/payments/${pathSegment(paymentId)}`, {
         method: "GET",
       });
     },
@@ -276,7 +295,7 @@ export class YunoClient {
     refund: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/refund`, {
+      return this.request<any>(`/payments/${pathSegment(paymentId)}/transactions/${pathSegment(transactionId)}/refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -286,7 +305,7 @@ export class YunoClient {
     cancelOrRefund: async (paymentId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/cancel-or-refund`, {
+      return this.request<any>(`/payments/${pathSegment(paymentId)}/cancel-or-refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -296,7 +315,7 @@ export class YunoClient {
     cancelOrRefundWithTransaction: async (paymentId: string, transactionId: string, body: PaymentRefundSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel-or-refund`, {
+      return this.request<any>(`/payments/${pathSegment(paymentId)}/transactions/${pathSegment(transactionId)}/cancel-or-refund`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -306,7 +325,7 @@ export class YunoClient {
     cancel: async (paymentId: string, transactionId: string, body: PaymentCancelSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/cancel`, {
+      return this.request<any>(`/payments/${pathSegment(paymentId)}/transactions/${pathSegment(transactionId)}/cancel`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -326,7 +345,7 @@ export class YunoClient {
     captureAuthorization: async (paymentId: string, transactionId: string, body: PaymentCaptureAuthorizationSchema, idempotencyKey: string) => {
       const headers: Record<string, string> = {};
       headers["x-idempotency-key"] = idempotencyKey;
-      return this.request<any>(`/payments/${paymentId}/transactions/${transactionId}/capture`, {
+      return this.request<any>(`/payments/${pathSegment(paymentId)}/transactions/${pathSegment(transactionId)}/capture`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -347,13 +366,13 @@ export class YunoClient {
     },
 
     retrieve: async (paymentLinkId: string) => {
-      return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}`, {
+      return this.request<YunoPaymentLink>(`/payment-links/${pathSegment(paymentLinkId)}`, {
         method: "GET",
       });
     },
 
     cancel: async (paymentLinkId: string) => {
-      return this.request<YunoPaymentLink>(`/payment-links/${paymentLinkId}/cancel`, {
+      return this.request<YunoPaymentLink>(`/payment-links/${pathSegment(paymentLinkId)}/cancel`, {
         method: "POST",
       });
     },
@@ -372,32 +391,32 @@ export class YunoClient {
     },
 
     retrieve: async (subscriptionId: string) => {
-      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}`, {
+      return this.request<YunoSubscription>(`/subscriptions/${pathSegment(subscriptionId)}`, {
         method: "GET",
       });
     },
 
     pause: async (subscriptionId: string) => {
-      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/pause`, {
+      return this.request<YunoSubscription>(`/subscriptions/${pathSegment(subscriptionId)}/pause`, {
         method: "POST",
       });
     },
 
     resume: async (subscriptionId: string) => {
-      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/resume`, {
+      return this.request<YunoSubscription>(`/subscriptions/${pathSegment(subscriptionId)}/resume`, {
         method: "POST",
       });
     },
 
     update: async (subscriptionId: string, updateFields: SubscriptionUpdateBody) => {
-      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}`, {
+      return this.request<YunoSubscription>(`/subscriptions/${pathSegment(subscriptionId)}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
     },
 
     cancel: async (subscriptionId: string) => {
-      return this.request<YunoSubscription>(`/subscriptions/${subscriptionId}/cancel`, {
+      return this.request<YunoSubscription>(`/subscriptions/${pathSegment(subscriptionId)}/cancel`, {
         method: "POST",
       });
     },
@@ -416,20 +435,20 @@ export class YunoClient {
     },
 
     retrieve: async (recipientId: string) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+      return this.request<YunoRecipient>(`/recipients/${pathSegment(recipientId)}?account_id=${this.accountCode}`, {
         method: "GET",
       });
     },
 
     update: async (recipientId: string, updateFields: RecipientUpdateBody) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+      return this.request<YunoRecipient>(`/recipients/${pathSegment(recipientId)}?account_id=${this.accountCode}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
     },
 
     delete: async (recipientId: string) => {
-      return this.request<YunoRecipient>(`/recipients/${recipientId}?account_id=${this.accountCode}`, {
+      return this.request<YunoRecipient>(`/recipients/${pathSegment(recipientId)}?account_id=${this.accountCode}`, {
         method: "DELETE",
       });
     },
@@ -444,7 +463,7 @@ export class YunoClient {
     },
 
     retrieve: async (planId: string) => {
-      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${pathSegment(planId)}`, {
         method: "GET",
       });
     },
@@ -456,14 +475,14 @@ export class YunoClient {
     },
 
     update: async (planId: string, updateFields: InstallmentPlanUpdateBody) => {
-      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${pathSegment(planId)}`, {
         method: "PATCH",
         body: JSON.stringify(updateFields),
       });
     },
 
     delete: async (planId: string) => {
-      return this.request<YunoInstallmentPlan>(`/installments-plans/${planId}`, {
+      return this.request<YunoInstallmentPlan>(`/installments-plans/${pathSegment(planId)}`, {
         method: "DELETE",
       });
     },
