@@ -1,7 +1,8 @@
 /**
  * Shrinks the JSON Schema the MCP SDK emits for `tools/list` without changing what
- * any schema accepts: drops `$schema`, and drops a `{type: "null"}` member that
- * adds nothing. tests/lean-tools-list.test.ts checks every tool accepts the same
+ * any schema accepts: drops `$schema`, expands `type: [X, "null"]` (emitted by
+ * zod >= 4.6 for nullable fields) into the long form, and drops a
+ * `{type: "null"}` member that adds nothing. tests/lean-tools-list.test.ts checks every tool accepts the same
  * values as before; anything that changes that belongs in compactSchema.
  *
  * Nullable fields keep the long `anyOf: [X, {type: "null"}]` form: released
