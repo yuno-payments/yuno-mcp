@@ -14,9 +14,9 @@ type JsonSchemaNode = Record<string, unknown>;
 
 /** Rewrites `type: [X, "null"]` into the long `anyOf: [{type: X, ...}, {type: "null"}]` form. */
 function expandArrayFormType(node: JsonSchemaNode): JsonSchemaNode {
-  const types = node.type;
+  const types: unknown = node.type;
   if (!Array.isArray(types)) return node;
-  const nonNull = types.filter((type) => type !== "null");
+  const nonNull = (types as unknown[]).filter((type) => type !== "null");
   if (nonNull.length === types.length || nonNull.length !== 1) return node;
   const { description, title, ...member } = node;
   return {
