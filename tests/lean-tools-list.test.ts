@@ -21,6 +21,18 @@ describe("leanJsonSchema", () => {
     expect(leanJsonSchema(nullableEnum)).toEqual(nullableEnum);
   });
 
+  it("expands an array-form nullable type into the long anyOf form", () => {
+    expect(leanJsonSchema({ type: ["string", "null"], minLength: 3, description: "d" })).toEqual({
+      anyOf: [{ type: "string", minLength: 3 }, { type: "null" }],
+      description: "d",
+    });
+  });
+
+  it("leaves an array-form type without null, or with several non-null types, alone", () => {
+    expect(leanJsonSchema({ type: ["string", "number"] })).toEqual({ type: ["string", "number"] });
+    expect(leanJsonSchema({ type: ["string", "number", "null"] })).toEqual({ type: ["string", "number", "null"] });
+  });
+
   it("leaves a real union alone", () => {
     const real = { anyOf: [{ type: "string" }, { type: "number" }] };
     expect(leanJsonSchema(real)).toEqual(real);
@@ -259,6 +271,10 @@ function sample(schema: JsonSchema, depth: number): unknown {
   const members = (schema.anyOf ?? schema.oneOf) as JsonSchema[] | undefined;
   if (members) return sample(members.find((member) => member.type !== "null") ?? members[0], depth);
   if (Array.isArray(schema.allOf)) return sample(schema.allOf[0] as JsonSchema, depth);
+  if (Array.isArray(schema.type)) {
+    const types = schema.type as string[];
+    return sample({ ...schema, type: types.find((type) => type !== "null") ?? types[0] }, depth);
+  }
   switch (schema.type) {
     case "string":
       return "x";
