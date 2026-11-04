@@ -11,6 +11,20 @@
 
 type JsonSchemaNode = Record<string, unknown>;
 
+/** Rewrites `type: [X, "null"]` into the long `anyOf: [{type: X, ...}, {type: "null"}]` form. */
+function expandArrayFormType(node: JsonSchemaNode): JsonSchemaNode {
+  const types = node.type;
+  if (!Array.isArray(types)) return node;
+  const nonNull = types.filter((type) => type !== "null");
+  if (nonNull.length === types.length || nonNull.length !== 1) return node;
+  const { description, title, ...member } = node;
+  return {
+    anyOf: [{ ...member, type: nonNull[0] }, { type: "null" }],
+    ...(title !== undefined && { title }),
+    ...(description !== undefined && { description }),
+  };
+}
+
 const isNullMember = (member: unknown): boolean =>
   typeof member === "object" && member !== null && Object.keys(member).length === 1 && (member as JsonSchemaNode).type === "null";
 
@@ -83,5 +97,5 @@ export function leanJsonSchema<T>(node: T): T {
     if (key === "$schema") continue;
     out[key] = leanJsonSchema(value);
   }
-  return simplifyNullableUnion(out) as unknown as T;
+  return simplifyNullableUnion(expandArrayFormType(out)) as unknown as T;
 }
